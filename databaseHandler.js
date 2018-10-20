@@ -17,7 +17,7 @@ var database = {};
  * @param callback: The Callback.
  */
 database.insert = function (tableName, values, callback) {
-    pool.getConnections(function (err, con) {
+    pool.getConnection(function (err, con) {
         if (err) {
             callback(err);
         } else {
@@ -45,7 +45,7 @@ database.insert = function (tableName, values, callback) {
  * @param callback: The Method callback.
  */
 database.select = function (queryStatement, callback) {
-    pool.getConnections(function (err, con) {
+    pool.getConnection(function (err, con) {
         if (err) {
             callback(err);
             console.log(err);
@@ -67,3 +67,4 @@ database.select = function (queryStatement, callback) {
         });
     });
 };
+module.exports=database;
