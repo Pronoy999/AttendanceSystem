@@ -2,6 +2,7 @@
   "name": "hyperxchangeapi",
   "version": "1.0.0",
   "dependencies": {
-    "mysql": "latest"
+    "mysql": "latest",
+    "aws-sdk": "latest"
   }
 }
