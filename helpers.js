@@ -1,4 +1,9 @@
 var helpers = {};
+/**
+ * Method to parse JSON to Objects.
+ * @param data
+ * @returns {*}
+ */
 helpers.parseJsonToObjects = function (data) {
     var obj = {};
     try {

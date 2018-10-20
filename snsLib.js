@@ -1,44 +1,39 @@
 const aws = require('aws-sdk');
+var sms = {};
 aws.config.update({
     region: 'ap-southeast-1',
     accessKeyId: 'AKIAJIZWJEI3NUHXOC3Q',
     secretAccessKey: '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'
 });
-var otp = {};
 var sns = new aws.SNS();
 /**
- * Method to sendOTP the OTP to Specified Phone Number.
- * @param phoneNumber: The Phone Number where the OTP to be sendOTP.
- * @param callback: the function callback
+ * Method to send an OTP.
+ * @param phone: The Phone Number.
+ * @param callback: The Method callback.
  */
-otp.sendOTP = function (phoneNumber, callback) {
-    var randomOtp = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
-    var msg = 'Your HX OTP is: ' + randomOtp;
+sms.sendOTP = function (phone, callback) {
+    var number = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
+    var msg = 'Your HX OTP is: ' + number;
     var params = {
         Message: msg,
         MessageStructure: 'string',
-        phoneNumber: phoneNumber
+        PhoneNumber: phone
     };
     sns.publish(params, function (err, data) {
-        if (err) {
-            callback(err);
-            console.log(err);
-        } else {
-            callback(randomOtp, data);
-        }
+        callback(err, number);
     });
 };
 /**
- * Method to send any text as an SMS.
- * @param phoneNumber: The PhoneNumber where the SMS is to be send.
+ * Method to send normal Text.
+ * @param phoneNumber: The Phone Number where the data to Send.
  * @param msg: The Message.
- * @param callback: The Method callback.
+ * @param callback: The method callback.
  */
-otp.sendMessage = function (phoneNumber, msg, callback) {
+sms.sendMessage = function (phoneNumber, msg, callback) {
     var params = {
         Message: msg,
         MessageStructure: 'string',
-        phoneNumber: phoneNumber
+        PhoneNumber: phoneNumber
     };
     sns.publish(params, function (err, data) {
         if (err) {
@@ -49,4 +44,4 @@ otp.sendMessage = function (phoneNumber, msg, callback) {
         }
     });
 };
-module.exports = otp;
+module.exports = sms;
