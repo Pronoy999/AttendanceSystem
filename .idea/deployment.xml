@@ -6,6 +6,7 @@
         <serverdata>
           <mappings>
             <mapping deploy="/var/www/html/nodeServer/HyperXchangeAPI" local="$PROJECT_DIR$" web="/" />
+            <mapping local="" />
           </mappings>
         </serverdata>
       </paths>

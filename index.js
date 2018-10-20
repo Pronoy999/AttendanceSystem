@@ -1,10 +1,11 @@
 const http = require('http');
 const url = require('url');
-const stringDecoder = require('string_decoder').StringDecoder;
+const StringDecoder = require('string_decoder').StringDecoder;
 const handlers = require('./handlers');
 const helpers=require('./helpers');
 const router = {
     'otp': handlers.otp,
+    'text':handlers.text
 };
 var unifiedServer = function (req, res) {
     var parsedUrl = url.parse(req.url, true);
@@ -12,13 +13,13 @@ var unifiedServer = function (req, res) {
     var trimmedPath = pathName.replace(/^\/+|\/+$/g, '');
     var method = req.method.toLowerCase();
     var queryString = parsedUrl.query;
-    var decoder = new stringDecoder('utf-8');
+    var decoder = new StringDecoder('utf-8');
     var postData='';
     req.on('data', function (data) {
         postData += decoder.write(data);
     });
     req.on('end', function () {
-        postData = decoder.end();
+        postData+= decoder.end();
         postData = helpers.parseJsonToObjects(postData);
         console.log(trimmedPath);
         console.log(router[trimmedPath]);
