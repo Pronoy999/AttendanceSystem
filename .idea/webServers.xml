@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="a8da3435-6c20-4530-9f0e-0ec2784fd160" name="AWS Staging" url="http://ec2-35-154-219-101.ap-south-1.compute.amazonaws.com/">
+        <fileTransfer host="ec2-35-154-219-101.ap-south-1.compute.amazonaws.com" port="22" privateKey="$PROJECT_DIR$/../../AWSPrivateKey/hx-mumbai.pem" accessType="SFTP" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
