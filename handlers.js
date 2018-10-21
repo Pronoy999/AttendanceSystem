@@ -1,8 +1,9 @@
 const database = require('./databaseHandler');
 const snsLib = require('./snsLib');
+const helpers = require('./helpers');
 var handlers = {};
 handlers.notFound = function (data, callback) {
-    var response = {
+    const response = {
         'res': 'Invalid Path'
     };
     callback(true, 404, response);
@@ -45,24 +46,35 @@ handlers.otp = function (dataObject, callback) {
             }
         });
     } else if (method === 'post') {
-        console.log(dataObject.postData);
         phoneNumber = dataObject.postData.phoneNumber;
         snsLib.sendOTP(phoneNumber, function (err, randomOTP) {
             if (err) {
+                console.log(err);
                 console.log(err);
                 response = {
                     'res': 'ERROR'
                 };
                 callback(err, 500, response);
             } else {
-                var values = phoneNumber + "," + randomOTP;
+                var values = "'"+phoneNumber + "'," + randomOTP;
                 database.insert("otp", values, function (err, data) {
                     if (err) {
                         console.log(err);
-                        response = {
-                            'res': 'ERROR'
-                        };
-                        callback(err, 500, response);
+                        const whereClause = "mobile_number LIKE '" + phoneNumber + "'";
+                        database.update("otp", "otp", randomOTP, whereClause, function (err, data) {
+                            if (err) {
+                                console.log(err);
+                                response = {
+                                    'res': 'ERROR'
+                                };
+                                callback(err, 500, response);
+                            } else {
+                                response = {
+                                    'res': ' New OTP Send.'
+                                };
+                                callback(false, 200, response);
+                            }
+                        });
                     } else {
                         response = {
                             'res': 'OTP Send.'
@@ -104,6 +116,53 @@ handlers.text = function (dataObject, callback) {
             'res': 'Invalid Request'
         };
         callback(true, 404, response);
+    }
+};
+/**
+ * Method to either INSERT new Phones or to check for old ones.
+ * @param dataObject: The request data.
+ * @param callback: The method callback.
+ */
+handlers.phone = function (dataObject, callback) {
+    var method = dataObject.method;
+    var response = {};
+    if (method === 'get') {
+        var imei = dataObject.queryString.imei;
+        var query = "SELECT * FROM phone_details WHERE imei LIKE '" + imei + "'";
+        database.select(query, function (err, data) {
+            if (err) {
+                response = {
+                    'res': 'Error'
+                };
+                callback(err, 500, response);
+            }
+            else {
+                if (data.length > 0) {
+                    callback(false, 200, data);
+                } else {
+                    response = {
+                        'res': 'No Phones found with this IMEI.'
+                    };
+                    callback(false, 404, response);
+                }
+            }
+        });
+    } else if (method === 'post') {
+        var postData = dataObject.postData;
+        helpers.insertNewPhone(postData, function (err, data) {
+            var response = {};
+            if (err) {
+                response = {
+                    'res': 'Error, the phone may already exists.'
+                };
+                callback(err, 500, response);
+            } else {
+                response = {
+                    'res': 'Successfully Inserted new phone'
+                };
+                callback(false, 200, response);
+            }
+        });
     }
 };
 module.exports = handlers;

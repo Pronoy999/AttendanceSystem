@@ -17,4 +17,28 @@ helpers.parseJsonToObjects = function (data) {
 helpers.validateKey = function (key) {
     //TODO: Check the Key.
 };
+/**
+ * Method to insert new phones into the table.
+ * @param data: The Data containing the phone details.
+ * @param callback: The Method callback.
+ */
+helpers.insertNewPhone = function (data, callback) {
+    var manufacturer = data.manufacturer;
+    var model = data.model;
+    var serial_number = data.serial_number;
+    var imei = data.imei;
+    var bssid = data.bssid;
+    var region = data.region;
+    var uuid = data.uuid;
+    var storage = data.storage;
+    var actual_battery_capacity = data.actual_battery_capacity;
+    var status = data.status;
+    var is_customer = data.is_customer;
+    var values = "'" + manufacturer + "','" + model + "','" + serial_number + "','" +
+        imei + "','" + bssid + "','" + region + "','" + uuid + "','" + storage + "','" +
+        actual_battery_capacity + "','" + status + "','" + is_customer + "'";
+    database.insert("phone_details", values, function (err, data) {
+        callback(err, data);
+    });
+};
 module.exports = helpers;
