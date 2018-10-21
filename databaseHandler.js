@@ -67,4 +67,31 @@ database.select = function (queryStatement, callback) {
         });
     });
 };
-module.exports=database;
+/**
+ * Method to update a database value.
+ * @param tableName: The tableName.
+ * @param updateCol: The column which is to be updated.
+ * @param updateVal: The updated value or the new value.
+ * @param where: The Where clause.
+ * @param callback: The Method callback.
+ */
+database.update = function (tableName, updateCol, updateVal, where, callback) {
+    pool.getConnection(function (err, con) {
+        if (err) {
+            callback(err);
+            console.log(err);
+        } else {
+            var queryStatement = "UPDATE " + tableName + " SET " + updateCol + " = " +
+                updateVal + " WHERE " + where;
+            con.query(queryStatement, function (err, results, fields) {
+                if (err) {
+                    callback(err, {});
+                    console.log(err);
+                } else {
+                    callback(false, results);
+                }
+            });
+        }
+    });
+};
+module.exports = database;

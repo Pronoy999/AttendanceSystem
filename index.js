@@ -5,7 +5,9 @@ const handlers = require('./handlers');
 const helpers=require('./helpers');
 const router = {
     'otp': handlers.otp,
-    'text':handlers.text
+    'text':handlers.text,
+    'phone':handlers.phone,
+    'phone-report':handlers.report
 };
 var unifiedServer = function (req, res) {
     var parsedUrl = url.parse(req.url, true);
@@ -21,8 +23,6 @@ var unifiedServer = function (req, res) {
     req.on('end', function () {
         postData+= decoder.end();
         postData = helpers.parseJsonToObjects(postData);
-        console.log(trimmedPath);
-        console.log(router[trimmedPath]);
         var chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
         var data = {
             'path': trimmedPath,
