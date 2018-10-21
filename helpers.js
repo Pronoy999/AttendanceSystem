@@ -89,4 +89,7 @@ helpers.insertNewReport = function (data, callback) {
         callback(err, data);
     });
 };
+/**
+ * Exporting the module.
+ */
 module.exports = helpers;
