@@ -56,10 +56,11 @@ handlers.otp = function (dataObject, callback) {
                 };
                 callback(err, 500, response);
             } else {
-                var values = "'"+phoneNumber + "'," + randomOTP;
+                var values = "'" + phoneNumber + "'," + randomOTP;
                 database.insert("otp", values, function (err, data) {
                     if (err) {
                         console.log(err);
+                        //Updating the Old OTP.
                         const whereClause = "mobile_number LIKE '" + phoneNumber + "'";
                         database.update("otp", "otp", randomOTP, whereClause, function (err, data) {
                             if (err) {
@@ -95,7 +96,6 @@ handlers.text = function (dataObject, callback) {
     var response = {};
     var phoneNumber = dataObject.postData.phoneNumber;
     var text = dataObject.postData.text;
-    //console.log(dataObject);
     var method = dataObject.method;
     if (method === 'post') {
         snsLib.sendMessage(phoneNumber, text, function (err) {
@@ -141,7 +141,7 @@ handlers.phone = function (dataObject, callback) {
                     callback(false, 200, data);
                 } else {
                     response = {
-                        'res': 'No Phones found with this IMEI.'
+                        'res': 'No device found with this ID.'
                     };
                     callback(false, 404, response);
                 }
@@ -163,6 +163,35 @@ handlers.phone = function (dataObject, callback) {
                 callback(false, 200, response);
             }
         });
+    }
+};
+/**
+ * Method to insert Report for devices.
+ * @param dataObject: the Request object.
+ * @param callback: The method callback.
+ */
+handlers.report = function (dataObject, callback) {
+    var method = dataObject.method;
+    var response = {};
+    if (method === 'post') {
+        helpers.insertNewReport(dataObject.postData, function (err, data) {
+            if (err) {
+                response = {
+                    'res': 'Error'
+                };
+                callback(err, 500, response);
+            } else {
+                response = {
+                    'res': 'Successfully inserted the report.'
+                };
+                callback(false, 200, response);
+            }
+        });
+    } else if (method === 'get') {
+        response = {
+            'res': 'Invalid Request Method'
+        };
+        callback(true, 404, response);
     }
 };
 module.exports = handlers;

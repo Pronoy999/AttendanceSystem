@@ -6,7 +6,8 @@ const helpers=require('./helpers');
 const router = {
     'otp': handlers.otp,
     'text':handlers.text,
-    'phone':handlers.phone
+    'phone':handlers.phone,
+    'phone-report':handlers.report
 };
 var unifiedServer = function (req, res) {
     var parsedUrl = url.parse(req.url, true);
