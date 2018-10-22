@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const http = require('http');
 const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
@@ -45,7 +46,6 @@ var unifiedServer = function (req, res) {
 var httpServer = http.createServer(function (req, res) {
     unifiedServer(req, res);
 });
-httpServer.listen(7000, function () {
-    console.log("Server Listening on Port 7000");
+httpServer.listen(7009, function () {
+    console.log("Server Listening on Port 7009");
 });
-
