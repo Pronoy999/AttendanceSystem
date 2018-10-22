@@ -8,7 +8,8 @@ const router = {
     'otp': handlers.otp,
     'text': handlers.text,
     'phone': handlers.phone,
-    'phone-report': handlers.report
+    'phone-report': handlers.report,
+    'order-id':handlers.orderId
 };
 /**
  * Method which controls the Server.

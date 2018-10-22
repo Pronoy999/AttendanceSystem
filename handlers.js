@@ -194,4 +194,73 @@ handlers.report = function (dataObject, callback) {
         callback(true, 404, response);
     }
 };
+/**
+ * Method to get the Order ID.
+ * @param dataObject: The object containing the REQUEST.
+ * @param callback: The Method callback.
+ */
+handlers.orderId = function (dataObject, callback) {
+    var paymentMethod, productType, pincode, autoIncrVal;
+    var response = {};
+    if (dataObject.method === 'post') {
+        var isResponded = false;
+        helpers.getPaymentMethod(dataObject.postData.payment_method, function (err, data) {
+            if (err) {
+                response = {
+                    'res': 'Invalid Payment method selected.'
+                };
+                callback(err, 400, response);
+            } else {
+                paymentMethod = data;
+                checkResponse();
+            }
+        });
+        helpers.getProductType(dataObject.postData.product_type, function (err, data) {
+            if (err) {
+                response = {
+                    'res': 'Invalid Product Type'
+                };
+                callback(err, 400, response);
+            } else {
+                productType = data;
+                checkResponse();
+            }
+        });
+        pincode = dataObject.postData.pincode;
+        helpers.getAutoIncrementedValue(function (err, data) {
+            if (err) {
+                response = {
+                    'res': 'Error creating order Number'
+                };
+                callback(err, 500, response);
+            } else {
+                autoIncrVal = Number(data) + 1;
+                database.insert("order_incremented_value", autoIncrVal, function (err, data) {
+                    if (err) {
+                        response = {
+                            'res': 'Error Inserting new Order ID'
+                        };
+                        callback(err, 500, response);
+                    } else {
+                        checkResponse();
+                    }
+                });
+            }
+        });
+
+        /**
+         * Method to send the Response.
+         */
+        function checkResponse() {
+            if (!isResponded && paymentMethod && productType && pincode && autoIncrVal) {
+                isResponded = true;
+                var orderId = 'HX' + paymentMethod + productType + pincode + autoIncrVal;
+                response = {
+                    'res': orderId
+                };
+                callback(false, 200, response);
+            }
+        }
+    }
+};
 module.exports = handlers;

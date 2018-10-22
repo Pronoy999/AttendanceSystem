@@ -32,15 +32,15 @@ helpers.insertNewPhone = function (data, callback) {
     var uuid = data.uuid;
     var storage = data.storage;
     var actual_battery_capacity = data.actual_battery_capacity;
-    var battery_wear_capacity=data.battery_wear_capacity;
-    var color=data.color;
+    var battery_wear_capacity = data.battery_wear_capacity;
+    var color = data.color;
     var status = data.status;
     var is_customer = data.is_customer;
-    var time_stamp=data.time_stamp;
+    var time_stamp = data.time_stamp;
     var values = "'" + manufacturer + "','" + model + "','" + serial_number + "','" +
         imei + "','" + bssid + "','" + region + "','" + uuid + "','" + storage + "','" +
-        actual_battery_capacity + "','" +battery_wear_capacity+ "','" +color+ "','" +
-        status + "','" + is_customer+ "','" + time_stamp + "'";
+        actual_battery_capacity + "','" + battery_wear_capacity + "','" + color + "','" +
+        status + "','" + is_customer + "','" + time_stamp + "'";
     database.insert("phone_details", values, function (err, data) {
         callback(err, data);
     });
@@ -91,6 +91,36 @@ helpers.insertNewReport = function (data, callback) {
         report_date + "','" + email + "'";
     database.insert("report_details", values, function (err, data) {
         callback(err, data);
+    });
+};
+helpers.getPaymentMethod = function (data, callback) {
+    var query = "SELECT value FROM payment_method_details WHERE payment_methods LIKE '" + data + "'";
+    database.select(query, function (err, data) {
+        if (err) {
+            callback(err, {});
+        } else {
+            callback(false, data[0].value);
+        }
+    });
+};
+helpers.getProductType = function (data, callback) {
+    var query = "SELECT value FROM product_type_details WHERE product_type LIKE '" + data + "'";
+    database.select(query, function (err, data) {
+        if (err) {
+            callback(err, {});
+        } else {
+            callback(false, data[0].value);
+        }
+    });
+};
+helpers.getAutoIncrementedValue = function (callback) {
+    var query = "SELECT max(value) as value FROM order_incremented_value";
+    database.select(query, function (err, data) {
+        if (err) {
+            callback(err, {});
+        } else {
+           callback(false,data[0].value);
+        }
     });
 };
 /**
