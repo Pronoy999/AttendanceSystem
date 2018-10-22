@@ -32,11 +32,15 @@ helpers.insertNewPhone = function (data, callback) {
     var uuid = data.uuid;
     var storage = data.storage;
     var actual_battery_capacity = data.actual_battery_capacity;
+    var battery_wear_capacity=data.battery_wear_capacity;
+    var color=data.color;
     var status = data.status;
     var is_customer = data.is_customer;
+    var time_stamp=data.time_stamp;
     var values = "'" + manufacturer + "','" + model + "','" + serial_number + "','" +
         imei + "','" + bssid + "','" + region + "','" + uuid + "','" + storage + "','" +
-        actual_battery_capacity + "','" + status + "','" + is_customer + "'";
+        actual_battery_capacity + "','" +battery_wear_capacity+ "','" +color+ "','" +
+        status + "','" + is_customer+ "','" + time_stamp + "'";
     database.insert("phone_details", values, function (err, data) {
         callback(err, data);
     });

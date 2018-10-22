@@ -5,7 +5,7 @@ const mysql = require('mysql');
 var pool = mysql.createPool({
     host: 'hx-db.coh0oaulbzdr.ap-southeast-1.rds.amazonaws.com',
     user: 'db_admin',
-    database: 'staging_diagnostic_app',
+    database: 'diagnostic_app',
     password: 'hxadmin123',
     port: '3306'
 });

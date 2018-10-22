@@ -3,13 +3,18 @@ const http = require('http');
 const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const handlers = require('./handlers');
-const helpers=require('./helpers');
+const helpers = require('./helpers');
 const router = {
     'otp': handlers.otp,
-    'text':handlers.text,
-    'phone':handlers.phone,
-    'phone-report':handlers.report
+    'text': handlers.text,
+    'phone': handlers.phone,
+    'phone-report': handlers.report
 };
+/**
+ * Method which controls the Server.
+ * @param req: The REQUEST.
+ * @param res: The RESPONSE.
+ */
 var unifiedServer = function (req, res) {
     var parsedUrl = url.parse(req.url, true);
     var pathName = parsedUrl.pathname;
@@ -17,12 +22,12 @@ var unifiedServer = function (req, res) {
     var method = req.method.toLowerCase();
     var queryString = parsedUrl.query;
     var decoder = new StringDecoder('utf-8');
-    var postData='';
+    var postData = '';
     req.on('data', function (data) {
         postData += decoder.write(data);
     });
     req.on('end', function () {
-        postData+= decoder.end();
+        postData += decoder.end();
         postData = helpers.parseJsonToObjects(postData);
         var chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
         var data = {
@@ -32,8 +37,8 @@ var unifiedServer = function (req, res) {
             'postData': postData
         };
         chosenHandler(data, function (err, statusCode, responseData) {
-            responseData = typeof(responseData) == 'object' ? responseData : {};
-            statusCode = typeof (statusCode) == 'number' ? statusCode : 400;
+            responseData = typeof(responseData) === 'object' ? responseData : {};
+            statusCode = typeof (statusCode) === 'number' ? statusCode : 400;
             var responseObject = JSON.stringify(responseData);
             res.setHeader('Content-Type', 'application/json');
             res.writeHead(statusCode);
@@ -43,9 +48,15 @@ var unifiedServer = function (req, res) {
     });
 
 };
+/**
+ * Method to create the Server.
+ */
 var httpServer = http.createServer(function (req, res) {
     unifiedServer(req, res);
 });
+/**
+ * Method to listen on the port.
+ */
 httpServer.listen(7009, function () {
     console.log("Server Listening on Port 7009");
 });
