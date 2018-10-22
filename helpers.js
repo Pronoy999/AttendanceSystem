@@ -93,6 +93,11 @@ helpers.insertNewReport = function (data, callback) {
         callback(err, data);
     });
 };
+/**
+ * Method to get the Payment Method.
+ * @param data: The payment Method.
+ * @param callback: The method callback.
+ */
 helpers.getPaymentMethod = function (data, callback) {
     var query = "SELECT value FROM payment_method_details WHERE payment_methods LIKE '" + data + "'";
     database.select(query, function (err, data) {
@@ -103,6 +108,11 @@ helpers.getPaymentMethod = function (data, callback) {
         }
     });
 };
+/**
+ * Method to get the Product Type.
+ * @param data: The product type.
+ * @param callback: The method callback.
+ */
 helpers.getProductType = function (data, callback) {
     var query = "SELECT value FROM product_type_details WHERE product_type LIKE '" + data + "'";
     database.select(query, function (err, data) {
@@ -113,13 +123,17 @@ helpers.getProductType = function (data, callback) {
         }
     });
 };
+/**
+ * Method to get the Auto incremented value.
+ * @param callback: The method callback.
+ */
 helpers.getAutoIncrementedValue = function (callback) {
     var query = "SELECT max(value) as value FROM order_incremented_value";
     database.select(query, function (err, data) {
         if (err) {
             callback(err, {});
         } else {
-           callback(false,data[0].value);
+            callback(false, data[0].value);
         }
     });
 };
