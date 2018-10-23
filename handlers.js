@@ -1,6 +1,7 @@
 const database = require('./databaseHandler');
 const snsLib = require('./snsLib');
 const helpers = require('./helpers');
+const companyPrefix = 'HX';
 var handlers = {};
 handlers.notFound = function (data, callback) {
     const response = {
@@ -254,7 +255,7 @@ handlers.orderId = function (dataObject, callback) {
         function checkResponse() {
             if (!isResponded && paymentMethod && productType && pincode && autoIncrVal) {
                 isResponded = true;
-                var orderId = 'HX' + paymentMethod + productType + pincode + autoIncrVal;
+                var orderId = companyPrefix + paymentMethod + productType + pincode + autoIncrVal;
                 response = {
                     'res': orderId
                 };
@@ -263,4 +264,106 @@ handlers.orderId = function (dataObject, callback) {
         }
     }
 };
+/**
+ * Method to check whether the Mobile number belongs to Employee or Visitor or NEW.
+ * @param dataObject: The Request object.
+ * @param callback: The Method callback.
+ */
+handlers.logCheck = function (dataObject, callback) {
+    var response = {};
+    if (dataObject.method === 'get') {
+        var mobileNumber = dataObject.queryString.mobileNumber;
+        var query = "SELECT * FROM employee_details " +
+            "WHERE mobile_number LIKE '" + mobileNumber + "'";
+        database.select(query, function (err, data) {
+            if (typeof(data[0]) === 'undefined') {
+                query = "SELECT * FROM visitor_details " +
+                    "WHERE mobile_number LIKE '" + mobileNumber + "'";
+                database.select(query, function (err, data) {
+                    if (err) {
+                        response = {
+                            'res': 'Error'
+                        };
+                        callback(err, 500, response);
+                    } else {
+                        if (typeof(data[0]) === 'undefined') {
+                            response = {
+                                'res': 'Not Present'
+                            };
+                            callback(false, 404, response);
+                        } else {
+                            response = {
+                                'res': data[0],
+                                'type': 'Visitor'
+                            };
+                            callback(false, 200, response);
+                        }
+                    }
+                });
+            } else {
+                response = {
+                    'res': data[0],
+                    'type': 'Employee'
+                };
+                callback(false, 200, response);
+            }
+        });
+    } else {
+        response = {
+            'res': 'Invalid Request'
+        };
+        callback(false, 400, response);
+    }
+};
+/**
+ * Method to add the Visitor.
+ * @param dataObject: The Request Object.
+ * @param callback: The method callback.
+ */
+handlers.addVisitor = function (dataObject, callback) {
+    var response = {};
+    if (dataObject.method === 'post') {
+        var firstName = dataObject.postData.first_name;
+        var lastName = dataObject.postData.last_name;
+        var mobileNumber = dataObject.postData.mobile_number;
+        firstName = typeof (firstName) === 'string' ? firstName : false;
+        lastName = typeof (lastName) === 'string' ? lastName : false;
+        mobileNumber = typeof(mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
+        if (firstName && lastName && mobileNumber) {
+            var values = "'','" + firstName + "','" + lastName + "','" +
+                mobileNumber + "'";
+            database.insert("visitor_details", values, function (err, data) {
+                if (err) {
+                    response = {
+                        'res': 'Error, Visitor may already Exist.'
+                    };
+                    callback(err, 409, response);
+                } else {
+                    response = {
+                        'res': 'New visitor added.'
+                    };
+                    callback(false, 200, response);
+                }
+            });
+        } else {
+            response = {
+                'res': 'Insufficient Data'
+            };
+            callback(false, 400, response);
+        }
+    } else {
+        response = {
+            'res': 'Invalid Request'
+        };
+        callback(false, 400, response);
+    }
+};
+handlers.visitLog = function (dataObject, callback) {
+    var method=dataObject.method;
+    var postData = dataObject.postData;
+
+};
+/**
+ * Exporting the Handlers.
+ */
 module.exports = handlers;

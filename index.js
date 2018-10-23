@@ -9,7 +9,10 @@ const router = {
     'text': handlers.text,
     'phone': handlers.phone,
     'phone-report': handlers.report,
-    'order-id':handlers.orderId
+    'order-id':handlers.orderId,
+    'log-check':handlers.logCheck,
+    'visitor':handlers.addVisitor,
+    'visit-log':handlers.visitLog
 };
 /**
  * Method which controls the Server.

@@ -137,6 +137,16 @@ helpers.getAutoIncrementedValue = function (callback) {
         }
     });
 };
+helpers.getEmployeeID=function(mobileNumber){
+      var query="SELECT id FROM employee_details WHERE mobile_number LIKE '"+mobileNumber+"'";
+      database.select(query,function (err, data) {
+         if(err){
+             return {};
+         }else{
+             return data[0].id;
+         }
+      });
+};
 /**
  * Exporting the module.
  */
