@@ -262,6 +262,11 @@ handlers.orderId = function (dataObject, callback) {
                 callback(false, 200, response);
             }
         }
+    } else {
+        response = {
+            'res': 'Invalid Request'
+        };
+        callback(false, 400, response);
     }
 };
 /**
@@ -358,10 +363,61 @@ handlers.addVisitor = function (dataObject, callback) {
         callback(false, 400, response);
     }
 };
+/**
+ * Method to get the Visit Log.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
 handlers.visitLog = function (dataObject, callback) {
-    var method=dataObject.method;
-    var postData = dataObject.postData;
+    var method = dataObject.method;
+    var response = {};
+    var log = {};
+    if (method === 'post') {
+        var postData = dataObject.postData;
+        var employeeID = postData.employee_id;
+        var vistorID = postData.visitor_id;
+        var location = postData.location;
+        var timeStamp = postData.timeStamp;
+        var status = postData.status;
+        helpers.getStatusValue(status, function (statusID) {
+            if (employeeID)
+                log['employee_id'] = employeeID;
+            if (vistorID)
+                log['vistor_id'] = vistorID;
+            if (location)
+                log['location'] = location;
+            if (timeStamp)
+                log['timeStamp'] = timeStamp;
+            if (status) {
+                if (statusID > 0)
+                    log['status'] = statusID;
+            }
+            const where = Object.keys(log).map(x => x + " = '" + log[x] + "'").join(" AND ");
+            getLog(where);
+        });
+    } else {
+        response = {
+            'res': 'Invalid Request'
+        };
+        callback(false, 400, response);
+    }
 
+    function getLog(where) {
+        var query = "SELECT * FROM visit_details WHERE " + where;
+        database.select(query, function (err, data) {
+            if (err) {
+                response = {
+                    'res': 'Error'
+                };
+                callback(err, 500, response);
+            } else {
+                response = {
+                    'res': data
+                };
+                callback(false, 200, response);
+            }
+        });
+    }
 };
 /**
  * Exporting the Handlers.

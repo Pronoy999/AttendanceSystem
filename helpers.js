@@ -137,15 +137,34 @@ helpers.getAutoIncrementedValue = function (callback) {
         }
     });
 };
-helpers.getEmployeeID=function(mobileNumber){
-      var query="SELECT id FROM employee_details WHERE mobile_number LIKE '"+mobileNumber+"'";
-      database.select(query,function (err, data) {
-         if(err){
-             return {};
-         }else{
-             return data[0].id;
-         }
-      });
+helpers.getEmployeeID = function (mobileNumber) {
+    var query = "SELECT id FROM employee_details WHERE mobile_number LIKE '" + mobileNumber + "'";
+    database.select(query, function (err, data) {
+        if (err) {
+            return {};
+        } else {
+            return data[0].id;
+        }
+    });
+};
+/**
+ * Method to get the status value.
+ * @param status: The Status.
+ * @param callback: The Method callback.
+ */
+helpers.getStatusValue = function (status,callback) {
+    var query = "SELECT id FROM visit_status_details WHERE status LIKE '" + status + "'";
+    database.select(query, function (err, data) {
+        if (err) {
+            callback(-1);
+        } else {
+            try {
+                callback(data[0].id);
+            }catch (e) {
+                callback(-1);
+            }
+        }
+    });
 };
 /**
  * Exporting the module.
