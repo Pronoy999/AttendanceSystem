@@ -32,11 +32,15 @@ helpers.insertNewPhone = function (data, callback) {
     var uuid = data.uuid;
     var storage = data.storage;
     var actual_battery_capacity = data.actual_battery_capacity;
+    var battery_wear_capacity = data.battery_wear_capacity;
+    var color = data.color;
     var status = data.status;
     var is_customer = data.is_customer;
+    var time_stamp = data.time_stamp;
     var values = "'" + manufacturer + "','" + model + "','" + serial_number + "','" +
         imei + "','" + bssid + "','" + region + "','" + uuid + "','" + storage + "','" +
-        actual_battery_capacity + "','" + status + "','" + is_customer + "'";
+        actual_battery_capacity + "','" + battery_wear_capacity + "','" + color + "','" +
+        status + "','" + is_customer + "','" + time_stamp + "'";
     database.insert("phone_details", values, function (err, data) {
         callback(err, data);
     });
@@ -87,6 +91,79 @@ helpers.insertNewReport = function (data, callback) {
         report_date + "','" + email + "'";
     database.insert("report_details", values, function (err, data) {
         callback(err, data);
+    });
+};
+/**
+ * Method to get the Payment Method.
+ * @param data: The payment Method.
+ * @param callback: The method callback.
+ */
+helpers.getPaymentMethod = function (data, callback) {
+    var query = "SELECT value FROM payment_method_details WHERE payment_methods LIKE '" + data + "'";
+    database.query(query, function (err, data) {
+        if (err) {
+            callback(err, {});
+        } else {
+            callback(false, data[0].value);
+        }
+    });
+};
+/**
+ * Method to get the Product Type.
+ * @param data: The product type.
+ * @param callback: The method callback.
+ */
+helpers.getProductType = function (data, callback) {
+    var query = "SELECT value FROM product_type_details WHERE product_type LIKE '" + data + "'";
+    database.query(query, function (err, data) {
+        if (err) {
+            callback(err, {});
+        } else {
+            callback(false, data[0].value);
+        }
+    });
+};
+/**
+ * Method to get the Auto incremented value.
+ * @param callback: The method callback.
+ */
+helpers.getAutoIncrementedValue = function (callback) {
+    var query = "SELECT max(value) as value FROM order_incremented_value";
+    database.query(query, function (err, data) {
+        if (err) {
+            callback(err, {});
+        } else {
+            callback(false, data[0].value);
+        }
+    });
+};
+helpers.getEmployeeID = function (mobileNumber) {
+    var query = "SELECT id FROM employee_details WHERE mobile_number LIKE '" + mobileNumber + "'";
+    database.query(query, function (err, data) {
+        if (err) {
+            return {};
+        } else {
+            return data[0].id;
+        }
+    });
+};
+/**
+ * Method to get the status value.
+ * @param status: The Status.
+ * @param callback: The Method callback.
+ */
+helpers.getStatusValue = function (status,callback) {
+    var query = "SELECT id FROM visit_status_details WHERE status LIKE '" + status + "'";
+    database.query(query, function (err, data) {
+        if (err) {
+            callback(-1);
+        } else {
+            try {
+                callback(data[0].id);
+            }catch (e) {
+                callback(-1);
+            }
+        }
     });
 };
 /**
