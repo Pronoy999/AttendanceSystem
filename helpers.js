@@ -100,7 +100,7 @@ helpers.insertNewReport = function (data, callback) {
  */
 helpers.getPaymentMethod = function (data, callback) {
     var query = "SELECT value FROM payment_method_details WHERE payment_methods LIKE '" + data + "'";
-    database.select(query, function (err, data) {
+    database.query(query, function (err, data) {
         if (err) {
             callback(err, {});
         } else {
@@ -115,7 +115,7 @@ helpers.getPaymentMethod = function (data, callback) {
  */
 helpers.getProductType = function (data, callback) {
     var query = "SELECT value FROM product_type_details WHERE product_type LIKE '" + data + "'";
-    database.select(query, function (err, data) {
+    database.query(query, function (err, data) {
         if (err) {
             callback(err, {});
         } else {
@@ -129,7 +129,7 @@ helpers.getProductType = function (data, callback) {
  */
 helpers.getAutoIncrementedValue = function (callback) {
     var query = "SELECT max(value) as value FROM order_incremented_value";
-    database.select(query, function (err, data) {
+    database.query(query, function (err, data) {
         if (err) {
             callback(err, {});
         } else {
@@ -139,7 +139,7 @@ helpers.getAutoIncrementedValue = function (callback) {
 };
 helpers.getEmployeeID = function (mobileNumber) {
     var query = "SELECT id FROM employee_details WHERE mobile_number LIKE '" + mobileNumber + "'";
-    database.select(query, function (err, data) {
+    database.query(query, function (err, data) {
         if (err) {
             return {};
         } else {
@@ -154,7 +154,7 @@ helpers.getEmployeeID = function (mobileNumber) {
  */
 helpers.getStatusValue = function (status,callback) {
     var query = "SELECT id FROM visit_status_details WHERE status LIKE '" + status + "'";
-    database.select(query, function (err, data) {
+    database.query(query, function (err, data) {
         if (err) {
             callback(-1);
         } else {

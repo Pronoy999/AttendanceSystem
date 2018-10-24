@@ -44,7 +44,7 @@ database.insert = function (tableName, values, callback) {
  * @param queryStatement: The Query statment to be executed.
  * @param callback: The Method callback.
  */
-database.select = function (queryStatement, callback) {
+database.query = function (queryStatement, callback) {
     pool.getConnection(function (err, con) {
         if (err) {
             callback(err);

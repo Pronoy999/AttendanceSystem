@@ -24,7 +24,7 @@ handlers.otp = function (dataObject, callback) {
         var otp = Number(queryString.otp);
         var queryStatement = "SELECT * FROM otp WHERE mobile_number LIKE '" +
             phoneNumber + "' AND otp = " + otp;
-        database.select(queryStatement, function (err, data) {
+        database.query(queryStatement, function (err, data) {
             if (err) {
                 console.log(err);
                 response = {
@@ -130,7 +130,7 @@ handlers.phone = function (dataObject, callback) {
     if (method === 'get') {
         var imei = dataObject.queryString.imei;
         var query = "SELECT * FROM phone_details WHERE imei LIKE '" + imei + "'";
-        database.select(query, function (err, data) {
+        database.query(query, function (err, data) {
             if (err) {
                 response = {
                     'res': 'Error'
@@ -280,11 +280,11 @@ handlers.logCheck = function (dataObject, callback) {
         var mobileNumber = dataObject.queryString.mobileNumber;
         var query = "SELECT * FROM employee_details " +
             "WHERE mobile_number LIKE '" + mobileNumber + "'";
-        database.select(query, function (err, data) {
+        database.query(query, function (err, data) {
             if (typeof(data[0]) === 'undefined') {
                 query = "SELECT * FROM visitor_details " +
                     "WHERE mobile_number LIKE '" + mobileNumber + "'";
-                database.select(query, function (err, data) {
+                database.query(query, function (err, data) {
                     if (err) {
                         response = {
                             'res': 'Error'
@@ -404,7 +404,7 @@ handlers.visitLog = function (dataObject, callback) {
 
     function getLog(where) {
         var query = "SELECT * FROM visit_details WHERE " + where;
-        database.select(query, function (err, data) {
+        database.query(query, function (err, data) {
             if (err) {
                 response = {
                     'res': 'Error'
@@ -417,6 +417,42 @@ handlers.visitLog = function (dataObject, callback) {
                 callback(false, 200, response);
             }
         });
+    }
+};
+/**
+ * Method to update the iPhone Model name and storage.
+ * @param dataObject: The request data.
+ * @param callback: The Method callback.
+ */
+handlers.updateIphoneModel = function (dataObject, callback) {
+    var postData = dataObject.postData;
+    var response = {};
+    if (dataObject.method === 'post') {
+        var modelName = postData.model_name;
+        var newModel = postData.new_model;
+        var color = postData.color;
+        var storage = Number(postData.storage);
+        var query = "UPDATE phone_details SET model = '" + newModel + "', storage = " + storage + ", color = '" + color + "'" +
+            " WHERE model LIKE '" + modelName + "'";
+        console.log(query);
+        database.query(query, function (err, data) {
+            if (err) {
+                response = {
+                    'res': 'Error'
+                };
+                callback(err, 409, response);
+            } else {
+                response = {
+                    'res': 'Updated successfully.'
+                };
+                callback(false, 200, response);
+            }
+        });
+    } else {
+        response = {
+            'res': 'Invalid Request'
+        };
+        callback(false, 400, response);
     }
 };
 /**
