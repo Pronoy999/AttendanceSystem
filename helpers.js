@@ -137,6 +137,10 @@ helpers.getAutoIncrementedValue = function (callback) {
         }
     });
 };
+/**
+ * Method to get the Employee ID.
+ * @param mobileNumber: The mobile Number of the Employee.
+ */
 helpers.getEmployeeID = function (mobileNumber) {
     var query = "SELECT id FROM employee_details WHERE mobile_number LIKE '" + mobileNumber + "'";
     database.query(query, function (err, data) {
@@ -152,7 +156,7 @@ helpers.getEmployeeID = function (mobileNumber) {
  * @param status: The Status.
  * @param callback: The Method callback.
  */
-helpers.getStatusValue = function (status,callback) {
+helpers.getStatusValue = function (status, callback) {
     var query = "SELECT id FROM visit_status_details WHERE status LIKE '" + status + "'";
     database.query(query, function (err, data) {
         if (err) {
@@ -160,7 +164,7 @@ helpers.getStatusValue = function (status,callback) {
         } else {
             try {
                 callback(data[0].id);
-            }catch (e) {
+            } catch (e) {
                 callback(-1);
             }
         }

@@ -432,7 +432,7 @@ handlers.updateIphoneModel = function (dataObject, callback) {
         var newModel = postData.new_model;
         var color = postData.color;
         var storage = Number(postData.storage);
-        var query = "UPDATE phone_details SET model = '" + newModel + "', storage = " + storage + ", color = '" + color + "'" +
+        const query = "UPDATE phone_details SET model = '" + newModel + "', storage = " + storage + ", color = '" + color + "'" +
             " WHERE model LIKE '" + modelName + "'";
         console.log(query);
         database.query(query, function (err, data) {

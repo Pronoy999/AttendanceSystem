@@ -4,6 +4,9 @@ const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const handlers = require('./handlers');
 const helpers = require('./helpers');
+/**
+ * The Router Containing the end points.
+ */
 const router = {
     'otp': handlers.otp,
     'text': handlers.text,
