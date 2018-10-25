@@ -3,11 +3,24 @@ const snsLib = require('./snsLib');
 const helpers = require('./helpers');
 const companyPrefix = 'HX';
 var handlers = {};
+/**
+ * Method for Invalid Path.
+ * @param data: The Data Object for the REQUEST.
+ * @param callback: The Method callback.
+ */
 handlers.notFound = function (data, callback) {
     const response = {
         'res': 'Invalid Path'
     };
     callback(true, 404, response);
+};
+/**
+ * Method to Ping the API.
+ * @param dataObject
+ * @param callback
+ */
+handlers.ping = function (dataObject, callback) {
+    callback(false, 200, {'res': 'Welcome to HX API.'});
 };
 /**
  * Method to verify or to send OTP.
@@ -339,10 +352,22 @@ handlers.addVisitor = function (dataObject, callback) {
                 mobileNumber + "'";
             database.insert("visitor_details", values, function (err, data) {
                 if (err) {
-                    response = {
-                        'res': 'Error, Visitor may already Exist.'
-                    };
-                    callback(err, 409, response);
+                    var query = "UPDATE visitor_details SET first_name='" +
+                        firstName + "', last_name='" + lastName + "' " +
+                        "WHERE mobile_number LIKE '" + mobileNumber + "'";
+                    database.query(query, function (err, data) {
+                        if (err) {
+                            response = {
+                                'res': 'Error'
+                            };
+                            callback(err, 500, response);
+                        } else {
+                            response = {
+                                'res': 'Visitor may already Exist.'
+                            };
+                            callback(err, 200, response);
+                        }
+                    })
                 } else {
                     response = {
                         'res': 'New visitor added.'

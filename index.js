@@ -8,6 +8,7 @@ const helpers = require('./helpers');
  * The Router Containing the end points.
  */
 const router = {
+    'ping':handlers.ping,
     'otp': handlers.otp,
     'text': handlers.text,
     'phone': handlers.phone,
@@ -31,6 +32,8 @@ var unifiedServer = function (req, res) {
     var queryString = parsedUrl.query;
     var decoder = new StringDecoder('utf-8');
     var postData = '';
+    console.log(trimmedPath);
+    console.log(router[trimmedPath]);
     req.on('data', function (data) {
         postData += decoder.write(data);
     });
