@@ -4,7 +4,11 @@ const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const handlers = require('./handlers');
 const helpers = require('./helpers');
+/**
+ * The Router Containing the end points.
+ */
 const router = {
+    'ping':handlers.ping,
     'otp': handlers.otp,
     'text': handlers.text,
     'phone': handlers.phone,
@@ -13,7 +17,8 @@ const router = {
     'log-check': handlers.logCheck,
     'visitor': handlers.addVisitor,
     'visit-log': handlers.visitLog,
-    'update': handlers.updateIphoneModel
+    'update': handlers.updateIphoneModel,
+    'auth':handlers.token
 };
 /**
  * Method which controls the Server.

@@ -3,11 +3,24 @@ const snsLib = require('./snsLib');
 const helpers = require('./helpers');
 const companyPrefix = 'HX';
 var handlers = {};
+/**
+ * Method for Invalid Path.
+ * @param data: The Data Object for the REQUEST.
+ * @param callback: The Method callback.
+ */
 handlers.notFound = function (data, callback) {
     const response = {
         'res': 'Invalid Path'
     };
     callback(true, 404, response);
+};
+/**
+ * Method to Ping the API.
+ * @param dataObject
+ * @param callback
+ */
+handlers.ping = function (dataObject, callback) {
+    callback(false, 200, {'res': 'Welcome to HX API.'});
 };
 /**
  * Method to verify or to send OTP.
@@ -339,10 +352,22 @@ handlers.addVisitor = function (dataObject, callback) {
                 mobileNumber + "'";
             database.insert("visitor_details", values, function (err, data) {
                 if (err) {
-                    response = {
-                        'res': 'Error, Visitor may already Exist.'
-                    };
-                    callback(err, 409, response);
+                    var query = "UPDATE visitor_details SET first_name='" +
+                        firstName + "', last_name='" + lastName + "' " +
+                        "WHERE mobile_number LIKE '" + mobileNumber + "'";
+                    database.query(query, function (err, data) {
+                        if (err) {
+                            response = {
+                                'res': 'Error'
+                            };
+                            callback(err, 500, response);
+                        } else {
+                            response = {
+                                'res': 'Visitor may already Exist.'
+                            };
+                            callback(err, 200, response);
+                        }
+                    })
                 } else {
                     response = {
                         'res': 'New visitor added.'
@@ -432,7 +457,7 @@ handlers.updateIphoneModel = function (dataObject, callback) {
         var newModel = postData.new_model;
         var color = postData.color;
         var storage = Number(postData.storage);
-        var query = "UPDATE phone_details SET model = '" + newModel + "', storage = " + storage + ", color = '" + color + "'" +
+        const query = "UPDATE phone_details SET model = '" + newModel + "', storage = " + storage + ", color = '" + color + "'" +
             " WHERE model LIKE '" + modelName + "'";
         console.log(query);
         database.query(query, function (err, data) {
@@ -453,6 +478,79 @@ handlers.updateIphoneModel = function (dataObject, callback) {
             'res': 'Invalid Request'
         };
         callback(false, 400, response);
+    }
+};
+/**
+ * Method to generate a new Token.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.token = function (dataObject, callback) {
+    var response = {};
+    if (dataObject.method === 'get') {
+        var token = helpers.getRandomKey(16);
+        var apiKey = dataObject.queryString.key.trim();
+        apiKey = typeof(apiKey) === 'string' && apiKey.length === 32 ? apiKey : false;
+        var validity = Date.now() + 6000 * 60 * 60;
+        if (apiKey && token) {
+            response = {
+                'apikey': apiKey,
+                'token': token,
+                'validity': validity
+            };
+            var values = "'" + apiKey + "','" + token + "'," + validity;
+            database.insert("api_token", values, function (err, data) {
+                if (err) {
+                    console.log(err);
+                    callback(err, 500, {'res': 'Error'});
+                } else {
+                    callback(false, 200, response);
+                }
+            });
+        } else {
+            callback(true, 400, {'res': 'Missing Required Fields'});
+        }
+    } else if (dataObject.method === 'put') {
+        var extend = dataObject.postData.extend;
+        extend = typeof(extend) === 'boolean' ? extend : false;
+        var apikey = dataObject.postData.apikey.trim();
+        apikey = typeof(apikey) === 'string' && apikey.length === 32 ? apikey : false;
+        if (apikey && extend) {
+            var query = "SELECT * FROM api_token WHERE api_key LIKE '" + apikey + "'";
+            database.query(query, function (err, data) {
+                if (err) {
+                    callback(err, 404, {'res': 'Invalid Api Key'});
+                } else {
+                    var validity = data[0].validity;
+                    console.log(validity);
+                    console.log(Date.now());
+                    if (validity > Date.now()) {
+                        var newValidity = Date.now() + 6000 * 60 * 60;
+                        query = "UPDATE api_token SET validity= " + newValidity + " " +
+                            "WHERE api_key LIKE '" + apikey + "'";
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                callback(err, 500, {'res': 'Error'});
+                            } else {
+                                var response = {
+                                    'apikey': apikey,
+                                    'token': data[0].token,
+                                    'validity': newValidity
+                                };
+                                callback(false, 200, response);
+                            }
+                        });
+                    } else {
+                        callback(true, 409, {'res': 'Token expired'});
+                    }
+                }
+            });
+        } else {
+            callback(true, 400, {'res': 'Missing Required Fields'});
+        }
+    }
+    else {
+        callback(false, 400, {'res': 'Invalid Request.'});
     }
 };
 /**
