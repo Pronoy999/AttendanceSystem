@@ -17,7 +17,8 @@ const router = {
     'log-check': handlers.logCheck,
     'visitor': handlers.addVisitor,
     'visit-log': handlers.visitLog,
-    'update': handlers.updateIphoneModel
+    'update': handlers.updateIphoneModel,
+    'auth':handlers.token
 };
 /**
  * Method which controls the Server.
@@ -32,8 +33,6 @@ var unifiedServer = function (req, res) {
     var queryString = parsedUrl.query;
     var decoder = new StringDecoder('utf-8');
     var postData = '';
-    console.log(trimmedPath);
-    console.log(router[trimmedPath]);
     req.on('data', function (data) {
         postData += decoder.write(data);
     });

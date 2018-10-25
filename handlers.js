@@ -481,6 +481,79 @@ handlers.updateIphoneModel = function (dataObject, callback) {
     }
 };
 /**
+ * Method to generate a new Token.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.token = function (dataObject, callback) {
+    var response = {};
+    if (dataObject.method === 'get') {
+        var token = helpers.getRandomKey(16);
+        var apiKey = dataObject.queryString.key.trim();
+        apiKey = typeof(apiKey) === 'string' && apiKey.length === 32 ? apiKey : false;
+        var validity = Date.now() + 6000 * 60 * 60;
+        if (apiKey && token) {
+            response = {
+                'apikey': apiKey,
+                'token': token,
+                'validity': validity
+            };
+            var values = "'" + apiKey + "','" + token + "'," + validity;
+            database.insert("api_token", values, function (err, data) {
+                if (err) {
+                    console.log(err);
+                    callback(err, 500, {'res': 'Error'});
+                } else {
+                    callback(false, 200, response);
+                }
+            });
+        } else {
+            callback(true, 400, {'res': 'Missing Required Fields'});
+        }
+    } else if (dataObject.method === 'put') {
+        var extend = dataObject.postData.extend;
+        extend = typeof(extend) === 'boolean' ? extend : false;
+        var apikey = dataObject.postData.apikey.trim();
+        apikey = typeof(apikey) === 'string' && apikey.length === 32 ? apikey : false;
+        if (apikey && extend) {
+            var query = "SELECT * FROM api_token WHERE api_key LIKE '" + apikey + "'";
+            database.query(query, function (err, data) {
+                if (err) {
+                    callback(err, 404, {'res': 'Invalid Api Key'});
+                } else {
+                    var validity = data[0].validity;
+                    console.log(validity);
+                    console.log(Date.now());
+                    if (validity > Date.now()) {
+                        var newValidity = Date.now() + 6000 * 60 * 60;
+                        query = "UPDATE api_token SET validity= " + newValidity + " " +
+                            "WHERE api_key LIKE '" + apikey + "'";
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                callback(err, 500, {'res': 'Error'});
+                            } else {
+                                var response = {
+                                    'apikey': apikey,
+                                    'token': data[0].token,
+                                    'validity': newValidity
+                                };
+                                callback(false, 200, response);
+                            }
+                        });
+                    } else {
+                        callback(true, 409, {'res': 'Token expired'});
+                    }
+                }
+            });
+        } else {
+            callback(true, 400, {'res': 'Missing Required Fields'});
+        }
+    }
+    else {
+        callback(false, 400, {'res': 'Invalid Request.'});
+    }
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;

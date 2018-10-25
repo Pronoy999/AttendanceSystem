@@ -171,6 +171,20 @@ helpers.getStatusValue = function (status, callback) {
     });
 };
 /**
+ * Method to get the Random Token.
+ * @param len
+ * @returns {string}
+ */
+helpers.getRandomKey = function (len) {
+    var possibleCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    len = typeof(len) === 'number' && len > 0 ? len : 16;
+    var key = '';
+    for (var i = 1; i <= len; i++) {
+        key += possibleCharacters.charAt(Math.floor(Math.random()*possibleCharacters.length));
+    }
+    return key;
+};
+/**
  * Exporting the module.
  */
 module.exports = helpers;
