@@ -32,74 +32,83 @@ handlers.otp = function (dataObject, callback) {
     var method = dataObject.method;
     var queryString = dataObject.queryString;
     var phoneNumber;
-    if (method === 'get') {
-        phoneNumber = queryString.phoneNumber;
-        var otp = Number(queryString.otp);
-        var queryStatement = "SELECT * FROM otp WHERE mobile_number LIKE '" +
-            phoneNumber + "' AND otp = " + otp;
-        database.query(queryStatement, function (err, data) {
-            if (err) {
-                console.log(err);
-                response = {
-                    'res': 'ERROR'
-                };
-                callback(err, 500, response);
-            } else {
-                var serverOTP = data[0].otp;
-                if (serverOTP === otp) {
-                    response = {
-                        'res': true,
-                    };
-                    callback(false, 200, response);
-                } else {
-                    response = {
-                        'res': false,
-                    };
-                    callback(false, 200, response);
-                }
-            }
-        });
-    } else if (method === 'post') {
-        phoneNumber = dataObject.postData.phoneNumber;
-        snsLib.sendOTP(phoneNumber, function (err, randomOTP) {
-            if (err) {
-                console.log(err);
-                console.log(err);
-                response = {
-                    'res': 'ERROR'
-                };
-                callback(err, 500, response);
-            } else {
-                var values = "'" + phoneNumber + "'," + randomOTP;
-                database.insert("otp", values, function (err, data) {
+    helpers.validateToken(queryString.key, function (isValid) {
+        if (isValid) {
+            if (method === 'get') {
+                phoneNumber = queryString.phoneNumber;
+                var otp = Number(queryString.otp);
+                var queryStatement = "SELECT * FROM otp WHERE mobile_number LIKE '" +
+                    phoneNumber + "' AND otp = " + otp;
+                database.query(queryStatement, function (err, data) {
                     if (err) {
                         console.log(err);
-                        //Updating the Old OTP.
-                        const whereClause = "mobile_number LIKE '" + phoneNumber + "'";
-                        database.update("otp", "otp", randomOTP, whereClause, function (err, data) {
-                            if (err) {
-                                console.log(err);
-                                response = {
-                                    'res': 'ERROR'
-                                };
-                                callback(err, 500, response);
-                            } else {
-                                response = {
-                                    'res': ' New OTP Send.'
-                                };
-                                callback(false, 200, response);
-                            }
-                        });
-                    } else {
                         response = {
-                            'res': 'OTP Send.'
+                            'res': 'ERROR'
                         };
-                        callback(err, 200, response);
+                        callback(err, 500, response);
+                    } else {
+                        var serverOTP = data[0].otp;
+                        if (serverOTP === otp) {
+                            response = {
+                                'res': true,
+                            };
+                            callback(false, 200, response);
+                        } else {
+                            response = {
+                                'res': false,
+                            };
+                            callback(false, 200, response);
+                        }
                     }
                 });
+            } else if (method === 'post') {
+                phoneNumber = dataObject.postData.phoneNumber;
+                snsLib.sendOTP(phoneNumber, function (err, randomOTP) {
+                    if (err) {
+                        console.log(err);
+                        console.log(err);
+                        response = {
+                            'res': 'ERROR'
+                        };
+                        callback(err, 500, response);
+                    } else {
+                        var values = "'" + phoneNumber + "'," + randomOTP;
+                        database.insert("otp", values, function (err, data) {
+                            if (err) {
+                                console.log(err);
+                                //Updating the Old OTP.
+                                const whereClause = "mobile_number LIKE '" + phoneNumber + "'";
+                                database.update("otp", "otp", randomOTP, whereClause, function (err, data) {
+                                    if (err) {
+                                        console.log(err);
+                                        response = {
+                                            'res': 'ERROR'
+                                        };
+                                        callback(err, 500, response);
+                                    } else {
+                                        response = {
+                                            'res': ' New OTP Send.'
+                                        };
+                                        callback(false, 200, response);
+                                    }
+                                });
+                            } else {
+                                response = {
+                                    'res': 'OTP Send.'
+                                };
+                                callback(err, 200, response);
+                            }
+                        });
+                    }
+                });
+            } else {
+                callback(false, 400, {'res': 'Invalid Request Method.'});
             }
-        });
-    }
+        } else {
+            callback(false, 403, {'res': 'Invalid Token'});
+        }
+    });
+
 };
 /**
  * Handler to handle the normal text.
@@ -111,26 +120,33 @@ handlers.text = function (dataObject, callback) {
     var phoneNumber = dataObject.postData.phoneNumber;
     var text = dataObject.postData.text;
     var method = dataObject.method;
-    if (method === 'post') {
-        snsLib.sendMessage(phoneNumber, text, function (err) {
-            if (err) {
-                response = {
-                    'res': 'Error'
-                };
-                callback(err, 500, response);
+    var queryString = dataObject.queryString;
+    helpers.validateToken(queryString.key, function (isValid) {
+        if (isValid) {
+            if (method === 'post') {
+                snsLib.sendMessage(phoneNumber, text, function (err) {
+                    if (err) {
+                        response = {
+                            'res': 'Error'
+                        };
+                        callback(err, 500, response);
+                    } else {
+                        response = {
+                            'res': 'Message Send'
+                        };
+                        callback(false, 200, response);
+                    }
+                });
             } else {
                 response = {
-                    'res': 'Message Send'
+                    'res': 'Invalid Request'
                 };
-                callback(false, 200, response);
+                callback(true, 404, response);
             }
-        });
-    } else {
-        response = {
-            'res': 'Invalid Request'
-        };
-        callback(true, 404, response);
-    }
+        } else {
+            callback(false, 403, {'res': 'Invalid Token'});
+        }
+    });
 };
 /**
  * Method to either INSERT new Phones or to check for old ones.

@@ -14,8 +14,28 @@ helpers.parseJsonToObjects = function (data) {
         return {};
     }
 };
-helpers.validateKey = function (key) {
-    //TODO: Check the Key.
+/**
+ * Method to validate the Token.
+ * @param key: the Token.
+ * @param callback: The Method callback.
+ */
+helpers.validateToken = function (key, callback) {
+    var query = "SELECT * FROM api_token WHERE token LIKE '" + key + "'";
+    database.query(query, function (err, data) {
+        if (err) {
+            callback(false);
+        } else {
+            if(typeof(data[0])!=='undefined') {
+                if (data[0].token === key) {
+                    callback(true);
+                } else {
+                    callback(false);
+                }
+            }else{
+                callback(false);
+            }
+        }
+    });
 };
 /**
  * Method to insert new phones into the table.
@@ -180,7 +200,7 @@ helpers.getRandomKey = function (len) {
     len = typeof(len) === 'number' && len > 0 ? len : 16;
     var key = '';
     for (var i = 1; i <= len; i++) {
-        key += possibleCharacters.charAt(Math.floor(Math.random()*possibleCharacters.length));
+        key += possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters.length));
     }
     return key;
 };
