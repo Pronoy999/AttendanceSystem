@@ -29,7 +29,7 @@ helpers.validateToken = function (key, callback) {
                 if (Number(data[0].validity) === -1) {
                     callback(true);
                 }
-                if (data[0].token === key && Number(data[0].validity) > Date.now()) {
+                else if (data[0].token === key && Number(data[0].validity) > Date.now()) {
                     callback(true);
                 } else {
                     callback(false);

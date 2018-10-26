@@ -197,6 +197,8 @@ handlers.phone = function (dataObject, callback) {
                         callback(false, 200, response);
                     }
                 });
+            } else {
+                callback(true, 400, {'res': messages.invalidRequestMessag});
             }
         } else {
             callback(false, 403, {'res': messages.tokenExpiredMessage});
