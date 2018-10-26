@@ -2,6 +2,7 @@ const database = require('./databaseHandler');
 const snsLib = require('./snsLib');
 const helpers = require('./helpers');
 const companyPrefix = 'HX';
+const messages = require('./Constants');
 var handlers = {};
 /**
  * Method for Invalid Path.
@@ -20,7 +21,7 @@ handlers.notFound = function (data, callback) {
  * @param callback
  */
 handlers.ping = function (dataObject, callback) {
-    callback(false, 200, {'res': 'Welcome to HX API.'});
+    callback(false, 200, {'res': 'Welcome to HX API version 1.0.'});
 };
 /**
  * Method to verify or to send OTP.
@@ -32,74 +33,83 @@ handlers.otp = function (dataObject, callback) {
     var method = dataObject.method;
     var queryString = dataObject.queryString;
     var phoneNumber;
-    if (method === 'get') {
-        phoneNumber = queryString.phoneNumber;
-        var otp = Number(queryString.otp);
-        var queryStatement = "SELECT * FROM otp WHERE mobile_number LIKE '" +
-            phoneNumber + "' AND otp = " + otp;
-        database.query(queryStatement, function (err, data) {
-            if (err) {
-                console.log(err);
-                response = {
-                    'res': 'ERROR'
-                };
-                callback(err, 500, response);
-            } else {
-                var serverOTP = data[0].otp;
-                if (serverOTP === otp) {
-                    response = {
-                        'res': true,
-                    };
-                    callback(false, 200, response);
-                } else {
-                    response = {
-                        'res': false,
-                    };
-                    callback(false, 200, response);
-                }
-            }
-        });
-    } else if (method === 'post') {
-        phoneNumber = dataObject.postData.phoneNumber;
-        snsLib.sendOTP(phoneNumber, function (err, randomOTP) {
-            if (err) {
-                console.log(err);
-                console.log(err);
-                response = {
-                    'res': 'ERROR'
-                };
-                callback(err, 500, response);
-            } else {
-                var values = "'" + phoneNumber + "'," + randomOTP;
-                database.insert("otp", values, function (err, data) {
+    helpers.validateToken(queryString.key, function (isValid) {
+        if (isValid) {
+            if (method === 'get') {
+                phoneNumber = queryString.phoneNumber;
+                var otp = Number(queryString.otp);
+                var queryStatement = "SELECT * FROM otp WHERE mobile_number LIKE '" +
+                    phoneNumber + "' AND otp = " + otp;
+                database.query(queryStatement, function (err, data) {
                     if (err) {
                         console.log(err);
-                        //Updating the Old OTP.
-                        const whereClause = "mobile_number LIKE '" + phoneNumber + "'";
-                        database.update("otp", "otp", randomOTP, whereClause, function (err, data) {
-                            if (err) {
-                                console.log(err);
-                                response = {
-                                    'res': 'ERROR'
-                                };
-                                callback(err, 500, response);
-                            } else {
-                                response = {
-                                    'res': ' New OTP Send.'
-                                };
-                                callback(false, 200, response);
-                            }
-                        });
-                    } else {
                         response = {
-                            'res': 'OTP Send.'
+                            'res': 'ERROR'
                         };
-                        callback(err, 200, response);
+                        callback(err, 500, response);
+                    } else {
+                        var serverOTP = data[0].otp;
+                        if (serverOTP === otp) {
+                            response = {
+                                'res': true,
+                            };
+                            callback(false, 200, response);
+                        } else {
+                            response = {
+                                'res': false,
+                            };
+                            callback(false, 200, response);
+                        }
                     }
                 });
+            } else if (method === 'post') {
+                phoneNumber = dataObject.postData.phoneNumber;
+                snsLib.sendOTP(phoneNumber, function (err, randomOTP) {
+                    if (err) {
+                        console.log(err);
+                        console.log(err);
+                        response = {
+                            'res': 'ERROR'
+                        };
+                        callback(err, 500, response);
+                    } else {
+                        var values = "'" + phoneNumber + "'," + randomOTP;
+                        database.insert("otp", values, function (err, data) {
+                            if (err) {
+                                console.log(err);
+                                //Updating the Old OTP.
+                                const whereClause = "mobile_number LIKE '" + phoneNumber + "'";
+                                database.update("otp", "otp", randomOTP, whereClause, function (err, data) {
+                                    if (err) {
+                                        console.log(err);
+                                        response = {
+                                            'res': 'ERROR'
+                                        };
+                                        callback(err, 500, response);
+                                    } else {
+                                        response = {
+                                            'res': ' New OTP Send.'
+                                        };
+                                        callback(false, 200, response);
+                                    }
+                                });
+                            } else {
+                                response = {
+                                    'res': 'OTP Send.'
+                                };
+                                callback(err, 200, response);
+                            }
+                        });
+                    }
+                });
+            } else {
+                callback(false, 400, {'res': 'Invalid Request Method.'});
             }
-        });
-    }
+        } else {
+            callback(false, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+
 };
 /**
  * Handler to handle the normal text.
@@ -111,26 +121,33 @@ handlers.text = function (dataObject, callback) {
     var phoneNumber = dataObject.postData.phoneNumber;
     var text = dataObject.postData.text;
     var method = dataObject.method;
-    if (method === 'post') {
-        snsLib.sendMessage(phoneNumber, text, function (err) {
-            if (err) {
-                response = {
-                    'res': 'Error'
-                };
-                callback(err, 500, response);
+    var queryString = dataObject.queryString;
+    helpers.validateToken(queryString.key, function (isValid) {
+        if (isValid) {
+            if (method === 'post') {
+                snsLib.sendMessage(phoneNumber, text, function (err) {
+                    if (err) {
+                        response = {
+                            'res': 'Error'
+                        };
+                        callback(err, 500, response);
+                    } else {
+                        response = {
+                            'res': 'Message Send'
+                        };
+                        callback(false, 200, response);
+                    }
+                });
             } else {
                 response = {
-                    'res': 'Message Send'
+                    'res': 'Invalid Request'
                 };
-                callback(false, 200, response);
+                callback(true, 404, response);
             }
-        });
-    } else {
-        response = {
-            'res': 'Invalid Request'
-        };
-        callback(true, 404, response);
-    }
+        } else {
+            callback(false, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
 };
 /**
  * Method to either INSERT new Phones or to check for old ones.
@@ -140,44 +157,53 @@ handlers.text = function (dataObject, callback) {
 handlers.phone = function (dataObject, callback) {
     var method = dataObject.method;
     var response = {};
-    if (method === 'get') {
-        var imei = dataObject.queryString.imei;
-        var query = "SELECT * FROM phone_details WHERE imei LIKE '" + imei + "'";
-        database.query(query, function (err, data) {
-            if (err) {
-                response = {
-                    'res': 'Error'
-                };
-                callback(err, 500, response);
-            }
-            else {
-                if (data.length > 0) {
-                    callback(false, 200, data);
-                } else {
-                    response = {
-                        'res': 'No device found with this ID.'
-                    };
-                    callback(false, 404, response);
-                }
-            }
-        });
-    } else if (method === 'post') {
-        var postData = dataObject.postData;
-        helpers.insertNewPhone(postData, function (err, data) {
-            var response = {};
-            if (err) {
-                response = {
-                    'res': 'Error, the phone may already exists.'
-                };
-                callback(err, 500, response);
+    const key = dataObject.queryString.key;
+    helpers.validateToken(key, function (isValid) {
+        if (isValid) {
+            if (method === 'get') {
+                var imei = dataObject.queryString.imei;
+                var query = "SELECT * FROM phone_details WHERE imei LIKE '" + imei + "'";
+                database.query(query, function (err, data) {
+                    if (err) {
+                        response = {
+                            'res': 'Error'
+                        };
+                        callback(err, 500, response);
+                    }
+                    else {
+                        if (data.length > 0) {
+                            callback(false, 200, data);
+                        } else {
+                            response = {
+                                'res': 'No device found with this ID.'
+                            };
+                            callback(false, 404, response);
+                        }
+                    }
+                });
+            } else if (method === 'post') {
+                var postData = dataObject.postData;
+                helpers.insertNewPhone(postData, function (err, data) {
+                    var response = {};
+                    if (err) {
+                        response = {
+                            'res': 'Error, the phone may already exists.'
+                        };
+                        callback(err, 500, response);
+                    } else {
+                        response = {
+                            'res': 'Successfully Inserted new phone'
+                        };
+                        callback(false, 200, response);
+                    }
+                });
             } else {
-                response = {
-                    'res': 'Successfully Inserted new phone'
-                };
-                callback(false, 200, response);
+                callback(true, 400, {'res': messages.invalidRequestMessag});
             }
-        });
-    }
+        } else {
+            callback(false, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
 };
 /**
  * Method to insert Report for devices.
@@ -367,7 +393,7 @@ handlers.addVisitor = function (dataObject, callback) {
                             };
                             callback(err, 200, response);
                         }
-                    })
+                    });
                 } else {
                     response = {
                         'res': 'New visitor added.'
@@ -489,7 +515,7 @@ handlers.token = function (dataObject, callback) {
     var response = {};
     if (dataObject.method === 'get') {
         var token = helpers.getRandomKey(16);
-        var apiKey = dataObject.queryString.key.trim();
+        var apiKey = dataObject.queryString.apikey.trim();
         apiKey = typeof(apiKey) === 'string' && apiKey.length === 32 ? apiKey : false;
         var validity = Date.now() + 6000 * 60 * 60;
         if (apiKey && token) {
@@ -501,8 +527,15 @@ handlers.token = function (dataObject, callback) {
             var values = "'" + apiKey + "','" + token + "'," + validity;
             database.insert("api_token", values, function (err, data) {
                 if (err) {
-                    console.log(err);
-                    callback(err, 500, {'res': 'Error'});
+                    var query = "UPDATE api_token SET token = '" + token + "', validity = '" +
+                        validity + "' WHERE api_key LIKE '" + apiKey + "'";
+                    database.query(query, function (err, data) {
+                        if (!err) {
+                            callback(false, 200, response);
+                        } else {
+                            callback(err, 500, {'res': 'Error'});
+                        }
+                    });
                 } else {
                     callback(false, 200, response);
                 }
@@ -552,6 +585,77 @@ handlers.token = function (dataObject, callback) {
     else {
         callback(false, 400, {'res': 'Invalid Request.'});
     }
+};
+/**
+ * Method to get the Distinct Models and Count.
+ * @param dataObject
+ * @param callback
+ */
+handlers.getDistinctModel = function (dataObject, callback) {
+    var response = {};
+    var singleObject = {};
+    var phone_details = [];
+    var key = dataObject.queryString.key;
+    if (dataObject.method === 'get') {
+        helpers.validateToken(key, function (isValid) {
+            if (isValid) {
+                const query = "SELECT (model_name),count(model_name) as count FROM inventory group by model_name";
+                database.query(query, function (err, data) {
+                    if (!err) {
+                        for (var i = 0; i < data.length; i++) {
+                            singleObject = {
+                                'model_name': data[i].model_name.trim(),
+                                'count': data[i].count
+                            };
+                            phone_details.push(singleObject);
+                        }
+                        response = {
+                            'res': phone_details
+                        };
+                        callback(false, 200, response);
+                    } else {
+                        callback(err, 500, {'res': 'Error'});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': 'Invalid Request.'});
+    }
+};
+/**
+ * Method to get the All the Employee Details.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.employee = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, function (isValid) {
+        if (dataObject.method === 'get') {
+            if (isValid) {
+                var query = "SELECT * FROM employee_details";
+                database.query(query, function (err, data) {
+                    if (err) {
+                        callback(err, 500, {'res': 'Error'});
+                    } else {
+                        var employee = [];
+                        for (var i = 0; i < data.length; i++) {
+                            employee.push(data[i]);
+                        }
+                        var response = {
+                            'res': employee
+                        };
+                        callback(false, 200, response);
+                    }
+                });
+            } else {
+                callback(false, 403, {'res': messages.tokenExpiredMessage});
+            }
+        } else {
+            callback(true, 400, {'res': 'Invalid Request.'});
+        }
+    });
 };
 /**
  * Exporting the Handlers.

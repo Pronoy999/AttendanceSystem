@@ -8,7 +8,7 @@ const helpers = require('./helpers');
  * The Router Containing the end points.
  */
 const router = {
-    'ping':handlers.ping,
+    'ping': handlers.ping,
     'otp': handlers.otp,
     'text': handlers.text,
     'phone': handlers.phone,
@@ -18,7 +18,9 @@ const router = {
     'visitor': handlers.addVisitor,
     'visit-log': handlers.visitLog,
     'update': handlers.updateIphoneModel,
-    'auth':handlers.token
+    'auth': handlers.token,
+    'inventory-data': handlers.getDistinctModel,
+    'employee':handlers.employee
 };
 /**
  * Method which controls the Server.
