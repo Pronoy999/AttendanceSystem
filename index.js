@@ -20,7 +20,9 @@ const router = {
     'update': handlers.updateIphoneModel,
     'auth': handlers.token,
     'inventory-data': handlers.getDistinctModel,
-    'employee':handlers.employee
+    'employee': handlers.employee,
+    'inventory-phone': handlers.inventoryPhone,
+    'inventory-vendor':handlers.getVendor
 };
 /**
  * Method which controls the Server.
