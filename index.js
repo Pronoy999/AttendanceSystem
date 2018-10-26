@@ -19,7 +19,8 @@ const router = {
     'visit-log': handlers.visitLog,
     'update': handlers.updateIphoneModel,
     'auth': handlers.token,
-    'inventory-data': handlers.getDistinctModel
+    'inventory-data': handlers.getDistinctModel,
+    'employee':handlers.employee
 };
 /**
  * Method which controls the Server.

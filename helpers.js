@@ -26,6 +26,9 @@ helpers.validateToken = function (key, callback) {
             callback(false);
         } else {
             if (typeof(data[0]) !== 'undefined') {
+                if (Number(data[0].validity) === -1) {
+                    callback(true);
+                }
                 if (data[0].token === key && Number(data[0].validity) > Date.now()) {
                     callback(true);
                 } else {

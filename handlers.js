@@ -2,6 +2,7 @@ const database = require('./databaseHandler');
 const snsLib = require('./snsLib');
 const helpers = require('./helpers');
 const companyPrefix = 'HX';
+const messages = require('./Constants');
 var handlers = {};
 /**
  * Method for Invalid Path.
@@ -20,7 +21,7 @@ handlers.notFound = function (data, callback) {
  * @param callback
  */
 handlers.ping = function (dataObject, callback) {
-    callback(false, 200, {'res': 'Welcome to HX API.'});
+    callback(false, 200, {'res': 'Welcome to HX API version 1.0.'});
 };
 /**
  * Method to verify or to send OTP.
@@ -105,7 +106,7 @@ handlers.otp = function (dataObject, callback) {
                 callback(false, 400, {'res': 'Invalid Request Method.'});
             }
         } else {
-            callback(false, 403, {'res': 'Invalid Token'});
+            callback(false, 403, {'res': messages.tokenExpiredMessage});
         }
     });
 
@@ -144,7 +145,7 @@ handlers.text = function (dataObject, callback) {
                 callback(true, 404, response);
             }
         } else {
-            callback(false, 403, {'res': 'Invalid Token'});
+            callback(false, 403, {'res': messages.tokenExpiredMessage});
         }
     });
 };
@@ -198,7 +199,7 @@ handlers.phone = function (dataObject, callback) {
                 });
             }
         } else {
-            callback(false, 403, {'res': 'Invalid Token.'});
+            callback(false, 403, {'res': messages.tokenExpiredMessage});
         }
     });
 };
@@ -390,7 +391,7 @@ handlers.addVisitor = function (dataObject, callback) {
                             };
                             callback(err, 200, response);
                         }
-                    })
+                    });
                 } else {
                     response = {
                         'res': 'New visitor added.'
@@ -615,12 +616,44 @@ handlers.getDistinctModel = function (dataObject, callback) {
                     }
                 });
             } else {
-                callback(true, 403, {'res': 'Invalid Token or Token Expired.'});
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
     } else {
         callback(true, 400, {'res': 'Invalid Request.'});
     }
+};
+/**
+ * Method to get the All the Employee Details.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.employee = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, function (isValid) {
+        if (dataObject.method === 'get') {
+            if (isValid) {
+                var query = "SELECT * FROM employee_details";
+                database.query(query, function (err, data) {
+                    if (err) {
+                        callback(err, 500, {'res': 'Error'});
+                    } else {
+                        var employee = [];
+                        for (var i = 0; i < data.length; i++) {
+                            employee.push(data[i]);
+                        }
+                        var response = {
+                            'res': employee
+                        };
+                        callback(false, 200, response);
+                    }
+                });
+            } else {
+                callback(false, 403, {'res': messages.tokenExpiredMessage});
+            }
+        } else {
+            callback(true, 400, {'res': 'Invalid Request.'});
+        }
+    });
 };
 /**
  * Exporting the Handlers.
