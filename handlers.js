@@ -156,44 +156,51 @@ handlers.text = function (dataObject, callback) {
 handlers.phone = function (dataObject, callback) {
     var method = dataObject.method;
     var response = {};
-    if (method === 'get') {
-        var imei = dataObject.queryString.imei;
-        var query = "SELECT * FROM phone_details WHERE imei LIKE '" + imei + "'";
-        database.query(query, function (err, data) {
-            if (err) {
-                response = {
-                    'res': 'Error'
-                };
-                callback(err, 500, response);
+    const key = dataObject.queryString.key;
+    helpers.validateToken(key, function (isValid) {
+        if (isValid) {
+            if (method === 'get') {
+                var imei = dataObject.queryString.imei;
+                var query = "SELECT * FROM phone_details WHERE imei LIKE '" + imei + "'";
+                database.query(query, function (err, data) {
+                    if (err) {
+                        response = {
+                            'res': 'Error'
+                        };
+                        callback(err, 500, response);
+                    }
+                    else {
+                        if (data.length > 0) {
+                            callback(false, 200, data);
+                        } else {
+                            response = {
+                                'res': 'No device found with this ID.'
+                            };
+                            callback(false, 404, response);
+                        }
+                    }
+                });
+            } else if (method === 'post') {
+                var postData = dataObject.postData;
+                helpers.insertNewPhone(postData, function (err, data) {
+                    var response = {};
+                    if (err) {
+                        response = {
+                            'res': 'Error, the phone may already exists.'
+                        };
+                        callback(err, 500, response);
+                    } else {
+                        response = {
+                            'res': 'Successfully Inserted new phone'
+                        };
+                        callback(false, 200, response);
+                    }
+                });
             }
-            else {
-                if (data.length > 0) {
-                    callback(false, 200, data);
-                } else {
-                    response = {
-                        'res': 'No device found with this ID.'
-                    };
-                    callback(false, 404, response);
-                }
-            }
-        });
-    } else if (method === 'post') {
-        var postData = dataObject.postData;
-        helpers.insertNewPhone(postData, function (err, data) {
-            var response = {};
-            if (err) {
-                response = {
-                    'res': 'Error, the phone may already exists.'
-                };
-                callback(err, 500, response);
-            } else {
-                response = {
-                    'res': 'Successfully Inserted new phone'
-                };
-                callback(false, 200, response);
-            }
-        });
-    }
+        } else {
+            callback(false, 403, {'res': 'Invalid Token.'});
+        }
+    });
 };
 /**
  * Method to insert Report for devices.
@@ -505,7 +512,7 @@ handlers.token = function (dataObject, callback) {
     var response = {};
     if (dataObject.method === 'get') {
         var token = helpers.getRandomKey(16);
-        var apiKey = dataObject.queryString.key.trim();
+        var apiKey = dataObject.queryString.apikey.trim();
         apiKey = typeof(apiKey) === 'string' && apiKey.length === 32 ? apiKey : false;
         var validity = Date.now() + 6000 * 60 * 60;
         if (apiKey && token) {
@@ -517,8 +524,15 @@ handlers.token = function (dataObject, callback) {
             var values = "'" + apiKey + "','" + token + "'," + validity;
             database.insert("api_token", values, function (err, data) {
                 if (err) {
-                    console.log(err);
-                    callback(err, 500, {'res': 'Error'});
+                    var query = "UPDATE api_token SET token = '" + token + "', validity = '" +
+                        validity + "' WHERE api_key LIKE '" + apiKey + "'";
+                    database.query(query, function (err, data) {
+                        if (!err) {
+                            callback(false, 200, response);
+                        } else {
+                            callback(err, 500, {'res': 'Error'});
+                        }
+                    });
                 } else {
                     callback(false, 200, response);
                 }
@@ -567,6 +581,45 @@ handlers.token = function (dataObject, callback) {
     }
     else {
         callback(false, 400, {'res': 'Invalid Request.'});
+    }
+};
+/**
+ * Method to get the Distinct Models and Count.
+ * @param dataObject
+ * @param callback
+ */
+handlers.getDistinctModel = function (dataObject, callback) {
+    var response = {};
+    var singleObject = {};
+    var phone_details = [];
+    var key = dataObject.queryString.key;
+    if (dataObject.method === 'get') {
+        helpers.validateToken(key, function (isValid) {
+            if (isValid) {
+                const query = "SELECT (model_name),count(model_name) as count FROM inventory group by model_name";
+                database.query(query, function (err, data) {
+                    if (!err) {
+                        for (var i = 0; i < data.length; i++) {
+                            singleObject = {
+                                'model_name': data[i].model_name.trim(),
+                                'count': data[i].count
+                            };
+                            phone_details.push(singleObject);
+                        }
+                        response = {
+                            'res': phone_details
+                        };
+                        callback(false, 200, response);
+                    } else {
+                        callback(err, 500, {'res': 'Error'});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': 'Invalid Token or Token Expired.'});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': 'Invalid Request.'});
     }
 };
 /**
