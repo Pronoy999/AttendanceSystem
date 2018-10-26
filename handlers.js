@@ -198,7 +198,7 @@ handlers.phone = function (dataObject, callback) {
                     }
                 });
             } else {
-                callback(true, 400, {'res': messages.invalidRequestMessag});
+                callback(true, 400, {'res': messages.invalidRequestMessage});
             }
         } else {
             callback(false, 403, {'res': messages.tokenExpiredMessage});
@@ -656,6 +656,71 @@ handlers.employee = function (dataObject, callback) {
             callback(true, 400, {'res': 'Invalid Request.'});
         }
     });
+};
+/**
+ * Method to get details of phones with Vendor names.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.inventoryPhone = function (dataObject, callback) {
+    var key = dataObject.queryString.key;
+    helpers.validateToken(key, function (isValid) {
+        if (isValid) {
+            if (dataObject.method === 'post') {
+                var modelName = dataObject.postData.model_name;
+                var query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name FROM " +
+                    "inventory i,vendor_details v " +
+                    "WHERE i.vendor_id = v.vendor_id AND model_name LIKE '" + modelName + "'";
+                database.query(query, function (err, phoneData) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        var array = [];
+                        for (var i = 0; i < phoneData.length; i++) {
+                            array.push(phoneData[i]);
+                        }
+                        var response = {
+                            'res': array
+                        };
+                        callback(false, 200, response);
+                    }
+                });
+
+            } else {
+                callback(true, 400, {'res': messages.invalidRequestMessage});
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+};
+/**
+ * Method to get the Vendor Details.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.getVendor = function (dataObject, callback) {
+    var key = dataObject.queryString.key;
+    var method = dataObject.method;
+    if (method === 'get') {
+        helpers.validateToken(key, function (isValid) {
+            if (isValid) {
+                var vendorId = dataObject.queryString.vendorid;
+                var query = "SELECT * FROM vendor_details WHERE vendor_id = " + vendorId;
+                database.query(query, function (err, data) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': data[0]});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 403, {'res': messages.invalidRequestMessage});
+    }
 };
 /**
  * Exporting the Handlers.
