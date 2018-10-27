@@ -723,6 +723,45 @@ handlers.getVendor = function (dataObject, callback) {
     }
 };
 /**
+ * Method to put the Attendance for the Employee.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.putAttendance = function (dataObject, callback) {
+    var key = dataObject.queryString.key;
+    if (dataObject.method === 'post') {
+        helpers.validateToken(key, function (isValid) {
+            if (isValid) {
+                var postData = dataObject.postData;
+                var id = Number(postData.id);
+                var new_status = postData.new_status;
+                var location = postData.location;
+                var timestamp = postData.timestamp;
+                var query = "UPDATE employee_details SET current_status = '" + new_status + "' WHERE id = " + id;
+                database.query(query, function (err, data) {
+                    if (!err) {
+                        query = "INSERT INTO attendance_record VALUES (" + id + ",'" +
+                            new_status + "','" + timestamp + "','" + location + "')";
+                        database.query(query, function (err, insertData) {
+                            if (!err) {
+                                callback(false, 200, {'res': messages.attendancePut});
+                            } else {
+                                callback(err, 500, {'res': messages.errorMessage});
+                            }
+                        });
+                    } else {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;

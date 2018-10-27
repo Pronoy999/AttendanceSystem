@@ -19,6 +19,7 @@ const router = {
     'visit-log': handlers.visitLog,
     'update': handlers.updateIphoneModel,
     'auth': handlers.token,
+    'attendance':handlers.putAttendance,
     'inventory-data': handlers.getDistinctModel,
     'employee': handlers.employee,
     'inventory-phone': handlers.inventoryPhone,
