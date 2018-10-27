@@ -744,7 +744,10 @@ handlers.putAttendance = function (dataObject, callback) {
                             new_status + "','" + timestamp + "','" + location + "')";
                         database.query(query, function (err, insertData) {
                             if (!err) {
-                                callback(false, 200, {'res': messages.attendancePut});
+                                callback(false, 200, {
+                                    'res': messages.attendancePut,
+                                    'current_status': new_status
+                                });
                             } else {
                                 callback(err, 500, {'res': messages.errorMessage});
                             }
