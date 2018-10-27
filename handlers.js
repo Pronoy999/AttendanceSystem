@@ -332,9 +332,10 @@ handlers.logCheck = function (dataObject, callback) {
                     } else {
                         if (typeof(data[0]) === 'undefined') {
                             response = {
-                                'res': 'Not Present'
+                                'res': 'Not Present',
+                                'type': 'Visitor'
                             };
-                            callback(false, 404, response);
+                            callback(false, 200, response);
                         } else {
                             response = {
                                 'res': data[0],
@@ -671,6 +672,7 @@ handlers.inventoryPhone = function (dataObject, callback) {
                 var query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name FROM " +
                     "inventory i,vendor_details v " +
                     "WHERE i.vendor_id = v.vendor_id AND model_name LIKE '" + modelName + "'";
+                console.log(query);
                 database.query(query, function (err, phoneData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
