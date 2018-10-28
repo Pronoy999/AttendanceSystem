@@ -21,7 +21,7 @@ handlers.notFound = function (data, callback) {
  * @param callback
  */
 handlers.ping = function (dataObject, callback) {
-    callback(false, 200, {'res': 'Welcome to HX API version 1.0.'});
+    callback(false, 200, {'res': 'Welcome to HyperXchange API version 1.0.'});
 };
 /**
  * Method to verify or to send OTP.
