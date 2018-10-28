@@ -1,7 +1,6 @@
 const database = require('./databaseHandler');
 const snsLib = require('./snsLib');
 const helpers = require('./helpers');
-const companyPrefix = 'HX';
 const messages = require('./Constants');
 var handlers = {};
 /**
@@ -294,7 +293,7 @@ handlers.orderId = function (dataObject, callback) {
         function checkResponse() {
             if (!isResponded && paymentMethod && productType && pincode && autoIncrVal) {
                 isResponded = true;
-                var orderId = companyPrefix + paymentMethod + productType + pincode + autoIncrVal;
+                var orderId = messages.companyPrefix + paymentMethod + productType + pincode + autoIncrVal;
                 response = {
                     'res': orderId
                 };
@@ -355,7 +354,7 @@ handlers.logCheck = function (dataObject, callback) {
         });
     } else {
         response = {
-            'res': 'Invalid Request'
+            'res': messages.invalidRequestMessage
         };
         callback(false, 400, response);
     }
@@ -404,13 +403,13 @@ handlers.addVisitor = function (dataObject, callback) {
             });
         } else {
             response = {
-                'res': 'Insufficient Data'
+                'res': messages.insufficientData
             };
             callback(false, 400, response);
         }
     } else {
         response = {
-            'res': 'Invalid Request'
+            'res': messages.invalidRequestMessage
         };
         callback(false, 400, response);
     }
@@ -459,7 +458,7 @@ handlers.visitLog = function (dataObject, callback) {
         database.query(query, function (err, data) {
             if (err) {
                 response = {
-                    'res': 'Error'
+                    'res': messages.errorMessage
                 };
                 callback(err, 500, response);
             } else {
@@ -502,7 +501,7 @@ handlers.updateIphoneModel = function (dataObject, callback) {
         });
     } else {
         response = {
-            'res': 'Invalid Request'
+            'res': messages.invalidRequestMessage
         };
         callback(false, 400, response);
     }
@@ -534,7 +533,7 @@ handlers.token = function (dataObject, callback) {
                         if (!err) {
                             callback(false, 200, response);
                         } else {
-                            callback(err, 500, {'res': 'Error'});
+                            callback(err, 500, {'res': messages.errorMessage});
                         }
                     });
                 } else {
@@ -575,7 +574,7 @@ handlers.token = function (dataObject, callback) {
                             }
                         });
                     } else {
-                        callback(true, 409, {'res': 'Token expired'});
+                        callback(true, 409, {'res': messages.tokenExpiredMessage});
                     }
                 }
             });
@@ -584,7 +583,7 @@ handlers.token = function (dataObject, callback) {
         }
     }
     else {
-        callback(false, 400, {'res': 'Invalid Request.'});
+        callback(false, 400, {'res': messages.invalidRequestMessage});
     }
 };
 /**
@@ -615,7 +614,7 @@ handlers.getDistinctModel = function (dataObject, callback) {
                         };
                         callback(false, 200, response);
                     } else {
-                        callback(err, 500, {'res': 'Error'});
+                        callback(err, 500, {'res': messages.errorMessage});
                     }
                 });
             } else {
@@ -623,7 +622,7 @@ handlers.getDistinctModel = function (dataObject, callback) {
             }
         });
     } else {
-        callback(true, 400, {'res': 'Invalid Request.'});
+        callback(true, 400, {'res': messages.invalidRequestMessage});
     }
 };
 /**
@@ -638,7 +637,7 @@ handlers.employee = function (dataObject, callback) {
                 var query = "SELECT * FROM employee_details";
                 database.query(query, function (err, data) {
                     if (err) {
-                        callback(err, 500, {'res': 'Error'});
+                        callback(err, 500, {'res': messages.errorMessage});
                     } else {
                         var employee = [];
                         for (var i = 0; i < data.length; i++) {
@@ -654,7 +653,7 @@ handlers.employee = function (dataObject, callback) {
                 callback(false, 403, {'res': messages.tokenExpiredMessage});
             }
         } else {
-            callback(true, 400, {'res': 'Invalid Request.'});
+            callback(true, 400, {'res': messages.invalidRequestMessage});
         }
     });
 };
