@@ -23,7 +23,8 @@ const router = {
     'inventory-data': handlers.getDistinctModel,
     'employee': handlers.employee,
     'inventory-phone': handlers.inventoryPhone,
-    'inventory-vendor':handlers.getVendor
+    'inventory-vendor': handlers.getVendor,
+    'inventory-imei': handlers.inventoryImei
 };
 /**
  * Method which controls the Server.

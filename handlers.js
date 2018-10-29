@@ -668,9 +668,9 @@ handlers.inventoryPhone = function (dataObject, callback) {
         if (isValid) {
             if (dataObject.method === 'post') {
                 var modelName = dataObject.postData.model_name;
-                var query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name FROM " +
-                    "inventory i,vendor_details v " +
-                    "WHERE i.vendor_id = v.vendor_id AND model_name LIKE '" + modelName + "'";
+                var query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name, p.status " +
+                    "FROM inventory i,vendor_details v ,phone_grade_details p " +
+                    "WHERE i.vendor_id = v.vendor_id AND model_name LIKE '" + modelName + "' AND i.product_grade=p.id";
                 console.log(query);
                 database.query(query, function (err, phoneData) {
                     if (err) {
@@ -757,6 +757,37 @@ handlers.putAttendance = function (dataObject, callback) {
                         callback(err, 500, {'res': messages.errorMessage});
                     }
                 });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * Method to get the Phone details with the IMEI from the Inventory.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.inventoryImei = function (dataObject, callback) {
+    var key = dataObject.queryString.key;
+    if (dataObject.method === 'get') {
+        helpers.validateToken(key, function (isValid) {
+            if (isValid) {
+                var imei = typeof(dataObject.queryString.imei) === 'string' && dataObject.queryString.key.trim().length > 10 ? dataObject.queryString.imei : false;
+                if (imei) {
+                    var query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+                    database.query(query, function (err, data) {
+                        if (err) {
+                            callback(err, 500, {'res': 'Error'});
+                        } else {
+                            callback(false, 200, data[0]);
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
