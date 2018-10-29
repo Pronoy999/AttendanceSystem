@@ -1,7 +1,6 @@
 const database = require('./databaseHandler');
 const snsLib = require('./snsLib');
 const helpers = require('./helpers');
-const companyPrefix = 'HX';
 const messages = require('./Constants');
 var handlers = {};
 /**
@@ -21,7 +20,7 @@ handlers.notFound = function (data, callback) {
  * @param callback
  */
 handlers.ping = function (dataObject, callback) {
-    callback(false, 200, {'res': 'Welcome to HX API version 1.0.'});
+    callback(false, 200, {'res': 'Welcome to HyperXchange API version 1.0.'});
 };
 /**
  * Method to verify or to send OTP.
@@ -294,7 +293,7 @@ handlers.orderId = function (dataObject, callback) {
         function checkResponse() {
             if (!isResponded && paymentMethod && productType && pincode && autoIncrVal) {
                 isResponded = true;
-                var orderId = companyPrefix + paymentMethod + productType + pincode + autoIncrVal;
+                var orderId = messages.companyPrefix + paymentMethod + productType + pincode + autoIncrVal;
                 response = {
                     'res': orderId
                 };
@@ -332,9 +331,10 @@ handlers.logCheck = function (dataObject, callback) {
                     } else {
                         if (typeof(data[0]) === 'undefined') {
                             response = {
-                                'res': 'Not Present'
+                                'res': 'Not Present',
+                                'type': 'Visitor'
                             };
-                            callback(false, 404, response);
+                            callback(false, 200, response);
                         } else {
                             response = {
                                 'res': data[0],
@@ -354,7 +354,7 @@ handlers.logCheck = function (dataObject, callback) {
         });
     } else {
         response = {
-            'res': 'Invalid Request'
+            'res': messages.invalidRequestMessage
         };
         callback(false, 400, response);
     }
@@ -403,13 +403,13 @@ handlers.addVisitor = function (dataObject, callback) {
             });
         } else {
             response = {
-                'res': 'Insufficient Data'
+                'res': messages.insufficientData
             };
             callback(false, 400, response);
         }
     } else {
         response = {
-            'res': 'Invalid Request'
+            'res': messages.invalidRequestMessage
         };
         callback(false, 400, response);
     }
@@ -458,7 +458,7 @@ handlers.visitLog = function (dataObject, callback) {
         database.query(query, function (err, data) {
             if (err) {
                 response = {
-                    'res': 'Error'
+                    'res': messages.errorMessage
                 };
                 callback(err, 500, response);
             } else {
@@ -501,7 +501,7 @@ handlers.updateIphoneModel = function (dataObject, callback) {
         });
     } else {
         response = {
-            'res': 'Invalid Request'
+            'res': messages.invalidRequestMessage
         };
         callback(false, 400, response);
     }
@@ -533,7 +533,7 @@ handlers.token = function (dataObject, callback) {
                         if (!err) {
                             callback(false, 200, response);
                         } else {
-                            callback(err, 500, {'res': 'Error'});
+                            callback(err, 500, {'res': messages.errorMessage});
                         }
                     });
                 } else {
@@ -574,7 +574,7 @@ handlers.token = function (dataObject, callback) {
                             }
                         });
                     } else {
-                        callback(true, 409, {'res': 'Token expired'});
+                        callback(true, 409, {'res': messages.tokenExpiredMessage});
                     }
                 }
             });
@@ -583,7 +583,7 @@ handlers.token = function (dataObject, callback) {
         }
     }
     else {
-        callback(false, 400, {'res': 'Invalid Request.'});
+        callback(false, 400, {'res': messages.invalidRequestMessage});
     }
 };
 /**
@@ -614,7 +614,7 @@ handlers.getDistinctModel = function (dataObject, callback) {
                         };
                         callback(false, 200, response);
                     } else {
-                        callback(err, 500, {'res': 'Error'});
+                        callback(err, 500, {'res': messages.errorMessage});
                     }
                 });
             } else {
@@ -622,7 +622,7 @@ handlers.getDistinctModel = function (dataObject, callback) {
             }
         });
     } else {
-        callback(true, 400, {'res': 'Invalid Request.'});
+        callback(true, 400, {'res': messages.invalidRequestMessage});
     }
 };
 /**
@@ -637,7 +637,7 @@ handlers.employee = function (dataObject, callback) {
                 var query = "SELECT * FROM employee_details";
                 database.query(query, function (err, data) {
                     if (err) {
-                        callback(err, 500, {'res': 'Error'});
+                        callback(err, 500, {'res': messages.errorMessage});
                     } else {
                         var employee = [];
                         for (var i = 0; i < data.length; i++) {
@@ -653,7 +653,7 @@ handlers.employee = function (dataObject, callback) {
                 callback(false, 403, {'res': messages.tokenExpiredMessage});
             }
         } else {
-            callback(true, 400, {'res': 'Invalid Request.'});
+            callback(true, 400, {'res': messages.invalidRequestMessage});
         }
     });
 };
@@ -668,9 +668,10 @@ handlers.inventoryPhone = function (dataObject, callback) {
         if (isValid) {
             if (dataObject.method === 'post') {
                 var modelName = dataObject.postData.model_name;
-                var query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name FROM " +
-                    "inventory i,vendor_details v " +
-                    "WHERE i.vendor_id = v.vendor_id AND model_name LIKE '" + modelName + "'";
+                var query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name, p.status " +
+                    "FROM inventory i,vendor_details v ,phone_grade_details p " +
+                    "WHERE i.vendor_id = v.vendor_id AND model_name LIKE '" + modelName + "' AND i.product_grade=p.id";
+                console.log(query);
                 database.query(query, function (err, phoneData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -756,6 +757,37 @@ handlers.putAttendance = function (dataObject, callback) {
                         callback(err, 500, {'res': messages.errorMessage});
                     }
                 });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * Method to get the Phone details with the IMEI from the Inventory.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.inventoryImei = function (dataObject, callback) {
+    var key = dataObject.queryString.key;
+    if (dataObject.method === 'get') {
+        helpers.validateToken(key, function (isValid) {
+            if (isValid) {
+                var imei = typeof(dataObject.queryString.imei) === 'string' && dataObject.queryString.key.trim().length > 10 ? dataObject.queryString.imei : false;
+                if (imei) {
+                    var query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+                    database.query(query, function (err, data) {
+                        if (err) {
+                            callback(err, 500, {'res': 'Error'});
+                        } else {
+                            callback(false, 200, data[0]);
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
