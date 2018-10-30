@@ -733,7 +733,7 @@ handlers.getVendor = function (dataObject, callback) {
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
-handlers.putAttendance = function (dataObject, callback) {
+handlers.attendance = function (dataObject, callback) {
     var key = dataObject.queryString.key;
     if (dataObject.method === 'post') {
         helpers.validateToken(key, function (isValid) {
@@ -766,7 +766,41 @@ handlers.putAttendance = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
-    } else {
+    } else if (dataObject.method === 'get') {
+        var token = dataObject.queryString.key;
+        helpers.validateToken(token, function (isValid) {
+            if (isValid) {
+                var employeeID;
+                try {
+                    employeeID = Number(dataObject.queryString.employeeid);
+                    employeeID = typeof (employeeID) === 'number' ? employeeID : false;
+
+                } catch (e) {
+                    employeeID = false;
+                    callback(e, 400, {'res': messages.errorMessage});
+                }
+                if (employeeID) {
+                    var query = "SELECT * FROM attendance_record WHERE employee_id = " + employeeID;
+                    database.query(query, function (err, empData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            var attendanceRecord = [];
+                            for (var i = 0; i < empData.length; i++) {
+                                attendanceRecord.push(empData[i]);
+                            }
+                            callback(false, 200, {'res': attendanceRecord});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    }
+    else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
 };
@@ -797,6 +831,32 @@ handlers.inventoryImei = function (dataObject, callback) {
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * Method to get the Pending phones from the Phone Table.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.inventoryPendingPhones = function (dataObject, callback) {
+    if (dataObject.method === 'get') {
+        var key = dataObject.queryString.key;
+        helpers.validateToken(key, function (isValid) {
+            if (isValid) {
+                var query = "SELECT * FROM phone_details WHERE status = 1";
+                database.query(query, function (err, phoneData) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, phoneData);
+                    }
+                });
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }

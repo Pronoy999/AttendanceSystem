@@ -19,12 +19,13 @@ const router = {
     'visit-log': handlers.visitLog,
     'update': handlers.updateIphoneModel,
     'auth': handlers.token,
-    'attendance':handlers.putAttendance,
+    'attendance': handlers.attendance,
     'inventory-data': handlers.getDistinctModel,
     'employee': handlers.employee,
     'inventory-phone': handlers.inventoryPhone,
     'inventory-vendor': handlers.getVendor,
-    'inventory-imei': handlers.inventoryImei
+    'inventory-imei': handlers.inventoryImei,
+    'inventory-pending': handlers.inventoryPendingPhones
 };
 /**
  * Method which controls the Server.
