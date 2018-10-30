@@ -703,18 +703,23 @@ handlers.inventoryPhone = function (dataObject, callback) {
 handlers.getVendor = function (dataObject, callback) {
     var key = dataObject.queryString.key;
     var method = dataObject.method;
-    if (method === 'get') {
+    if (method === 'post') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                var vendorId = dataObject.queryString.vendorid;
-                var query = "SELECT * FROM vendor_details WHERE vendor_id = " + vendorId;
-                database.query(query, function (err, data) {
-                    if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
-                    } else {
-                        callback(false, 200, {'res': data[0]});
-                    }
-                });
+                var vendorId = Number(dataObject.postData.vendor_id);
+                vendorId = typeof (vendorId) === 'number' ? vendorId : false;
+                if (vendorId) {
+                    var query = "SELECT * FROM vendor_details WHERE vendor_id = " + vendorId;
+                    database.query(query, function (err, data) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, data[0]);
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
@@ -728,7 +733,7 @@ handlers.getVendor = function (dataObject, callback) {
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
-handlers.putAttendance = function (dataObject, callback) {
+handlers.attendance = function (dataObject, callback) {
     var key = dataObject.queryString.key;
     if (dataObject.method === 'post') {
         helpers.validateToken(key, function (isValid) {
@@ -761,7 +766,41 @@ handlers.putAttendance = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
-    } else {
+    } else if (dataObject.method === 'get') {
+        var token = dataObject.queryString.key;
+        helpers.validateToken(token, function (isValid) {
+            if (isValid) {
+                var employeeID;
+                try {
+                    employeeID = Number(dataObject.queryString.employeeid);
+                    employeeID = typeof (employeeID) === 'number' ? employeeID : false;
+
+                } catch (e) {
+                    employeeID = false;
+                    callback(e, 400, {'res': messages.errorMessage});
+                }
+                if (employeeID) {
+                    var query = "SELECT * FROM attendance_record WHERE employee_id = " + employeeID;
+                    database.query(query, function (err, empData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            var attendanceRecord = [];
+                            for (var i = 0; i < empData.length; i++) {
+                                attendanceRecord.push(empData[i]);
+                            }
+                            callback(false, 200, {'res': attendanceRecord});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    }
+    else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
 };
@@ -772,12 +811,16 @@ handlers.putAttendance = function (dataObject, callback) {
  */
 handlers.inventoryImei = function (dataObject, callback) {
     var key = dataObject.queryString.key;
-    if (dataObject.method === 'get') {
+    if (dataObject.method === 'post') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                var imei = typeof(dataObject.queryString.imei) === 'string' && dataObject.queryString.key.trim().length > 10 ? dataObject.queryString.imei : false;
+                var imei = typeof(dataObject.postData.imei) === 'string' &&
+                dataObject.postData.imei.trim().length > 10 ?
+                    dataObject.postData.imei.trim() : false;
                 if (imei) {
-                    var query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+                    var query = "SELECT i.*,v.first_name as vendor_first_name, v.last_name as vendor_last_name FROM " +
+                        "inventory i , vendor_details v " +
+                        "WHERE i.product_imei_1 LIKE '" + imei + "' AND i.vendor_id = v.vendor_id ";
                     database.query(query, function (err, data) {
                         if (err) {
                             callback(err, 500, {'res': 'Error'});
@@ -788,6 +831,76 @@ handlers.inventoryImei = function (dataObject, callback) {
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * Method to get the Pending phones from the Phone Table.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.inventoryPendingPhones = function (dataObject, callback) {
+    if (dataObject.method === 'get') {
+        var key = dataObject.queryString.key;
+        helpers.validateToken(key, function (isValid) {
+            if (isValid) {
+                var query = "SELECT * FROM phone_details WHERE status = 1";
+                database.query(query, function (err, phoneData) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': phoneData});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * Method to add the new Visit.
+ * @param dataObject: The Request Object.
+ * @param callback: the method callback.
+ */
+handlers.visit = function (dataObject, callback) {
+    if (dataObject.method === 'post') {
+        var visitorID;
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var visitorPhone = typeof(dataObject.postData.visitor_phone) === 'string' ? dataObject.postData.visitor_phone.trim() : false;
+                if (visitorPhone) {
+                    var query = "SELECT id FROM visitor_details WHERE mobile_number LIKE '" + visitorPhone + "'";
+                    database.query(query, function (err, visitorData) {
+                        if (!err) {
+                            visitorID = visitorData[0].id;
+                            console.log(visitorID);
+                            var employeeId = dataObject.postData.employee_id;
+                            var timeStamp = dataObject.postData.timestamp;
+                            var location = dataObject.postData.location;
+                            var values = employeeId + "," + visitorID + ",'" + location + "','" + timeStamp + "',3";
+                            database.insert("visit_details", values, function (err, insertVisitData) {
+                                if (!err) {
+                                    callback(false, 200, {'res': 'Added new Visit.'});
+                                } else {
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                }
+                            });
+                        } else {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
