@@ -854,9 +854,53 @@ handlers.inventoryPendingPhones = function (dataObject, callback) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
                     } else {
-                        callback(false, 200, phoneData);
+                        callback(false, 200, {'res': phoneData});
                     }
                 });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * Method to add the new Visit.
+ * @param dataObject: The Request Object.
+ * @param callback: the method callback.
+ */
+handlers.visit = function (dataObject, callback) {
+    if (dataObject.method === 'post') {
+        var visitorID;
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var visitorPhone = typeof(dataObject.postData.visitor_phone) === 'string' ? dataObject.postData.visitor_phone.trim() : false;
+                if (visitorPhone) {
+                    var query = "SELECT id FROM visitor_details WHERE mobile_number LIKE '" + visitorPhone + "'";
+                    database.query(query, function (err, visitorData) {
+                        if (!err) {
+                            visitorID = visitorData[0].id;
+                            console.log(visitorID);
+                            var employeeId = dataObject.postData.employee_id;
+                            var timeStamp = dataObject.postData.timestamp;
+                            var location = dataObject.postData.location;
+                            var values = employeeId + "," + visitorID + ",'" + location + "','" + timeStamp + "',3";
+                            database.insert("visit_details", values, function (err, insertVisitData) {
+                                if (!err) {
+                                    callback(false, 200, {'res': 'Added new Visit.'});
+                                } else {
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                }
+                            });
+                        } else {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }

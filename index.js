@@ -16,6 +16,7 @@ const router = {
     'order-id': handlers.orderId,
     'log-check': handlers.logCheck,
     'visitor': handlers.addVisitor,
+    'visit': handlers.visit,
     'visit-log': handlers.visitLog,
     'update': handlers.updateIphoneModel,
     'auth': handlers.token,
