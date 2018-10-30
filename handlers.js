@@ -703,18 +703,23 @@ handlers.inventoryPhone = function (dataObject, callback) {
 handlers.getVendor = function (dataObject, callback) {
     var key = dataObject.queryString.key;
     var method = dataObject.method;
-    if (method === 'get') {
+    if (method === 'post') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                var vendorId = dataObject.queryString.vendorid;
-                var query = "SELECT * FROM vendor_details WHERE vendor_id = " + vendorId;
-                database.query(query, function (err, data) {
-                    if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
-                    } else {
-                        callback(false, 200, {'res': data[0]});
-                    }
-                });
+                var vendorId = Number(dataObject.postData.vendor_id);
+                vendorId = typeof (vendorId) === 'number' ? vendorId : false;
+                if (vendorId) {
+                    var query = "SELECT * FROM vendor_details WHERE vendor_id = " + vendorId;
+                    database.query(query, function (err, data) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, data[0]);
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
@@ -772,12 +777,16 @@ handlers.putAttendance = function (dataObject, callback) {
  */
 handlers.inventoryImei = function (dataObject, callback) {
     var key = dataObject.queryString.key;
-    if (dataObject.method === 'get') {
+    if (dataObject.method === 'post') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                var imei = typeof(dataObject.queryString.imei) === 'string' && dataObject.queryString.key.trim().length > 10 ? dataObject.queryString.imei : false;
+                var imei = typeof(dataObject.postData.imei) === 'string' &&
+                dataObject.postData.imei.trim().length > 10 ?
+                    dataObject.postData.imei.trim() : false;
                 if (imei) {
-                    var query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+                    var query = "SELECT i.*,v.first_name as vendor_first_name, v.last_name as vendor_last_name FROM " +
+                        "inventory i , vendor_details v " +
+                        "WHERE i.product_imei_1 LIKE '" + imei + "' AND i.vendor_id = v.vendor_id ";
                     database.query(query, function (err, data) {
                         if (err) {
                             callback(err, 500, {'res': 'Error'});
