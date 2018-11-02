@@ -910,6 +910,30 @@ handlers.visit = function (dataObject, callback) {
     }
 };
 /**
+ * Method to insert the New phone to the Invetory.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.inventoryAddPhone = function (dataObject, callback) {
+    if (dataObject.method === 'post') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                helpers.addInventoryPhone(dataObject.postData, function (err, data) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': messages.phoneInserted});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;

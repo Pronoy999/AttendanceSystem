@@ -208,6 +208,39 @@ helpers.getRandomKey = function (len) {
     return key;
 };
 /**
+ * Method to add the Phone to the Inventory.
+ * @param data: The Post Data.
+ * @param callback: The Method callback.
+ */
+helpers.addInventoryPhone = function (data, callback) {
+    var model_name = data.model_name;
+    var imei_1 = data.product_imei_1;
+    var imei_2 = data.product_imei_2;
+    var color = data.product_color;
+    var time = data.product_add_time;
+    var date = data.product_add_date;
+    var price = data.product_price;
+    var grade = data.product_grade;
+    var vendorId = data.vendor_id;
+    var email = data.operations_email;
+    var service_stock = data.service_stock;
+    var isApproved = data.is_approved;
+    var storage = data.storage;
+    var charger = data.charger;
+    var head_phone = data.head_phone;
+    var ejectorTool = data.ejector_tool;
+    var back_cover = data.back_cover;
+    var manual = data.manual;
+    var connector = data.connector;
+    var values = "'','" + model_name + "'," + imei_1 + "'," + imei_2 + "'," + color + "'," + time + "'," + date + "'," +
+        price + "'," + grade + "'," + vendorId + "'," + email + "'," + service_stock + "'," +
+        isApproved + "'," + storage + "'," + charger + "'," + head_phone + "'," + ejectorTool + "'," + back_cover + "'," +
+        manual + "'," + connector + "'";
+    database.insert("inventory", values, function (err, insertData) {
+        callback(err, data);
+    });
+};
+/**
  * Exporting the module.
  */
 module.exports = helpers;
