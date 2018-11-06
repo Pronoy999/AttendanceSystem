@@ -2,6 +2,13 @@
 <project version="4">
   <component name="PublishConfigData" serverName="AWS Staging">
     <serverData>
+      <paths name="AWS Production">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/var/www/html/nodeServer/HyperXchangeAPI" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="AWS Staging">
         <serverdata>
           <mappings>

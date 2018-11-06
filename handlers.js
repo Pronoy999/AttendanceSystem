@@ -988,6 +988,25 @@ handlers.inventoryPin = function (dataObject, callback) {
     });
 };
 /**
+ * Method to insert the Sell your phone Order and send sms.
+ * @param dataObject: The Request Object.
+ * @param callback: The method callback.
+ */
+handlers.sellPhoneOrder = function (dataObject, callback) {
+    if (dataObject.method === 'post') {
+        var postData = dataObject.postData;
+        helpers.addSellPhoneOrder(postData, function (err) {
+            if (err) {
+                callback(err, 500, {'res': false});
+            } else {
+                callback(false, 200, {'res': true});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;

@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "dependencies": {
     "mysql": "latest",
-    "aws-sdk": "latest"
+    "aws-sdk": "latest",
+    "moment": "latest",
+    "moment-timezone": "latest"
   }
 }

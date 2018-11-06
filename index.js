@@ -28,7 +28,8 @@ const router = {
     'inventory-imei': handlers.inventoryImei,
     'inventory-pending': handlers.inventoryPendingPhones,
     'inventory-addPhone': handlers.inventoryAddPhone,
-    'inventory-pin': handlers.inventoryPin
+    'inventory-pin': handlers.inventoryPin,
+    'syp-order': handlers.sellPhoneOrder
 };
 /**
  * Method which controls the Server.

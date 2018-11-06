@@ -1,5 +1,4 @@
 const aws = require('aws-sdk');
-const helpers = require('./helpers');
 var sms = {};
 aws.config.update({
     region: 'ap-southeast-1',
@@ -13,6 +12,7 @@ var sns = new aws.SNS();
  * @param callback: The Method callback.
  */
 sms.sendOTP = function (phone, callback) {
+    const helpers = require('./helpers');
     var number = helpers.createOTP();
     var msg = 'Your HX OTP is: ' + number;
     var params = {
