@@ -208,7 +208,7 @@ helpers.getRandomKey = function (len) {
     return key;
 };
 /**
- * Method to add the Phone to the Inventory.
+ * Method to add the Phone to the Inventory and update the status of phone_details.
  * @param data: The Post Data.
  * @param callback: The Method callback.
  */
@@ -237,8 +237,22 @@ helpers.addInventoryPhone = function (data, callback) {
         isApproved + "'," + storage + "'," + charger + "'," + head_phone + "'," + ejectorTool + "'," + back_cover + "'," +
         manual + "'," + connector + "'";
     database.insert("inventory", values, function (err, insertData) {
-        callback(err, data);
+        var where = "imei LIKE '" + imei_1 + "'";
+        if (!err) {
+            database.update("phone_details", "status", service_stock, where, function (err, updateData) {
+                callback(err, updateData);
+            });
+        } else {
+            callback(err, {});
+        }
     });
+};
+/**
+ * Method to get a Random OTP.
+ * @returns {number}
+ */
+helpers.createOTP = function () {
+    return Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
 };
 /**
  * Exporting the module.
