@@ -994,12 +994,18 @@ handlers.inventoryPin = function (dataObject, callback) {
  */
 handlers.sellPhoneOrder = function (dataObject, callback) {
     if (dataObject.method === 'post') {
-        var postData = dataObject.postData;
-        helpers.addSellPhoneOrder(postData, function (err) {
-            if (err) {
-                callback(err, 500, {'res': false});
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                const postData = dataObject.postData;
+                helpers.addSellPhoneOrder(postData, function (err) {
+                    if (err) {
+                        callback(err, 500, {'res': false});
+                    } else {
+                        callback(false, 200, {'res': true});
+                    }
+                });
             } else {
-                callback(false, 200, {'res': true});
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
     } else {
