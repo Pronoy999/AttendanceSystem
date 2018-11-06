@@ -171,12 +171,12 @@ handlers.phone = function (dataObject, callback) {
                     }
                     else {
                         if (data.length > 0) {
-                            callback(false, 200, data);
+                            callback(false, 200, {res: true});
                         } else {
                             response = {
-                                'res': 'No device found with this ID.'
+                                'res': false
                             };
-                            callback(false, 404, response);
+                            callback(false, 202, response);
                         }
                     }
                 });
@@ -185,13 +185,14 @@ handlers.phone = function (dataObject, callback) {
                 helpers.insertNewPhone(postData, function (err, data) {
                     var response = {};
                     if (err) {
-                        response = {
-                            'res': 'Error, the phone may already exists.'
-                        };
-                        callback(err, 500, response);
+                        callback(err, 202, {
+                            'res': false,
+                            'message': 'The Phone may already Exists.'
+                        });
                     } else {
                         response = {
-                            'res': 'Successfully Inserted new phone'
+                            'res': true,
+                            'message': 'Successfully Inserted new phone'
                         };
                         callback(false, 200, response);
                     }
@@ -849,6 +850,7 @@ handlers.inventoryPendingPhones = function (dataObject, callback) {
         var key = dataObject.queryString.key;
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
+                //TODO: Change the status.
                 var query = "SELECT * FROM phone_details WHERE status = 1";
                 database.query(query, function (err, phoneData) {
                     if (err) {
@@ -901,6 +903,107 @@ handlers.visit = function (dataObject, callback) {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
 
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * Method to insert the New phone to the Invetory.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.inventoryAddPhone = function (dataObject, callback) {
+    if (dataObject.method === 'post') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                helpers.addInventoryPhone(dataObject.postData, function (err, data) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': messages.phoneInserted});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * Method to generate the Inventory OTP.
+ * @param dataObject: the request object.
+ * @param callback: The Method callback.
+ */
+handlers.inventoryPin = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, function (isValid) {
+        if (isValid) {
+            if (dataObject.method === 'post') {
+                var emailId = dataObject.postData.email.trim();
+                emailId = typeof (emailId) === 'string' && emailId.length >= 5 ? emailId : false;
+                if (emailId) {
+                    var pin = helpers.createOTP();
+                    var query = "SELECT * FROM login_pin WHERE passcode=" + pin;
+                    database.query(query, function (err, selectData) {
+                        if (selectData.length > 0) {
+                            pin = helpers.createOTP();
+                        }
+                        var values = "'" + emailId + "'," + pin;
+                        database.insert("login_pin", values, function (err, insertData) {
+                            if (!err) {
+                                callback(false, 200, {'res': pin});
+                            } else {
+                                callback(true, 500, {'res': messages.errorMessage});
+                            }
+                        });
+                    });
+                } else {
+                    callback(false, 400, {'res': messages.insufficientData});
+                }
+            } else if (dataObject.method === 'get') {
+                var userPin = dataObject.queryString.pin;
+                query = "SELECT * FROM login_pin WHERE passcode=" + userPin;
+                database.query(query, function (err, Data) {
+                    if (err) {
+                        callback(err, 404, {'res': messages.errorMessage});
+                    } else {
+                        if (Data.length > 0) {
+                            callback(false, 200, {'res': true, 'email': Data[0].email});
+                        } else {
+                            callback(false, 200, {'res': false});
+                        }
+                    }
+                });
+            } else {
+                callback(true, 400, {'res': messages.invalidRequestMessage});
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+};
+/**
+ * Method to insert the Sell your phone Order and send sms.
+ * @param dataObject: The Request Object.
+ * @param callback: The method callback.
+ */
+handlers.sellPhoneOrder = function (dataObject, callback) {
+    if (dataObject.method === 'post') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                const postData = dataObject.postData;
+                helpers.addSellPhoneOrder(postData, function (err) {
+                    if (err) {
+                        callback(err, 500, {'res': false});
+                    } else {
+                        callback(false, 200, {'res': true});
+                    }
+                });
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }

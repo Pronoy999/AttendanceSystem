@@ -1,5 +1,9 @@
 var helpers = {};
 const database = require('./databaseHandler');
+const moment = require('moment');
+const tz = require('moment-timezone');
+const messages = require('./Constants');
+const snsLib = require('./snsLib');
 /**
  * Method to parse JSON to Objects.
  * @param data
@@ -20,25 +24,30 @@ helpers.parseJsonToObjects = function (data) {
  * @param callback: The Method callback.
  */
 helpers.validateToken = function (key, callback) {
-    var query = "SELECT * FROM api_token WHERE token LIKE '" + key + "'";
-    database.query(query, function (err, data) {
-        if (err) {
-            callback(false);
-        } else {
-            if (typeof(data[0]) !== 'undefined') {
-                if (Number(data[0].validity) === -1) {
-                    callback(true);
-                }
-                else if (data[0].token === key && Number(data[0].validity) > Date.now()) {
-                    callback(true);
+    key = typeof ('string') && key.trim().length === 16 ? key.trim() : false;
+    if (key) {
+        var query = "SELECT * FROM api_token WHERE token LIKE '" + key + "'";
+        database.query(query, function (err, data) {
+            if (err) {
+                callback(false);
+            } else {
+                if (typeof(data[0]) !== 'undefined') {
+                    if (Number(data[0].validity) === -1) {
+                        callback(true);
+                    }
+                    else if (data[0].token === key && Number(data[0].validity) > Date.now()) {
+                        callback(true);
+                    } else {
+                        callback(false);
+                    }
                 } else {
                     callback(false);
                 }
-            } else {
-                callback(false);
             }
-        }
-    });
+        });
+    } else {
+        callback(false);
+    }
 };
 /**
  * Method to insert new phones into the table.
@@ -206,6 +215,104 @@ helpers.getRandomKey = function (len) {
         key += possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters.length));
     }
     return key;
+};
+/**
+ * Method to add the Phone to the Inventory and update the status of phone_details.
+ * @param data: The Post Data.
+ * @param callback: The Method callback.
+ */
+helpers.addInventoryPhone = function (data, callback) {
+    var model_name = data.model_name;
+    var imei_1 = data.product_imei_1;
+    var imei_2 = data.product_imei_2;
+    var color = data.product_color;
+    var time = data.product_add_time;
+    var date = data.product_add_date;
+    var price = data.product_price;
+    var grade = data.product_grade;
+    var vendorId = data.vendor_id;
+    var email = data.operations_email;
+    var service_stock = data.service_stock;
+    var isApproved = data.is_approved;
+    var storage = data.storage;
+    var charger = data.charger;
+    var head_phone = data.head_phone;
+    var ejectorTool = data.ejector_tool;
+    var back_cover = data.back_cover;
+    var manual = data.manual;
+    var connector = data.connector;
+    var values = "'','" + model_name + "'," + imei_1 + "'," + imei_2 + "'," + color + "'," + time + "'," + date + "'," +
+        price + "'," + grade + "'," + vendorId + "'," + email + "'," + service_stock + "'," +
+        isApproved + "'," + storage + "'," + charger + "'," + head_phone + "'," + ejectorTool + "'," + back_cover + "'," +
+        manual + "'," + connector + "'";
+    database.insert("inventory", values, function (err, insertData) {
+        var where = "imei LIKE '" + imei_1 + "'";
+        if (!err) {
+            database.update("phone_details", "status", service_stock, where, function (err, updateData) {
+                callback(err, updateData);
+            });
+        } else {
+            callback(err, {});
+        }
+    });
+};
+/**
+ * Method to get a Random OTP.
+ * @returns {number}
+ */
+helpers.createOTP = function () {
+    return Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
+};
+/**
+ * Method to extract the Details for Sell phone Order.
+ * @param postData: The POST Request Data.
+ */
+helpers.addSellPhoneOrder = function (postData, callback) {
+    var firstName = postData.seller_first_name;
+    var lastName = postData.seller_last_name;
+    var email = postData.seller_email;
+    var phone = postData.seller_phone_number;
+    var address = postData.seller_address;
+    var modelName = postData.model_name;
+    var price = postData.buy_back_price_offered;
+    var timeDate = Math.floor((new Date().getTime()) / 1000);
+    var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
+    var date = formattedDate[0];
+    var time = formattedDate[1];
+    var touch = postData.touch_not_working;
+    var screen = postData.screen_not_working;
+    var camera = postData.camera_not_working;
+    var volume = postData.volume_button_not_working;
+    var power = postData.power_button_not_working;
+    var home = postData.home_button_not_working;
+    var headphone = postData.headphone_port_damaged;
+    var wifi = postData.wifi_damaged;
+    var speaker = postData.speaker_damaged;
+    var microphone = postData.microphone_damaged;
+    var charging = postData.charging_defect;
+    var battery = postData.battery_damaged;
+    var wallCharger = postData.wall_charger;
+    var box = postData.box;
+    var usbCable = postData.usb_cable;
+    var earphones = postData.earphones;
+    var values = "'','" + firstName + "','" + lastName + "','" + email + "','" + phone + "','" + address + "','" +
+        modelName + "','" + price + "','" + date + "','" + time + "','" + touch + "','" + screen + "','" + camera +
+        "','" + volume + "','" + power + "','" + home + "','" + headphone + "','" + wifi + "','" + speaker + "','" +
+        microphone + "','" + charging + "','" + battery + "','" + wallCharger + "','" + box + "','" + usbCable +
+        "','" + earphones + "'";
+    database.insert("buy_back_phone_order", values, function (err, insertData) {
+        if (!err) {
+            snsLib.sendMessage(phone, messages.sellPhoneMessage, function (err) {
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(false);
+                }
+            });
+        } else {
+            callback(err);
+        }
+    });
 };
 /**
  * Exporting the module.
