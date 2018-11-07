@@ -14,6 +14,7 @@ messages.headers = {
     'Access-Control-Max-Age': 2592000, // 30 days
     /** add other headers as per requirement */
 };
+messages.sellPhoneMessage = 'thank you for showing interest to sell your phone at the best price. A HyperXpert would connect with you shortly.';
 /**
  * Exporting the Message Module.
  */
