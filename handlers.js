@@ -993,7 +993,10 @@ handlers.inventoryPin = function (dataObject, callback) {
  * @param callback: The method callback.
  */
 handlers.sellPhoneOrder = function (dataObject, callback) {
-    if (dataObject.method === 'post' || dataObject.method === 'options') {
+    if (dataObject.method === 'options') {
+        callback(false, 204, {});
+    }
+    else if (dataObject.method === 'post') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 const postData = dataObject.postData;
