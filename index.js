@@ -4,6 +4,7 @@ const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const handlers = require('./handlers');
 const helpers = require('./helpers');
+const message = require('./Constants');
 /**
  * The Router Containing the end points.
  */
@@ -62,7 +63,7 @@ var unifiedServer = function (req, res) {
             statusCode = typeof (statusCode) === 'number' ? statusCode : 400;
             var responseObject = JSON.stringify(responseData);
             res.setHeader('Content-Type', 'application/json');
-            res.writeHead(statusCode);
+            res.writeHead(statusCode, message.headers);
             res.end(responseObject);
             console.log('Returning: ', responseObject, statusCode);
         });
