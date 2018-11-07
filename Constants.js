@@ -11,8 +11,8 @@ messages.sellPhoneMessage = 'We have received your order for sell your phone and
 messages.headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'OPTIONS, POST, GET, PUT',
-    'Access-Control-Max-Age': 2592000, // 30 days
-    /** add other headers as per requirement */
+    'Access-Control-Max-Age': 2592000,
+    'Access-Control-Allow-Headers': 'Content-Type'
 };
 messages.sellPhoneMessage = 'thank you for showing interest to sell your phone at the best price. A HyperXpert would connect with you shortly.';
 /**
