@@ -68,7 +68,6 @@ var unifiedServer = function (req, res) {
             console.log('Returning: ', responseObject, statusCode);
         });
     });
-
 };
 /**
  * Method to create the Server.
