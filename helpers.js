@@ -302,7 +302,8 @@ helpers.addSellPhoneOrder = function (postData, callback) {
         "','" + earphones + "'";
     database.insert("buy_back_phone_order", values, function (err, insertData) {
         if (!err) {
-            snsLib.sendMessage(phone, messages.sellPhoneMessage, function (err) {
+            var msg = "Hi " + firstName + ", " + messages.sellPhoneMessage;
+            snsLib.sendMessage(phone, msg, function (err) {
                 if (err) {
                     callback(err);
                 } else {
