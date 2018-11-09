@@ -1051,7 +1051,6 @@ handlers.sellPhone = function (dataObject, callback) {
                             callback(true, 500, {'res': messages.errorMessage});
                         } else {
                             var id = phoneIdData[0].id;
-                            console.log(id);
                             query = "SELECT storage,price FROM buy_back_phone_price WHERE phoneId = " + id;
                             database.query(query, function (err, phoneData) {
                                 if (err) {
