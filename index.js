@@ -30,6 +30,7 @@ const router = {
     'inventory-pending': handlers.inventoryPendingPhones,
     'inventory-addPhone': handlers.inventoryAddPhone,
     'inventory-pin': handlers.inventoryPin,
+    'syp': handlers.sellPhone,
     'syp-order': handlers.sellPhoneOrder
 };
 /**

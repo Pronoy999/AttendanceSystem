@@ -1016,6 +1016,75 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
     }
 };
 /**
+ * Method to get the brand and other details for SellYourPhone.
+ * @param dataObject: the request Object.
+ * @param callback: The Method callback.
+ */
+handlers.sellPhone = function (dataObject, callback) {
+    var query;
+    helpers.validateToken(dataObject.queryString.key, function (isValid) {
+        if (isValid) {
+            if (dataObject.method === 'post') {
+                var postData = dataObject.postData;
+                var brandName = typeof(postData.brand) === 'string' && postData.brand.trim().length > 0 ?
+                    postData.brand.trim() : false;
+                var modelName = typeof(postData.model) === 'string' && postData.model.trim().length > 0 ?
+                    postData.model.trim() : false;
+                if (brandName && !modelName) {
+                    query = "SELECT model FROM buy_back_phone WHERE brand LIKE '" + brandName + "'";
+                    database.query(query, function (err, modelData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            var arr = [];
+                            for (var i = 0; i < modelData.length; i++) {
+                                arr[i] = modelData[i].model;
+                            }
+                            callback(false, 200, {'res': arr});
+                        }
+                    });
+                } else if (brandName && modelName) {
+                    query = "SELECT id FROM buy_back_phone WHERE model LIKE '" + modelName +
+                        "' AND brand LIKE '" + brandName + "'";
+                    database.query(query, function (err, phoneIdData) {
+                        if (err) {
+                            callback(true, 500, {'res': messages.errorMessage});
+                        } else {
+                            var id = phoneIdData[0].id;
+                            console.log(id);
+                            query = "SELECT storage,price FROM buy_back_phone_price WHERE phoneId = " + id;
+                            database.query(query, function (err, phoneData) {
+                                if (err) {
+                                    callback(true, 500, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': phoneData});
+                                }
+                            });
+                        }
+                    });
+                } else if (!brandName && !modelName) {
+                    query = "SELECT distinct(brand) FROM buy_back_phone";
+                    database.query(query, function (err, brandData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            var arr = [];
+                            for (var i = 0; i < brandData.length; i++) {
+                                arr[i] = brandData[i].brand;
+                            }
+                            callback(false, 200, {'res': arr});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;
