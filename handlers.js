@@ -993,10 +993,10 @@ handlers.inventoryPin = function (dataObject, callback) {
  * @param callback: The method callback.
  */
 handlers.sellPhoneOrder = function (dataObject, callback) {
-    if (dataObject.method === 'options') {
+    /*if (dataObject.method === 'options') {
         callback(false, 204, {});
-    }
-    else if (dataObject.method === 'post') {
+    }*/
+    if (dataObject.method === 'post') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 const postData = dataObject.postData;
@@ -1004,7 +1004,7 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
                     if (err) {
                         callback(err, 500, {'res': false});
                     } else {
-                        callback(false, 204, {'res': true});
+                        callback(false, 200, {'res': true});
                     }
                 });
             } else {
@@ -1077,6 +1077,10 @@ handlers.sellPhone = function (dataObject, callback) {
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
+            } else if (dataObject.method === 'options') {
+                callback(false, 200, {});//Accepting Options Request.
+            } else {
+                callback(false, 400, {'res': messages.invalidRequestMessage});
             }
         } else {
             callback(true, 403, {'res': messages.tokenExpiredMessage});

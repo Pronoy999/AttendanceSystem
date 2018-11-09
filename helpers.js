@@ -24,7 +24,11 @@ helpers.parseJsonToObjects = function (data) {
  * @param callback: The Method callback.
  */
 helpers.validateToken = function (key, callback) {
-    key = typeof ('string') && key.trim().length === 16 ? key.trim() : false;
+    try {
+        key = typeof ('string') && key.trim().length === 16 ? key.trim() : false;
+    } catch (e) {
+        key = false;
+    }
     if (key) {
         var query = "SELECT * FROM api_token WHERE token LIKE '" + key + "'";
         database.query(query, function (err, data) {
