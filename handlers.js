@@ -1088,6 +1088,52 @@ handlers.sellPhone = function (dataObject, callback) {
     });
 };
 /**
+ * Method to get the Phone Price for the Diagnostic App.
+ * @param dataObject: The Request Object.
+ * @param callback: The method callback.
+ */
+handlers.phonePrice = function (dataObject, callback) {
+    if (dataObject.method === 'post') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var postData = dataObject.postData;
+                var brand = typeof(postData.brand) === 'string' && postData.brand.trim().length > 0 ? postData.brand.trim() : false;
+                var model = typeof(postData.model) === 'string' && postData.model.trim().length > 0 ? postData.model.trim() : false;
+                var storage = postData.storage > 0 ? postData.storage : false;
+                if (brand && model && storage) {
+                    var query = "SELECT * FROM buy_back_phone WHERE brand LIKE '" + brand + "' AND model LIKE '" + model + "'";
+                    database.query(query, function (err, phoneData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            var id = phoneData[0].id;
+                            query = "SELECT * FROM buy_back_phone_price WHERE phoneId = " + id;
+                            database.query(query, function (err, priceData) {
+                                if (err) {
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    var response = {
+                                        'storage': priceData[0].storage,
+                                        'ram': priceData[0].ram,
+                                        'price': priceData[0].price
+                                    };
+                                    callback(false, 200, {'res': response});
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        })
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;

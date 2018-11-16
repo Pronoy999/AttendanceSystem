@@ -13,6 +13,7 @@ const router = {
     'otp': handlers.otp,
     'text': handlers.text,
     'phone': handlers.phone,
+    'phone-price': handlers.phonePrice,
     'phone-report': handlers.report,
     'order-id': handlers.orderId,
     'log-check': handlers.logCheck,
@@ -53,7 +54,7 @@ var unifiedServer = function (req, res) {
         postData += decoder.end();
         postData = helpers.parseJsonToObjects(postData);
         var chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
-        console.log(trimmedPath);
+        //console.log(trimmedPath);
         var data = {
             'path': trimmedPath,
             'method': method,
