@@ -2,6 +2,8 @@ const database = require('./databaseHandler');
 const snsLib = require('./snsLib');
 const helpers = require('./helpers');
 const messages = require('./Constants');
+const moment = require('moment');
+const tz = require('moment-timezone');
 var handlers = {};
 /**
  * Method for Invalid Path.
@@ -747,8 +749,14 @@ handlers.attendance = function (dataObject, callback) {
                 var query = "UPDATE employee_details SET current_status = '" + new_status + "' WHERE id = " + id;
                 database.query(query, function (err, data) {
                     if (!err) {
+                        var timeDate = Math.floor((new Date().getTime()) / 1000);
+                        var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat))
+                            .split(' ');
+                        var date = formattedDate[0];
+                        var time = formattedDate[1];
                         query = "INSERT INTO attendance_record VALUES (" + id + ",'" +
-                            new_status + "','" + timestamp + "','" + location + "')";
+                            new_status + "','" + timestamp + "','" + location + "','" + date + "','" + time + "')";
+                        console.log(query);
                         database.query(query, function (err, insertData) {
                             if (!err) {
                                 callback(false, 200, {
