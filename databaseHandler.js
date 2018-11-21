@@ -22,6 +22,7 @@ database.insert = function (tableName, values, callback) {
             callback(err);
         } else {
             var query = "INSERT INTO " + tableName + " VALUES (" + values + ")";
+            //console.log(query);
             con.query(query, function (err, result, fields) {
                 con.release();
                 if (err) {

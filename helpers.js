@@ -278,6 +278,7 @@ helpers.addSellPhoneOrder = function (postData, callback) {
     var phone = postData.seller_phone_number;
     var address = postData.seller_address;
     var modelName = postData.model_name;
+    var imei = postData.imei;
     var price = postData.buy_back_price_offered;
     var timeDate = Math.floor((new Date().getTime()) / 1000);
     var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
@@ -300,7 +301,7 @@ helpers.addSellPhoneOrder = function (postData, callback) {
     var usbCable = postData.usb_cable;
     var earphones = postData.earphones;
     var values = "'','" + firstName + "','" + lastName + "','" + email + "','" + phone + "','" + address + "','" +
-        modelName + "','" + price + "','" + date + "','" + time + "','" + touch + "','" + screen + "','" + camera +
+        modelName + "','" + imei + "','" + price + "','" + date + "','" + time + "','" + touch + "','" + screen + "','" + camera +
         "','" + volume + "','" + power + "','" + home + "','" + headphone + "','" + wifi + "','" + speaker + "','" +
         microphone + "','" + charging + "','" + battery + "','" + wallCharger + "','" + box + "','" + usbCable +
         "','" + earphones + "'";
@@ -315,6 +316,7 @@ helpers.addSellPhoneOrder = function (postData, callback) {
                 }
             });
         } else {
+            //console.log(err);
             callback(err);
         }
     });

@@ -53,6 +53,7 @@ handlers.otp = function (dataObject, callback) {
                         if (serverOTP === otp) {
                             response = {
                                 'res': true,
+                                'data': data[0].random_data
                             };
                             callback(false, 200, response);
                         } else {
@@ -65,6 +66,7 @@ handlers.otp = function (dataObject, callback) {
                 });
             } else if (method === 'post') {
                 phoneNumber = dataObject.postData.phoneNumber;
+                var randomData = dataObject.postData.randomData;
                 snsLib.sendOTP(phoneNumber, function (err, randomOTP) {
                     if (err) {
                         console.log(err);
@@ -74,7 +76,7 @@ handlers.otp = function (dataObject, callback) {
                         };
                         callback(err, 500, response);
                     } else {
-                        var values = "'" + phoneNumber + "'," + randomOTP;
+                        var values = "'" + phoneNumber + "'," + randomOTP + "','" + randomData;
                         database.insert("otp", values, function (err, data) {
                             if (err) {
                                 console.log(err);
@@ -1008,6 +1010,7 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 const postData = dataObject.postData;
+                console.log(postData);
                 helpers.addSellPhoneOrder(postData, function (err) {
                     if (err) {
                         callback(err, 500, {'res': false});
