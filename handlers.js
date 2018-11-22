@@ -2,6 +2,8 @@ const database = require('./databaseHandler');
 const snsLib = require('./snsLib');
 const helpers = require('./helpers');
 const messages = require('./Constants');
+const moment = require('moment');
+const tz = require('moment-timezone');
 var handlers = {};
 /**
  * Method for Invalid Path.
@@ -51,6 +53,7 @@ handlers.otp = function (dataObject, callback) {
                         if (serverOTP === otp) {
                             response = {
                                 'res': true,
+                                'data': data[0].random_data
                             };
                             callback(false, 200, response);
                         } else {
@@ -63,6 +66,7 @@ handlers.otp = function (dataObject, callback) {
                 });
             } else if (method === 'post') {
                 phoneNumber = dataObject.postData.phoneNumber;
+                var randomData = dataObject.postData.randomData;
                 snsLib.sendOTP(phoneNumber, function (err, randomOTP) {
                     if (err) {
                         console.log(err);
@@ -72,7 +76,7 @@ handlers.otp = function (dataObject, callback) {
                         };
                         callback(err, 500, response);
                     } else {
-                        var values = "'" + phoneNumber + "'," + randomOTP;
+                        var values = "'" + phoneNumber + "'," + randomOTP + "','" + randomData;
                         database.insert("otp", values, function (err, data) {
                             if (err) {
                                 console.log(err);
@@ -747,8 +751,14 @@ handlers.attendance = function (dataObject, callback) {
                 var query = "UPDATE employee_details SET current_status = '" + new_status + "' WHERE id = " + id;
                 database.query(query, function (err, data) {
                     if (!err) {
+                        var timeDate = Math.floor((new Date().getTime()) / 1000);
+                        var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat))
+                            .split(' ');
+                        var date = formattedDate[0];
+                        var time = formattedDate[1];
                         query = "INSERT INTO attendance_record VALUES (" + id + ",'" +
-                            new_status + "','" + timestamp + "','" + location + "')";
+                            new_status + "','" + timestamp + "','" + location + "','" + date + "','" + time + "')";
+                        console.log(query);
                         database.query(query, function (err, insertData) {
                             if (!err) {
                                 callback(false, 200, {
@@ -988,7 +998,7 @@ handlers.inventoryPin = function (dataObject, callback) {
     });
 };
 /**
- * Method to insert the Sell your phone Order and send sms.
+ * Method to insert the Sell your phone Order and send sms and also to get Order Details.
  * @param dataObject: The Request Object.
  * @param callback: The method callback.
  */
@@ -1000,6 +1010,7 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 const postData = dataObject.postData;
+                console.log(postData);
                 helpers.addSellPhoneOrder(postData, function (err) {
                     if (err) {
                         callback(err, 500, {'res': false});
@@ -1011,6 +1022,18 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
+    } else if (dataObject.method === 'get') {
+        var imei = dataObject.queryString.imei;
+        var query = "SELECT * FROM buy_back_phone_order WHERE imei LIKE '" + imei + "'";
+        database.query(query, function (err, sellData) {
+            if (err) {
+                callback(err, 500, {'res': messages.errorMessage});
+            } else {
+                callback(false, 200, {'res': sellData[0]});
+            }
+        });
+    } else if (dataObject.method === 'put') {
+        //TODO: Update Order.
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
@@ -1086,6 +1109,52 @@ handlers.sellPhone = function (dataObject, callback) {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
         }
     });
+};
+/**
+ * Method to get the Phone Price for the Diagnostic App.
+ * @param dataObject: The Request Object.
+ * @param callback: The method callback.
+ */
+handlers.phonePrice = function (dataObject, callback) {
+    if (dataObject.method === 'post') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var postData = dataObject.postData;
+                var brand = typeof(postData.brand) === 'string' && postData.brand.trim().length > 0 ? postData.brand.trim() : false;
+                var model = typeof(postData.model) === 'string' && postData.model.trim().length > 0 ? postData.model.trim() : false;
+                var storage = postData.storage > 0 ? postData.storage : false;
+                if (brand && model && storage) {
+                    var query = "SELECT * FROM buy_back_phone WHERE brand LIKE '" + brand + "' AND model LIKE '" + model + "'";
+                    database.query(query, function (err, phoneData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            var id = phoneData[0].id;
+                            query = "SELECT * FROM buy_back_phone_price WHERE phoneId = " + id;
+                            database.query(query, function (err, priceData) {
+                                if (err) {
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    var response = {
+                                        'storage': priceData[0].storage,
+                                        'ram': priceData[0].ram,
+                                        'price': priceData[0].price
+                                    };
+                                    callback(false, 200, {'res': response});
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        })
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
 };
 /**
  * Exporting the Handlers.
