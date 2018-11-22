@@ -300,11 +300,12 @@ helpers.addSellPhoneOrder = function (postData, callback) {
     var box = postData.box;
     var usbCable = postData.usb_cable;
     var earphones = postData.earphones;
+    var status = postData.status;
     var values = "'','" + firstName + "','" + lastName + "','" + email + "','" + phone + "','" + address + "','" +
         modelName + "','" + imei + "','" + price + "','" + date + "','" + time + "','" + touch + "','" + screen + "','" + camera +
         "','" + volume + "','" + power + "','" + home + "','" + headphone + "','" + wifi + "','" + speaker + "','" +
         microphone + "','" + charging + "','" + battery + "','" + wallCharger + "','" + box + "','" + usbCable +
-        "','" + earphones + "'";
+        "','" + earphones + "','" + status + "'";
     database.insert("buy_back_phone_order", values, function (err, insertData) {
         if (!err) {
             var msg = "Hi " + firstName + ", " + messages.sellPhoneMessage;
