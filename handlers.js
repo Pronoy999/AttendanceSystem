@@ -1032,6 +1032,8 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
                 callback(false, 200, {'res': sellData[0]});
             }
         });
+    } else if (dataObject.method === 'put') {
+        //TODO: Update Order.
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
