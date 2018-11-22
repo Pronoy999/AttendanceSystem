@@ -998,7 +998,7 @@ handlers.inventoryPin = function (dataObject, callback) {
     });
 };
 /**
- * Method to insert the Sell your phone Order and send sms.
+ * Method to insert the Sell your phone Order and send sms and also to get Order Details.
  * @param dataObject: The Request Object.
  * @param callback: The method callback.
  */
@@ -1020,6 +1020,16 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
                 });
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else if (dataObject.method === 'get') {
+        var imei = dataObject.queryString.imei;
+        var query = "SELECT * FROM buy_back_phone_order WHERE imei LIKE '" + imei + "'";
+        database.query(query, function (err, sellData) {
+            if (err) {
+                callback(err, 500, {'res': messages.errorMessage});
+            } else {
+                callback(false, 200, {'res': sellData[0]});
             }
         });
     } else {
