@@ -734,6 +734,37 @@ handlers.getVendor = function (dataObject, callback) {
     }
 };
 /**
+ * Method to get the dead phones from the inventory.
+ * @param dataObject: The Request Data object.
+ * @param callback: The Method callback.
+ */
+handlers.inventoryDead = function (dataObject, callback) {
+    var key = dataObject.queryString.key;
+    helpers.validateToken(key, function (isValid) {
+        if (isValid) {
+            if (dataObject.method === 'get') {
+                var query = "SELECT * FROM inventory i, phone_grade_details p WHERE p.status LIKE 'Dead' " +
+                    "AND p.id = i.product_grade";
+                database.query(query, function (err, deadPhones) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        var array = [];
+                        for (let i = 0; i < deadPhones.length; i++) {
+                            array.push(deadPhones[i]);
+                        }
+                        callback(false, 200, {'res': array});
+                    }
+                })
+            } else {
+                callback(true, 400, {'res': messages.invalidRequestMessage});
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    })
+};
+/**
  * Method to put the Attendance for the Employee.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
@@ -998,7 +1029,8 @@ handlers.inventoryPin = function (dataObject, callback) {
     });
 };
 /**
- * Method to insert the Sell your phone Order and send sms and also to get Order Details.
+ * Method to insert the Sell your phone Order and send sms and also to get Order Details and Update status
+ * of the existing Order.
  * @param dataObject: The Request Object.
  * @param callback: The method callback.
  */
@@ -1023,17 +1055,39 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
             }
         });
     } else if (dataObject.method === 'get') {
-        var imei = dataObject.queryString.imei;
-        var query = "SELECT * FROM buy_back_phone_order WHERE imei LIKE '" + imei + "'";
-        database.query(query, function (err, sellData) {
-            if (err) {
-                callback(err, 500, {'res': messages.errorMessage});
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var imei = dataObject.queryString.imei;
+                var query = "SELECT * FROM buy_back_phone_order WHERE imei LIKE '" + imei + "'";
+                database.query(query, function (err, sellData) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': sellData[0]});
+                    }
+                });
             } else {
-                callback(false, 200, {'res': sellData[0]});
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
     } else if (dataObject.method === 'put') {
-        //TODO: Update Order.
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var imei = dataObject.postData.imei;
+                var orderId = dataObject.postData.orderid;
+                var query = "UPDATE buy_back_phone_order SET status = 4 WHERE imei LIKE '" + imei + "' " +
+                    "AND order_id = " + orderId;
+                database.query(query, function (err, updateData) {
+                    if (err) {
+                        callback(err, 500, {'res': false});
+                    } else {
+                        callback(false, 200, {'res': true});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
@@ -1152,6 +1206,38 @@ handlers.phonePrice = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         })
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * Method to get the Returned Order.
+ * This method joins the Order table and the Order status table to fetch the data.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.orderReturned = function (dataObject, callback) {
+    var key = dataObject.queryString.key;
+    if (dataObject.method === 'get') {
+        helpers.validateToken(key, function (isValid) {
+            if (isValid) {
+                var query = "SELECT * FROM order_details o,order_status_details d WHERE d.status LIKE 'Returned' AND " +
+                    "d.id=o.order_status";
+                database.query(query, function (err, returnedData) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        var array = [];
+                        for (let i = 0; i < returnedData.length; i++) {
+                            array.push(returnedData[i]);
+                        }
+                        callback(false, 200, {'res': array});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
