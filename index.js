@@ -34,6 +34,7 @@ const router = {
     'inventory-pin': handlers.inventoryPin,
     'syp': handlers.sellPhone,
     'syp-order': handlers.sellPhoneOrder,
+    'order-details': handlers.orderDetails,
     'order-returned': handlers.orderReturned
 };
 /**

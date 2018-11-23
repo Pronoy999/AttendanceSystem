@@ -743,8 +743,8 @@ handlers.inventoryDead = function (dataObject, callback) {
     helpers.validateToken(key, function (isValid) {
         if (isValid) {
             if (dataObject.method === 'get') {
-                var query = "SELECT * FROM inventory i, phone_grade_details p WHERE p.status LIKE 'Dead' " +
-                    "AND p.id = i.product_grade";
+                var query = "SELECT count(model_name) as count,model_name FROM inventory i, phone_grade_details g WHERE " +
+                    "g.status='Dead' AND i.product_grade=g.id GROUP BY model_name";
                 database.query(query, function (err, deadPhones) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -1240,6 +1240,36 @@ handlers.orderReturned = function (dataObject, callback) {
         });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * Method to get all the order Details.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.orderDetails = function (dataObject, callback) {
+    var key = dataObject.queryString.key;
+    if (dataObject.method === 'get') {
+        helpers.validateToken(key, function (isValid) {
+            if (isValid) {
+                var query = "SELECT * FROM order_details";
+                database.query(query, function (err, orderData) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        var arr = [];
+                        for (let i = 0; i < orderData.length; i++) {
+                            arr.push(orderData[i]);
+                        }
+                        callback(false, 200, {'res': arr});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(false, 400, {'res': messages.invalidRequestMessage});
     }
 };
 /**
