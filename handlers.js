@@ -38,7 +38,13 @@ handlers.otp = function (dataObject, callback) {
         if (isValid) {
             if (method === 'get') {
                 phoneNumber = queryString.phoneNumber;
-                var otp = Number(queryString.otp);
+                var otp;
+                try {
+                    otp = Number(queryString.otp);
+                } catch (e) {
+                    console.log(e);
+                    otp = 0;
+                }
                 var queryStatement = "SELECT * FROM otp WHERE mobile_number LIKE '" +
                     phoneNumber + "' AND otp = " + otp;
                 database.query(queryStatement, function (err, data) {
@@ -112,7 +118,6 @@ handlers.otp = function (dataObject, callback) {
             callback(false, 403, {'res': messages.tokenExpiredMessage});
         }
     });
-
 };
 /**
  * Handler to handle the normal text.
