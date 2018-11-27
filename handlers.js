@@ -1257,16 +1257,35 @@ handlers.orderDetails = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                var query = "SELECT * FROM order_details";
+                var status = dataObject.queryString.status;
+                var date = typeof(dataObject.queryString.date) === 'string' &&
+                dataObject.queryString.date.length > 1 ? dataObject.queryString.date : false;
+                var channelname = typeof(dataObject.queryString.channel) === 'string' &&
+                dataObject.queryString.channel.length > 1 ? dataObject.queryString.channel : false;
+                status = typeof(status) === 'string' && status.length > 1 ? status : false;
+                var query;
+                if (!status && date && channelname) {
+                    query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'  AND order_date " +
+                        "LIKE '" + date + "'";
+                } else if (status && !date && !channelname) {
+                    query = "SELECT o.* FROM order_details o,order_status_details s " +
+                        "WHERE s.status LIKE '" + status + "' " + "AND o.order_status=s.id";
+                } else if (channelname) {
+                    query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'";
+                } else if (date) {
+                    query = "SELECT * FROM order_details WHERE order_date LIKE '" + date + "'";
+                } else {
+                    query = "SELECT * FROM order_details";
+                }
                 database.query(query, function (err, orderData) {
                     if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, {'res': orderData});
                     } else {
-                        var arr = [];
+                        var array = [];
                         for (let i = 0; i < orderData.length; i++) {
-                            arr.push(orderData[i]);
+                            array.push(orderData[i]);
                         }
-                        callback(false, 200, {'res': arr});
+                        callback(false, 200, {'res': array});
                     }
                 });
             } else {
