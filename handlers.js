@@ -668,7 +668,7 @@ handlers.employee = function (dataObject, callback) {
     });
 };
 /**
- * Method to get details of phones with Vendor names.
+ * Method to get details of phones with Vendor names for a particular model name.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
@@ -739,35 +739,43 @@ handlers.getVendor = function (dataObject, callback) {
     }
 };
 /**
- * Method to get the dead phones from the inventory.
- * @param dataObject: The Request Data object.
- * @param callback: The Method callback.
+ * This is the method to get the count of distinct model based on the state.
+ * It returns count and model name based on a particular state, referred to 'service_stock_sold' table.
+ * @param dataObject: The Request Object. GET Method ?state=''
+ * @param callback: The method callback.
  */
-handlers.inventoryDead = function (dataObject, callback) {
-    var key = dataObject.queryString.key;
-    helpers.validateToken(key, function (isValid) {
-        if (isValid) {
-            if (dataObject.method === 'get') {
-                var query = "SELECT count(model_name) as count,model_name FROM inventory i, phone_grade_details g WHERE " +
-                    "g.status='Dead' AND i.product_grade=g.id GROUP BY model_name";
-                database.query(query, function (err, deadPhones) {
-                    if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
-                    } else {
-                        var array = [];
-                        for (let i = 0; i < deadPhones.length; i++) {
-                            array.push(deadPhones[i]);
+handlers.inventoryState = function (dataObject, callback) {
+    if (dataObject.method === 'get') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var state;
+                try {
+                    state = dataObject.queryString.state.trim();
+                    state = typeof(state) === 'string' && state.length > 1 ? state : false;
+                } catch (e) {
+                    state = false;
+                }
+                if (state) {
+                    const query = "SELECT count(model_name) as count,i.model_name FROM inventory i, " +
+                        "service_stock_sold_details s WHERE " +
+                        "s.sold_stock_service='" + state + "' AND s.id=i.service_stock group by i.model_name;";
+                    database.query(query, function (err, serviceData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': serviceData});
                         }
-                        callback(false, 200, {'res': array});
-                    }
-                })
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
-                callback(true, 400, {'res': messages.invalidRequestMessage});
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
-        } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
-        }
-    })
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
 };
 /**
  * Method to put the Attendance for the Employee.
