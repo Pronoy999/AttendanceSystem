@@ -597,7 +597,7 @@ handlers.token = function (dataObject, callback) {
     }
 };
 /**
- * Method to get the Distinct Models and Count.
+ * Method to get the Distinct Models and Count for all the phones present in the inventory.
  * @param dataObject
  * @param callback
  */
