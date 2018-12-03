@@ -38,7 +38,13 @@ handlers.otp = function (dataObject, callback) {
         if (isValid) {
             if (method === 'get') {
                 phoneNumber = queryString.phoneNumber;
-                var otp = Number(queryString.otp);
+                var otp;
+                try {
+                    otp = Number(queryString.otp);
+                } catch (e) {
+                    console.log(e);
+                    otp = 0;
+                }
                 var queryStatement = "SELECT * FROM otp WHERE mobile_number LIKE '" +
                     phoneNumber + "' AND otp = " + otp;
                 database.query(queryStatement, function (err, data) {
@@ -112,7 +118,6 @@ handlers.otp = function (dataObject, callback) {
             callback(false, 403, {'res': messages.tokenExpiredMessage});
         }
     });
-
 };
 /**
  * Handler to handle the normal text.
@@ -663,7 +668,7 @@ handlers.employee = function (dataObject, callback) {
     });
 };
 /**
- * Method to get details of phones with Vendor names.
+ * Method to get details of phones with Vendor names for a particular model name.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
@@ -734,35 +739,43 @@ handlers.getVendor = function (dataObject, callback) {
     }
 };
 /**
- * Method to get the dead phones from the inventory.
- * @param dataObject: The Request Data object.
- * @param callback: The Method callback.
+ * This is the method to get the count of distinct model based on the state.
+ * It returns count and model name based on a particular state, referred to 'service_stock_sold' table.
+ * @param dataObject: The Request Object. GET Method ?state=''
+ * @param callback: The method callback.
  */
-handlers.inventoryDead = function (dataObject, callback) {
-    var key = dataObject.queryString.key;
-    helpers.validateToken(key, function (isValid) {
-        if (isValid) {
-            if (dataObject.method === 'get') {
-                var query = "SELECT * FROM inventory i, phone_grade_details p WHERE p.status LIKE 'Dead' " +
-                    "AND p.id = i.product_grade";
-                database.query(query, function (err, deadPhones) {
-                    if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
-                    } else {
-                        var array = [];
-                        for (let i = 0; i < deadPhones.length; i++) {
-                            array.push(deadPhones[i]);
+handlers.inventoryState = function (dataObject, callback) {
+    if (dataObject.method === 'get') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var state;
+                try {
+                    state = dataObject.queryString.state.trim();
+                    state = typeof(state) === 'string' && state.length > 1 ? state : false;
+                } catch (e) {
+                    state = false;
+                }
+                if (state) {
+                    const query = "SELECT count(model_name) as count,i.model_name FROM inventory i, " +
+                        "service_stock_sold_details s WHERE " +
+                        "s.sold_stock_service='" + state + "' AND s.id=i.service_stock group by i.model_name;";
+                    database.query(query, function (err, serviceData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': serviceData});
                         }
-                        callback(false, 200, {'res': array});
-                    }
-                })
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
-                callback(true, 400, {'res': messages.invalidRequestMessage});
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
-        } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
-        }
-    })
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
 };
 /**
  * Method to put the Attendance for the Employee.
@@ -1240,6 +1253,55 @@ handlers.orderReturned = function (dataObject, callback) {
         });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * Method to get all the order Details.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.orderDetails = function (dataObject, callback) {
+    var key = dataObject.queryString.key;
+    if (dataObject.method === 'get') {
+        helpers.validateToken(key, function (isValid) {
+            if (isValid) {
+                var status = dataObject.queryString.status;
+                var date = typeof(dataObject.queryString.date) === 'string' &&
+                dataObject.queryString.date.length > 1 ? dataObject.queryString.date : false;
+                var channelname = typeof(dataObject.queryString.channel) === 'string' &&
+                dataObject.queryString.channel.length > 1 ? dataObject.queryString.channel : false;
+                status = typeof(status) === 'string' && status.length > 1 ? status : false;
+                var query;
+                if (!status && date && channelname) {
+                    query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'  AND order_date " +
+                        "LIKE '" + date + "'";
+                } else if (status && !date && !channelname) {
+                    query = "SELECT o.* FROM order_details o,order_status_details s " +
+                        "WHERE s.status LIKE '" + status + "' " + "AND o.order_status=s.id";
+                } else if (channelname) {
+                    query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'";
+                } else if (date) {
+                    query = "SELECT * FROM order_details WHERE order_date LIKE '" + date + "'";
+                } else {
+                    query = "SELECT * FROM order_details";
+                }
+                database.query(query, function (err, orderData) {
+                    if (err) {
+                        callback(err, 500, {'res': orderData});
+                    } else {
+                        var array = [];
+                        for (let i = 0; i < orderData.length; i++) {
+                            array.push(orderData[i]);
+                        }
+                        callback(false, 200, {'res': array});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(false, 400, {'res': messages.invalidRequestMessage});
     }
 };
 /**

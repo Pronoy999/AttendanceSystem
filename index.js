@@ -30,10 +30,11 @@ const router = {
     'inventory-imei': handlers.inventoryImei,
     'inventory-pending': handlers.inventoryPendingPhones,
     'inventory-addPhone': handlers.inventoryAddPhone,
-    'inventory-dead': handlers.inventoryDead,
+    'inventory-state': handlers.inventoryState,
     'inventory-pin': handlers.inventoryPin,
     'syp': handlers.sellPhone,
     'syp-order': handlers.sellPhoneOrder,
+    'order-details': handlers.orderDetails,
     'order-returned': handlers.orderReturned
 };
 /**
