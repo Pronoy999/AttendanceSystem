@@ -997,7 +997,7 @@ handlers.inventoryAddPhone = function (dataObject, callback) {
 handlers.inventoryPin = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (isValid) {
-            if (dataObject.method === 'post') {
+            /*if (dataObject.method === 'post') {
                 var emailId = dataObject.postData.email.trim();
                 emailId = typeof (emailId) === 'string' && emailId.length >= 5 ? emailId : false;
                 if (emailId) {
@@ -1019,7 +1019,8 @@ handlers.inventoryPin = function (dataObject, callback) {
                 } else {
                     callback(false, 400, {'res': messages.insufficientData});
                 }
-            } else if (dataObject.method === 'get') {
+            } */
+            if (dataObject.method === 'get') {
                 var userPin = dataObject.queryString.pin;
                 query = "SELECT * FROM login_pin WHERE passcode=" + userPin;
                 database.query(query, function (err, Data) {
