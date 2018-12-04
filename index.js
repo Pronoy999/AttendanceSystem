@@ -32,6 +32,7 @@ const router = {
     'inventory-addPhone': handlers.inventoryAddPhone,
     'inventory-state': handlers.inventoryState,
     'inventory-pin': handlers.inventoryPin,
+    'inventory-auth': handlers.inventoryAuth,
     'syp': handlers.sellPhone,
     'syp-order': handlers.sellPhoneOrder,
     'order-details': handlers.orderDetails,
@@ -68,10 +69,14 @@ var unifiedServer = function (req, res) {
             responseData = typeof(responseData) === 'object' ? responseData : {};
             statusCode = typeof (statusCode) === 'number' ? statusCode : 400;
             var responseObject = JSON.stringify(responseData);
-            res.setHeader('Content-Type', 'application/json');
-            res.writeHead(statusCode, message.headers);
-            res.end(responseObject);
-            console.log('Returning: ', responseObject, statusCode);
+            try {
+                res.setHeader('Content-Type', 'application/json');
+                res.writeHead(statusCode, message.headers);
+                res.end(responseObject);
+                console.log('Returning: ', responseObject, statusCode);
+            } catch (e) {
+                console.log(e);
+            }
         });
     });
 };

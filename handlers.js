@@ -1042,6 +1042,120 @@ handlers.inventoryPin = function (dataObject, callback) {
     });
 };
 /**
+ * This is the method to create a login pin and check login status of a user.
+ * This will create a OTP for inventory on successful login.
+ * This will also delete the login pin while logging out with PUT request.
+ * @param dataObject: The Request Object.
+ * @param callback: The method callback.
+ */
+handlers.inventoryAuth = function (dataObject, callback) {
+    var isLoggedIn = true, isPasswordValid = false;
+    helpers.validateToken(dataObject.queryString.key, function (isValid) {
+        if (isValid) {
+            if (dataObject.method === 'post') {
+                var email, password;
+                try {
+                    email = typeof(dataObject.postData.email) === 'string' && dataObject.postData.email.length > 0 ?
+                        dataObject.postData.email.trim() : false;
+                    password = typeof(dataObject.postData.password) === 'string' && dataObject.postData.password.length > 0 ?
+                        dataObject.postData.password.trim() : false;
+                }
+                catch (e) {
+                    email = false;
+                    password = false;
+                }
+                if (email && password) {
+                    checkLoggedIn(email);
+                    checkValidity(email, password);
+                }
+            } else if (dataObject.method === 'put') {
+                try {
+                    email = typeof(dataObject.postData.email) === 'string' && dataObject.postData.email.length > 0 ?
+                        dataObject.postData.email.trim() : false;
+                } catch (e) {
+                    email = false;
+                }
+                const query = "DELETE FROM login_pin WHERE email LIKE '" + email + "'";
+                console.log(query);
+                database.query(query, function (err, deleteData) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': true});
+                    }
+                })
+            } else {
+                callback(true, 400, {'res': messages.invalidRequestMessage});
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+
+    /**
+     * This is the method to check whether the user is already logged in or not.
+     * @param email: The email of the user.
+     */
+    function checkLoggedIn(email) {
+        var query = "SELECT * FROM login_pin WHERE email LIKE '" + email + "'";
+        database.query(query, function (err, pinData) {
+            if (err) {
+                callback(err, 500, {'res': messages.errorMessage});
+            } else {
+                if (pinData.length === 0) {
+                    isLoggedIn = false;
+                } else {
+                    callback(false, 202, {'res': messages.alreadyLoggedIn});
+                }
+                sendResponse(email);
+            }
+        });
+    }
+
+    /**
+     * This is the method to check whether the email and the password is valid or not.
+     * @param email: The Email of the user.
+     * @param password: the password.
+     */
+    function checkValidity(email, password) {
+        const query = "SELECT * FROM people WHERE email LIKE '" + email + "'";
+        database.query(query, function (err, loginData) {
+            if (err) {
+                callback(err, 500, {'res': messages.errorMessage});
+            } else {
+                if (loginData.length > 0) {
+                    if (loginData[0].email === email && loginData[0].password === password) {
+                        isPasswordValid = true;
+                        sendResponse(email);
+                    } else {
+                        callback(true, 403, {'res': false, 'message': messages.invalidPassword});
+                    }
+                } else {
+                    callback(true, 403, {'res': false, 'message': messages.invalidPassword});
+                }
+            }
+        });
+    }
+
+    /**
+     * Method to create the OTP and then insert it into the table.
+     * @param email: The Email of the user.
+     */
+    function sendResponse(email) {
+        if (!isLoggedIn && isPasswordValid) {
+            var otp = helpers.createOTP();
+            const query = "INSERT INTO login_pin VALUES('" + email + "'," + otp + ")";
+            database.query(query, function (err, pinData) {
+                if (err) {
+                    callback(err, 500, {'res': messages.errorMessage});
+                } else {
+                    callback(false, 200, {'res': true, 'otp': otp, 'email': email});
+                }
+            });
+        }
+    }
+};
+/**
  * Method to insert the Sell your phone Order and send sms and also to get Order Details and Update status
  * of the existing Order.
  * @param dataObject: The Request Object.
