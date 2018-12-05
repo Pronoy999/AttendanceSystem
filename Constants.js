@@ -1,8 +1,10 @@
 const messages = {};
 messages.tokenExpiredMessage="Invalid Token or Token Expired.";
 messages.invalidRequestMessage="Invalid Request Method.";
+messages.alreadyLoggedIn = "The User is already logged in";
 messages.errorMessage="Error.";
 messages.attendancePut="Attendance successful.";
+messages.invalidPassword = "Invalid Email or Password";
 messages.companyPrefix = "HX";
 messages.phoneInserted = "Inserted new Phone.";
 messages.insufficientData = "Insufficient Data.";
