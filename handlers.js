@@ -1054,7 +1054,7 @@ handlers.inventoryAuth = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (isValid) {
             if (dataObject.method === 'post') {
-                var email, password;
+                var email, password, isSessionDeleted, isOTPDeleted;
                 try {
                     email = typeof(dataObject.postData.email) === 'string' && dataObject.postData.email.length > 0 ?
                         dataObject.postData.email.trim() : false;
@@ -1069,22 +1069,66 @@ handlers.inventoryAuth = function (dataObject, callback) {
                     checkLoggedIn(email);
                     checkValidity(email, password);
                 }
-            } else if (dataObject.method === 'put') {
+            } else if (dataObject.method === 'get') {
                 try {
-                    email = typeof(dataObject.postData.email) === 'string' && dataObject.postData.email.length > 0 ?
-                        dataObject.postData.email.trim() : false;
+                    email = typeof(dataObject.queryString.email) === 'string' && dataObject.queryString.email.length > 0 ?
+                        dataObject.queryString.email.trim() : false;
                 } catch (e) {
                     email = false;
                 }
-                const query = "DELETE FROM login_pin WHERE email LIKE '" + email + "'";
+                query = "DELETE FROM login_pin WHERE email LIKE '" + email + "'";
                 console.log(query);
                 database.query(query, function (err, deleteData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
+                        isOTPDeleted = false;
                     } else {
+                        isOTPDeleted = true;
+                        sendResponse();
+                    }
+                });
+                query = "UPDATE people set sessionid='' WHERE email LIKE '" + email + "'";
+                database.query(query, function (err, updateData) {
+                    if (err) {
+                        isSessionDeleted = false;
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        isSessionDeleted = true;
+                        sendResponse();
+                    }
+                });
+
+                /**
+                 * Method to send the response after delete.
+                 */
+                function sendResponse() {
+                    if (isOTPDeleted && isSessionDeleted) {
                         callback(false, 200, {'res': true});
                     }
-                })
+                }
+            } else if (dataObject.method === 'put') {
+                var session;
+                try {
+                    email = typeof(dataObject.postData.email) === 'string' && dataObject.postData.email.length > 0 ?
+                        dataObject.postData.email.trim() : false;
+                    session = typeof(dataObject.postData.sessionid) === 'string' && dataObject.postData.sessionid.length > 0 ?
+                        dataObject.postData.sessionid.trim() : false;
+                } catch (e) {
+                    email = false;
+                    session = false;
+                }
+                if (email && session) {
+                    var query = "UPDATE people set sessionid='" + session + "' WHERE email LIKE '" + email + "'";
+                    database.query(query, function (err, sessionData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
             }
