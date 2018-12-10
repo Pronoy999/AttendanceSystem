@@ -72,13 +72,21 @@ helpers.insertNewPhone = function (data, callback) {
     var color = data.color;
     var status = data.status;
     var is_customer = data.is_customer;
-    var time_stamp = data.time_stamp;
+    //var time_stamp = data.time_stamp;
+    var timeDate = Math.floor((new Date().getTime()) / 1000);
+    var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
     var values = "'" + manufacturer + "','" + model + "','" + serial_number + "','" +
         imei + "','" + bssid + "','" + region + "','" + uuid + "','" + storage + "','" +
         actual_battery_capacity + "','" + battery_wear_capacity + "','" + color + "','" +
-        status + "','" + is_customer + "','" + time_stamp + "'";
-    database.insert("phone_details", values, function (err, data) {
-        callback(err, data);
+        status + "','" + is_customer + "','" + formattedDate + "'";
+    database.insert("phone_details_duplicate", values, function (err, data) {
+        if (err) {
+            console.log(err);
+        } else {
+            database.insert("phone_details", values, function (err, data) {
+                callback(err, data);
+            });
+        }
     });
 };
 /**
