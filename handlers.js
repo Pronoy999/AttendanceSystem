@@ -177,8 +177,7 @@ handlers.phone = function (dataObject, callback) {
                             'res': 'Error'
                         };
                         callback(err, 500, response);
-                    }
-                    else {
+                    } else {
                         if (data.length > 0) {
                             callback(false, 200, {res: true});
                         } else {
@@ -329,7 +328,7 @@ handlers.logCheck = function (dataObject, callback) {
         var query = "SELECT * FROM employee_details " +
             "WHERE mobile_number LIKE '" + mobileNumber + "'";
         database.query(query, function (err, data) {
-            if (typeof(data[0]) === 'undefined') {
+            if (typeof (data[0]) === 'undefined') {
                 query = "SELECT * FROM visitor_details " +
                     "WHERE mobile_number LIKE '" + mobileNumber + "'";
                 database.query(query, function (err, data) {
@@ -339,7 +338,7 @@ handlers.logCheck = function (dataObject, callback) {
                         };
                         callback(err, 500, response);
                     } else {
-                        if (typeof(data[0]) === 'undefined') {
+                        if (typeof (data[0]) === 'undefined') {
                             response = {
                                 'res': 'Not Present',
                                 'type': 'Visitor'
@@ -382,7 +381,7 @@ handlers.addVisitor = function (dataObject, callback) {
         var mobileNumber = dataObject.postData.mobile_number;
         firstName = typeof (firstName) === 'string' ? firstName : false;
         lastName = typeof (lastName) === 'string' ? lastName : false;
-        mobileNumber = typeof(mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
+        mobileNumber = typeof (mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
         if (firstName && lastName && mobileNumber) {
             var values = "'','" + firstName + "','" + lastName + "','" +
                 mobileNumber + "'";
@@ -526,7 +525,7 @@ handlers.token = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         var token = helpers.getRandomKey(16);
         var apiKey = dataObject.queryString.apikey.trim();
-        apiKey = typeof(apiKey) === 'string' && apiKey.length === 32 ? apiKey : false;
+        apiKey = typeof (apiKey) === 'string' && apiKey.length === 32 ? apiKey : false;
         var validity = Date.now() + 6000 * 60 * 60;
         if (apiKey && token) {
             response = {
@@ -555,9 +554,9 @@ handlers.token = function (dataObject, callback) {
         }
     } else if (dataObject.method === 'put') {
         var extend = dataObject.postData.extend;
-        extend = typeof(extend) === 'boolean' ? extend : false;
+        extend = typeof (extend) === 'boolean' ? extend : false;
         var apikey = dataObject.postData.apikey.trim();
-        apikey = typeof(apikey) === 'string' && apikey.length === 32 ? apikey : false;
+        apikey = typeof (apikey) === 'string' && apikey.length === 32 ? apikey : false;
         if (apikey && extend) {
             var query = "SELECT * FROM api_token WHERE api_key LIKE '" + apikey + "'";
             database.query(query, function (err, data) {
@@ -591,8 +590,7 @@ handlers.token = function (dataObject, callback) {
         } else {
             callback(true, 400, {'res': 'Missing Required Fields'});
         }
-    }
-    else {
+    } else {
         callback(false, 400, {'res': messages.invalidRequestMessage});
     }
 };
@@ -751,7 +749,7 @@ handlers.inventoryState = function (dataObject, callback) {
                 var state;
                 try {
                     state = dataObject.queryString.state.trim();
-                    state = typeof(state) === 'string' && state.length > 1 ? state : false;
+                    state = typeof (state) === 'string' && state.length > 1 ? state : false;
                 } catch (e) {
                     state = false;
                 }
@@ -854,8 +852,7 @@ handlers.attendance = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
-    }
-    else {
+    } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
 };
@@ -869,7 +866,7 @@ handlers.inventoryImei = function (dataObject, callback) {
     if (dataObject.method === 'post') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                var imei = typeof(dataObject.postData.imei) === 'string' &&
+                var imei = typeof (dataObject.postData.imei) === 'string' &&
                 dataObject.postData.imei.trim().length > 10 ?
                     dataObject.postData.imei.trim() : false;
                 if (imei) {
@@ -931,7 +928,7 @@ handlers.visit = function (dataObject, callback) {
         var visitorID;
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var visitorPhone = typeof(dataObject.postData.visitor_phone) === 'string' ? dataObject.postData.visitor_phone.trim() : false;
+                var visitorPhone = typeof (dataObject.postData.visitor_phone) === 'string' ? dataObject.postData.visitor_phone.trim() : false;
                 if (visitorPhone) {
                     var query = "SELECT id FROM visitor_details WHERE mobile_number LIKE '" + visitorPhone + "'";
                     database.query(query, function (err, visitorData) {
@@ -1056,22 +1053,23 @@ handlers.inventoryAuth = function (dataObject, callback) {
             if (dataObject.method === 'post') {
                 var email, password, isSessionDeleted, isOTPDeleted;
                 try {
-                    email = typeof(dataObject.postData.email) === 'string' && dataObject.postData.email.length > 0 ?
+                    email = typeof (dataObject.postData.email) === 'string' && dataObject.postData.email.length > 0 ?
                         dataObject.postData.email.trim() : false;
-                    password = typeof(dataObject.postData.password) === 'string' && dataObject.postData.password.length > 0 ?
+                    password = typeof (dataObject.postData.password) === 'string' && dataObject.postData.password.length > 0 ?
                         dataObject.postData.password.trim() : false;
-                }
-                catch (e) {
+                } catch (e) {
                     email = false;
                     password = false;
                 }
                 if (email && password) {
                     checkLoggedIn(email);
                     checkValidity(email, password);
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData, 'msg': false});
                 }
             } else if (dataObject.method === 'get') {
                 try {
-                    email = typeof(dataObject.queryString.email) === 'string' && dataObject.queryString.email.length > 0 ?
+                    email = typeof (dataObject.queryString.email) === 'string' && dataObject.queryString.email.length > 0 ?
                         dataObject.queryString.email.trim() : false;
                 } catch (e) {
                     email = false;
@@ -1109,9 +1107,9 @@ handlers.inventoryAuth = function (dataObject, callback) {
             } else if (dataObject.method === 'put') {
                 var session;
                 try {
-                    email = typeof(dataObject.postData.email) === 'string' && dataObject.postData.email.length > 0 ?
+                    email = typeof (dataObject.postData.email) === 'string' && dataObject.postData.email.length > 0 ?
                         dataObject.postData.email.trim() : false;
-                    session = typeof(dataObject.postData.sessionid) === 'string' && dataObject.postData.sessionid.length > 0 ?
+                    session = typeof (dataObject.postData.sessionid) === 'string' && dataObject.postData.sessionid.length > 0 ?
                         dataObject.postData.sessionid.trim() : false;
                 } catch (e) {
                     email = false;
@@ -1209,8 +1207,7 @@ handlers.inventoryAuth = function (dataObject, callback) {
 handlers.sellPhoneOrder = function (dataObject, callback) {
     if (dataObject.method === 'options') {
         callback(false, 200, {});
-    }
-    else if (dataObject.method === 'post') {
+    } else if (dataObject.method === 'post') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 const postData = dataObject.postData;
@@ -1275,9 +1272,9 @@ handlers.sellPhone = function (dataObject, callback) {
         if (isValid) {
             if (dataObject.method === 'post') {
                 var postData = dataObject.postData;
-                var brandName = typeof(postData.brand) === 'string' && postData.brand.trim().length > 0 ?
+                var brandName = typeof (postData.brand) === 'string' && postData.brand.trim().length > 0 ?
                     postData.brand.trim() : false;
-                var modelName = typeof(postData.model) === 'string' && postData.model.trim().length > 0 ?
+                var modelName = typeof (postData.model) === 'string' && postData.model.trim().length > 0 ?
                     postData.model.trim() : false;
                 if (brandName && !modelName) {
                     query = "SELECT model FROM buy_back_phone WHERE brand LIKE '" + brandName + "'";
@@ -1346,8 +1343,8 @@ handlers.phonePrice = function (dataObject, callback) {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 var postData = dataObject.postData;
-                var brand = typeof(postData.brand) === 'string' && postData.brand.trim().length > 0 ? postData.brand.trim() : false;
-                var model = typeof(postData.model) === 'string' && postData.model.trim().length > 0 ? postData.model.trim() : false;
+                var brand = typeof (postData.brand) === 'string' && postData.brand.trim().length > 0 ? postData.brand.trim() : false;
+                var model = typeof (postData.model) === 'string' && postData.model.trim().length > 0 ? postData.model.trim() : false;
                 var storage = postData.storage > 0 ? postData.storage : false;
                 if (brand && model && storage) {
                     var query = "SELECT * FROM buy_back_phone WHERE brand LIKE '" + brand + "' AND model LIKE '" + model + "'";
@@ -1416,6 +1413,8 @@ handlers.orderReturned = function (dataObject, callback) {
 };
 /**
  * Method to get all the order Details.
+ * Either you can get all the order for a channel, or based on a particular status.
+ * Based on a particular date, or hxOrderID.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
@@ -1425,11 +1424,13 @@ handlers.orderDetails = function (dataObject, callback) {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
                 var status = dataObject.queryString.status;
-                var date = typeof(dataObject.queryString.date) === 'string' &&
+                var date = typeof (dataObject.queryString.date) === 'string' &&
                 dataObject.queryString.date.length > 1 ? dataObject.queryString.date : false;
-                var channelname = typeof(dataObject.queryString.channel) === 'string' &&
+                var channelname = typeof (dataObject.queryString.channel) === 'string' &&
                 dataObject.queryString.channel.length > 1 ? dataObject.queryString.channel : false;
-                status = typeof(status) === 'string' && status.length > 1 ? status : false;
+                status = typeof (status) === 'string' && status.length > 1 ? status : false;
+                var hxOrderId = typeof (dataObject.queryString.orderid) === 'string' &&
+                dataObject.queryString.orderid.length > 0 ? dataObject.queryString.orderid : false;
                 var query;
                 if (!status && date && channelname) {
                     query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'  AND order_date " +
@@ -1441,6 +1442,8 @@ handlers.orderDetails = function (dataObject, callback) {
                     query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'";
                 } else if (date) {
                     query = "SELECT * FROM order_details WHERE order_date LIKE '" + date + "'";
+                } else if (hxOrderId) {
+                    query = "SELECT * FROM order_details WHERE hx_order_id = " + hxOrderId;
                 } else {
                     query = "SELECT * FROM order_details";
                 }
