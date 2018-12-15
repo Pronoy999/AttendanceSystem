@@ -57,7 +57,7 @@ var unifiedServer = function (req, res) {
     req.on('end', function () {
         postData += decoder.end();
         postData = helpers.parseJsonToObjects(postData);
-        var chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
+        var chosenHandler = typeof (router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
         //console.log(trimmedPath);
         var data = {
             'path': trimmedPath,
@@ -66,14 +66,14 @@ var unifiedServer = function (req, res) {
             'postData': postData
         };
         chosenHandler(data, function (err, statusCode, responseData) {
-            responseData = typeof(responseData) === 'object' ? responseData : {};
+            responseData = typeof (responseData) === 'object' ? responseData : {};
             statusCode = typeof (statusCode) === 'number' ? statusCode : 400;
             var responseObject = JSON.stringify(responseData);
             try {
                 res.setHeader('Content-Type', 'application/json');
                 res.writeHead(statusCode, message.headers);
                 res.end(responseObject);
-                console.log('Returning: ', responseObject, statusCode);
+                console.log('Returning: ', responseObject, "For Path ", trimmedPath, statusCode);
             } catch (e) {
                 console.log(e);
             }
