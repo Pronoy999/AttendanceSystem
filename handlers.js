@@ -66,6 +66,7 @@ handlers.otp = function (dataObject, callback) {
                             response = {
                                 'res': false,
                             };
+                            deleteOTP(otp);
                             callback(false, 200, response);
                         }
                     }
@@ -88,20 +89,21 @@ handlers.otp = function (dataObject, callback) {
                                 console.log(err);
                                 //Updating the Old OTP.
                                 const whereClause = "mobile_number LIKE '" + phoneNumber + "'";
-                                database.update("otp", "otp", randomOTP, whereClause, function (err, data) {
-                                    if (err) {
-                                        console.log(err);
-                                        response = {
-                                            'res': 'ERROR'
-                                        };
-                                        callback(err, 500, response);
-                                    } else {
-                                        response = {
-                                            'res': ' New OTP Send.'
-                                        };
-                                        callback(false, 200, response);
-                                    }
-                                });
+                                database.update("otp", "otp", randomOTP,
+                                    whereClause, function (err, data) {
+                                        if (err) {
+                                            console.log(err);
+                                            response = {
+                                                'res': 'ERROR'
+                                            };
+                                            callback(err, 500, response);
+                                        } else {
+                                            response = {
+                                                'res': ' New OTP Send.'
+                                            };
+                                            callback(false, 200, response);
+                                        }
+                                    });
                             } else {
                                 response = {
                                     'res': 'OTP Send.'
@@ -118,6 +120,21 @@ handlers.otp = function (dataObject, callback) {
             callback(false, 403, {'res': messages.tokenExpiredMessage});
         }
     });
+
+    /**
+     * This is the method to get the otp once it has been verified.
+     * @param otp: The otp that has been checked once.
+     */
+    function deleteOTP(otp) {
+        const query = "DELETE FROM otp WHERE otp = " + otp;
+        database.query(query, function (err) {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log(otp + " deleted");
+            }
+        });
+    }
 };
 /**
  * Handler to handle the normal text.
@@ -1042,7 +1059,8 @@ handlers.inventoryPin = function (dataObject, callback) {
 /**
  * This is the method to create a login pin and check login status of a user.
  * This will create a OTP for inventory on successful login.
- * This will also delete the login pin while logging out with PUT request.
+ * This will also update the session id of the user using the PUT Request.
+ * This will also delete the login pin while logging out with GET request.
  * @param dataObject: The Request Object.
  * @param callback: The method callback.
  */
