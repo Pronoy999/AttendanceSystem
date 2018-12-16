@@ -533,7 +533,7 @@ handlers.updateIphoneModel = function (dataObject, callback) {
     }
 };
 /**
- * Method to generate a new Token.
+ * Method to generate a new Token or update the validity of an existing token with PUT REQUEST.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
