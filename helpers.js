@@ -237,8 +237,10 @@ helpers.addInventoryPhone = function (data, callback) {
     var imei_1 = data.product_imei_1;
     var imei_2 = data.product_imei_2;
     var color = data.product_color;
-    var time = data.product_add_time;
-    var date = data.product_add_date;
+    var timeDate = Math.floor((new Date().getTime()) / 1000);
+    var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
+    var time = formattedDate[1];
+    var date = formattedDate[0];
     var price = data.product_price;
     var grade = data.product_grade;
     var vendorId = data.vendor_id;
@@ -252,10 +254,12 @@ helpers.addInventoryPhone = function (data, callback) {
     var back_cover = data.back_cover;
     var manual = data.manual;
     var connector = data.connector;
-    var values = "'','" + model_name + "'," + imei_1 + "'," + imei_2 + "'," + color + "'," + time + "'," + date + "'," +
-        price + "'," + grade + "'," + vendorId + "'," + email + "'," + service_stock + "'," +
-        isApproved + "'," + storage + "'," + charger + "'," + head_phone + "'," + ejectorTool + "'," + back_cover + "'," +
-        manual + "'," + connector + "'";
+    var remarks = data.remarks;
+    var is_photo_taken = data.is_photo_taken;
+    var values = "'','" + model_name + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
+        price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "','" +
+        isApproved + "','" + "'," + is_photo_taken + ",'" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
+        manual + "','" + connector + "','" + remarks + "'";
     database.insert("inventory", values, function (err, insertData) {
         var where = "imei LIKE '" + imei_1 + "'";
         if (!err) {

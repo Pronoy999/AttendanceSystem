@@ -988,17 +988,22 @@ handlers.visit = function (dataObject, callback) {
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
-handlers.inventoryAddPhone = function (dataObject, callback) {
+handlers.inventoryAdd = function (dataObject, callback) {
     if (dataObject.method === 'post') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                helpers.addInventoryPhone(dataObject.postData, function (err, data) {
-                    if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
-                    } else {
-                        callback(false, 200, {'res': messages.phoneInserted});
-                    }
-                });
+                var type = dataObject.queryString.type;
+                if (type === 'business') {
+                    helpers.addInventoryPhone(dataObject.postData, function (err, data) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': messages.phoneInserted});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }

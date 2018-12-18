@@ -29,7 +29,7 @@ const router = {
     'inventory-vendor': handlers.getVendor,
     'inventory-imei': handlers.inventoryImei,
     'inventory-pending': handlers.inventoryPendingPhones,
-    'inventory-addPhone': handlers.inventoryAddPhone,
+    'inventory-add': handlers.inventoryAdd,
     'inventory-state': handlers.inventoryState,
     'inventory-pin': handlers.inventoryPin,
     'inventory-auth': handlers.inventoryAuth,
