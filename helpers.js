@@ -35,11 +35,10 @@ helpers.validateToken = function (key, callback) {
             if (err) {
                 callback(false);
             } else {
-                if (typeof(data[0]) !== 'undefined') {
+                if (typeof (data[0]) !== 'undefined') {
                     if (Number(data[0].validity) === -1) {
                         callback(true);
-                    }
-                    else if (data[0].token === key && Number(data[0].validity) > Date.now()) {
+                    } else if (data[0].token === key && Number(data[0].validity) > Date.now()) {
                         callback(true);
                     } else {
                         callback(false);
@@ -221,7 +220,7 @@ helpers.getStatusValue = function (status, callback) {
  */
 helpers.getRandomKey = function (len) {
     var possibleCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    len = typeof(len) === 'number' && len > 0 ? len : 16;
+    len = typeof (len) === 'number' && len > 0 ? len : 16;
     var key = '';
     for (var i = 1; i <= len; i++) {
         key += possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters.length));
@@ -264,6 +263,7 @@ helpers.addInventoryPhone = function (data, callback) {
                 callback(err, updateData);
             });
         } else {
+            console.log(err);
             callback(err, {});
         }
     });

@@ -66,27 +66,31 @@ handlers.otp = function (dataObject, callback) {
                             response = {
                                 'res': false,
                             };
-                            deleteOTP(otp);
                             callback(false, 200, response);
                         }
+                        deleteOTP(otp);
                     }
                 });
             } else if (method === 'post') {
                 phoneNumber = dataObject.postData.phoneNumber;
-                var randomData = dataObject.postData.randomData;
+                var randomData;
+                try {
+                    randomData = dataObject.postData.randomData;
+                } catch (e) {
+                    randomData = '';
+                }
                 snsLib.sendOTP(phoneNumber, function (err, randomOTP) {
                     if (err) {
-                        console.log(err);
                         console.log(err);
                         response = {
                             'res': 'ERROR'
                         };
                         callback(err, 500, response);
                     } else {
-                        var values = "'" + phoneNumber + "'," + randomOTP + "','" + randomData;
+                        var values = "'" + phoneNumber + "'," + randomOTP + ",'" + randomData + "'";
                         database.insert("otp", values, function (err, data) {
                             if (err) {
-                                console.log(err);
+                                //console.log(err);
                                 //Updating the Old OTP.
                                 const whereClause = "mobile_number LIKE '" + phoneNumber + "'";
                                 database.update("otp", "otp", randomOTP,
@@ -980,7 +984,7 @@ handlers.visit = function (dataObject, callback) {
     }
 };
 /**
- * Method to insert the New phone to the Invetory.
+ * Method to insert the New phone to the Inventory.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
