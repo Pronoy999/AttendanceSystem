@@ -55,53 +55,61 @@ handlers.otp = function (dataObject, callback) {
                         };
                         callback(err, 500, response);
                     } else {
-                        var serverOTP = data[0].otp;
-                        if (serverOTP === otp) {
-                            response = {
-                                'res': true,
-                                'data': data[0].random_data
-                            };
-                            callback(false, 200, response);
-                        } else {
-                            response = {
-                                'res': false,
-                            };
-                            callback(false, 200, response);
+                        if (data.length > 0) {
+                            var serverOTP = data[0].otp;
+                            if (serverOTP === otp) {
+                                response = {
+                                    'res': true,
+                                    'data': data[0].random_data
+                                };
+                                callback(false, 200, response);
+                            } else {
+                                response = {
+                                    'res': false,
+                                };
+                                callback(false, 200, response);
+                            }
+                            deleteOTP(otp);
                         }
                     }
                 });
             } else if (method === 'post') {
                 phoneNumber = dataObject.postData.phoneNumber;
-                var randomData = dataObject.postData.randomData;
+                var randomData;
+                try {
+                    randomData = dataObject.postData.randomData;
+                } catch (e) {
+                    randomData = '';
+                }
                 snsLib.sendOTP(phoneNumber, function (err, randomOTP) {
                     if (err) {
-                        console.log(err);
                         console.log(err);
                         response = {
                             'res': 'ERROR'
                         };
                         callback(err, 500, response);
                     } else {
-                        var values = "'" + phoneNumber + "'," + randomOTP + "','" + randomData;
+                        var values = "'" + phoneNumber + "'," + randomOTP + ",'" + randomData + "'";
                         database.insert("otp", values, function (err, data) {
                             if (err) {
-                                console.log(err);
+                                //console.log(err);
                                 //Updating the Old OTP.
                                 const whereClause = "mobile_number LIKE '" + phoneNumber + "'";
-                                database.update("otp", "otp", randomOTP, whereClause, function (err, data) {
-                                    if (err) {
-                                        console.log(err);
-                                        response = {
-                                            'res': 'ERROR'
-                                        };
-                                        callback(err, 500, response);
-                                    } else {
-                                        response = {
-                                            'res': ' New OTP Send.'
-                                        };
-                                        callback(false, 200, response);
-                                    }
-                                });
+                                database.update("otp", "otp", randomOTP,
+                                    whereClause, function (err, data) {
+                                        if (err) {
+                                            console.log(err);
+                                            response = {
+                                                'res': 'ERROR'
+                                            };
+                                            callback(err, 500, response);
+                                        } else {
+                                            response = {
+                                                'res': ' New OTP Send.'
+                                            };
+                                            callback(false, 200, response);
+                                        }
+                                    });
                             } else {
                                 response = {
                                     'res': 'OTP Send.'
@@ -118,6 +126,21 @@ handlers.otp = function (dataObject, callback) {
             callback(false, 403, {'res': messages.tokenExpiredMessage});
         }
     });
+
+    /**
+     * This is the method to get the otp once it has been verified.
+     * @param otp: The otp that has been checked once.
+     */
+    function deleteOTP(otp) {
+        const query = "DELETE FROM otp WHERE otp = " + otp;
+        database.query(query, function (err) {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log(otp + " deleted");
+            }
+        });
+    }
 };
 /**
  * Handler to handle the normal text.
@@ -516,7 +539,7 @@ handlers.updateIphoneModel = function (dataObject, callback) {
     }
 };
 /**
- * Method to generate a new Token.
+ * Method to generate a new Token or update the validity of an existing token with PUT REQUEST.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
@@ -963,21 +986,26 @@ handlers.visit = function (dataObject, callback) {
     }
 };
 /**
- * Method to insert the New phone to the Invetory.
+ * Method to insert the New phone to the Inventory.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
-handlers.inventoryAddPhone = function (dataObject, callback) {
+handlers.inventoryAdd = function (dataObject, callback) {
     if (dataObject.method === 'post') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                helpers.addInventoryPhone(dataObject.postData, function (err, data) {
-                    if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
-                    } else {
-                        callback(false, 200, {'res': messages.phoneInserted});
-                    }
-                });
+                var type = dataObject.queryString.type;
+                if (type === 'business') {
+                    helpers.addInventoryPhone(dataObject.postData, function (err, data) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': messages.phoneInserted});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
@@ -1042,7 +1070,8 @@ handlers.inventoryPin = function (dataObject, callback) {
 /**
  * This is the method to create a login pin and check login status of a user.
  * This will create a OTP for inventory on successful login.
- * This will also delete the login pin while logging out with PUT request.
+ * This will also update the session id of the user using the PUT Request.
+ * This will also delete the login pin while logging out with GET request.
  * @param dataObject: The Request Object.
  * @param callback: The method callback.
  */
@@ -1464,6 +1493,105 @@ handlers.orderDetails = function (dataObject, callback) {
         });
     } else {
         callback(false, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * This is the method to update the order status based on the condition.
+ * @param dataObject: The Request Object.
+ * @param callback: the method callback.
+ */
+handlers.orderStatus = function (dataObject, callback) {
+    if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var type, channelOrderID;
+                try {
+                    type = typeof (dataObject.queryString.type) === 'string' &&
+                    dataObject.queryString.type.length > 1 ? dataObject.queryString.type.trim() : false;
+                    channelOrderID = typeof (dataObject.queryString.orderid) === 'string' &&
+                    dataObject.queryString.orderid.length > 1 ? dataObject.queryString.orderid.trim() : false;
+                } catch (e) {
+                    type = false;
+                    channelOrderID = false;
+                }
+                if (type === 'photo') {
+                    var query = "UPDATE order_details SET is_photo_taken = 1" +
+                        " WHERE channel_order_id LIKE '" + channelOrderID + "'";
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * This is the method to get the Details of certain tables or the mapped values.
+ * Such as Grade, service stock
+ * @param dataObject: The Request Method.
+ * @param callback: The Method callback.
+ */
+handlers.details = function (dataObject, callback) {
+    var query;
+    if (dataObject.method === 'get') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var type;
+                try {
+                    type = typeof (dataObject.queryString.type) === 'string' &&
+                    dataObject.queryString.type.length > 1 ? dataObject.queryString.type.trim() : false;
+                } catch (e) {
+                    console.log(e);
+                    type = false;
+                }
+                if (type === 'vendor') {
+                    query = "SELECT * FROM vendor_details";
+                    database.query(query, function (err, vendorData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': vendorData});
+                        }
+                    });
+                } else if (type === 'productGrade') {
+                    query = "SELECT * FROM phone_grade_details";
+                    database.query(query, function (err, gradeData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': gradeData});
+                        }
+                    });
+                } else if (type === 'serviceStock') {
+                    query = "SELECT * FROM service_stock_sold_details";
+                    database.query(query, function (err, serviceData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': serviceData});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
     }
 };
 /**

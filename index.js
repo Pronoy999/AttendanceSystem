@@ -29,14 +29,16 @@ const router = {
     'inventory-vendor': handlers.getVendor,
     'inventory-imei': handlers.inventoryImei,
     'inventory-pending': handlers.inventoryPendingPhones,
-    'inventory-addPhone': handlers.inventoryAddPhone,
+    'inventory-add': handlers.inventoryAdd,
     'inventory-state': handlers.inventoryState,
     'inventory-pin': handlers.inventoryPin,
     'inventory-auth': handlers.inventoryAuth,
     'syp': handlers.sellPhone,
     'syp-order': handlers.sellPhoneOrder,
     'order-details': handlers.orderDetails,
-    'order-returned': handlers.orderReturned
+    'order-returned': handlers.orderReturned,
+    'order-status': handlers.orderStatus,
+    'details': handlers.details
 };
 /**
  * Method which controls the Server.

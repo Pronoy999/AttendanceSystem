@@ -35,11 +35,10 @@ helpers.validateToken = function (key, callback) {
             if (err) {
                 callback(false);
             } else {
-                if (typeof(data[0]) !== 'undefined') {
+                if (typeof (data[0]) !== 'undefined') {
                     if (Number(data[0].validity) === -1) {
                         callback(true);
-                    }
-                    else if (data[0].token === key && Number(data[0].validity) > Date.now()) {
+                    } else if (data[0].token === key && Number(data[0].validity) > Date.now()) {
                         callback(true);
                     } else {
                         callback(false);
@@ -221,7 +220,7 @@ helpers.getStatusValue = function (status, callback) {
  */
 helpers.getRandomKey = function (len) {
     var possibleCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    len = typeof(len) === 'number' && len > 0 ? len : 16;
+    len = typeof (len) === 'number' && len > 0 ? len : 16;
     var key = '';
     for (var i = 1; i <= len; i++) {
         key += possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters.length));
@@ -234,12 +233,15 @@ helpers.getRandomKey = function (len) {
  * @param callback: The Method callback.
  */
 helpers.addInventoryPhone = function (data, callback) {
+    console.log(data);
     var model_name = data.model_name;
     var imei_1 = data.product_imei_1;
     var imei_2 = data.product_imei_2;
     var color = data.product_color;
-    var time = data.product_add_time;
-    var date = data.product_add_date;
+    var timeDate = Math.floor((new Date().getTime()) / 1000);
+    var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
+    var time = formattedDate[1];
+    var date = formattedDate[0];
     var price = data.product_price;
     var grade = data.product_grade;
     var vendorId = data.vendor_id;
@@ -253,10 +255,17 @@ helpers.addInventoryPhone = function (data, callback) {
     var back_cover = data.back_cover;
     var manual = data.manual;
     var connector = data.connector;
-    var values = "'','" + model_name + "'," + imei_1 + "'," + imei_2 + "'," + color + "'," + time + "'," + date + "'," +
-        price + "'," + grade + "'," + vendorId + "'," + email + "'," + service_stock + "'," +
-        isApproved + "'," + storage + "'," + charger + "'," + head_phone + "'," + ejectorTool + "'," + back_cover + "'," +
-        manual + "'," + connector + "'";
+    var remarks = data.remarks;
+    charger = checkValid(charger);
+    head_phone = checkValid(head_phone);
+    ejectorTool = checkValid(ejectorTool);
+    back_cover = checkValid(back_cover);
+    manual = checkValid(manual);
+    connector = checkValid(connector);
+    var values = "'','" + model_name + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
+        price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "','" +
+        isApproved + "','" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
+        manual + "','" + connector + "','" + remarks + "'";
     database.insert("inventory", values, function (err, insertData) {
         var where = "imei LIKE '" + imei_1 + "'";
         if (!err) {
@@ -264,9 +273,19 @@ helpers.addInventoryPhone = function (data, callback) {
                 callback(err, updateData);
             });
         } else {
+            console.log(err);
             callback(err, {});
         }
     });
+
+    /**
+     * Method to check the validity of the accessories.
+     * @param value
+     * @returns {string}
+     */
+    function checkValid(value) {
+        return typeof (value) === 'string' ? value : 'no';
+    }
 };
 /**
  * Method to get a Random OTP.
