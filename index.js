@@ -37,7 +37,8 @@ const router = {
     'syp-order': handlers.sellPhoneOrder,
     'order-details': handlers.orderDetails,
     'order-returned': handlers.orderReturned,
-    'order-status': handlers.orderStatus
+    'order-status': handlers.orderStatus,
+    'details': handlers.details
 };
 /**
  * Method which controls the Server.

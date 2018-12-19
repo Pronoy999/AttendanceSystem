@@ -1535,6 +1535,66 @@ handlers.orderStatus = function (dataObject, callback) {
     }
 };
 /**
+ * This is the method to get the Details of certain tables or the mapped values.
+ * Such as Grade, service stock
+ * @param dataObject: The Request Method.
+ * @param callback: The Method callback.
+ */
+handlers.details = function (dataObject, callback) {
+    var query;
+    if (dataObject.method === 'get') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var type;
+                try {
+                    type = typeof (dataObject.queryString.type) === 'string' &&
+                    dataObject.queryString.type.length > 1 ? dataObject.queryString.type.trim() : false;
+                } catch (e) {
+                    console.log(e);
+                    type = false;
+                }
+                if (type === 'vendor') {
+                    query = "SELECT * FROM vendor_details";
+                    database.query(query, function (err, vendorData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': vendorData});
+                        }
+                    });
+                } else if (type === 'productGrade') {
+                    query = "SELECT * FROM phone_grade_details";
+                    database.query(query, function (err, gradeData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': gradeData});
+                        }
+                    });
+                } else if (type === 'serviceStock') {
+                    query = "SELECT * FROM service_stock_sold_details";
+                    database.query(query, function (err, serviceData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': serviceData});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;

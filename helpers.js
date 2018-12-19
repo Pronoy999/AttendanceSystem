@@ -256,21 +256,36 @@ helpers.addInventoryPhone = function (data, callback) {
     var manual = data.manual;
     var connector = data.connector;
     var remarks = data.remarks;
+    charger = checkValid(charger);
+    head_phone = checkValid(head_phone);
+    ejectorTool = checkValid(ejectorTool);
+    back_cover = checkValid(back_cover);
+    manual = checkValid(manual);
+    connector = checkValid(connector);
     var values = "'','" + model_name + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
         price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "','" +
-        isApproved + "','" + "'," + storage + ",'" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
+        isApproved + "','" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
         manual + "','" + connector + "','" + remarks + "'";
     database.insert("inventory", values, function (err, insertData) {
         var where = "imei LIKE '" + imei_1 + "'";
         if (!err) {
-            /*database.update("phone_details", "status", service_stock, where, function (err, updateData) {
+            database.update("phone_details", "status", service_stock, where, function (err, updateData) {
                 callback(err, updateData);
-            });*/
+            });
         } else {
             console.log(err);
             callback(err, {});
         }
     });
+
+    /**
+     * Method to check the validity of the accessories.
+     * @param value
+     * @returns {string}
+     */
+    function checkValid(value) {
+        return typeof (value) === 'string' ? value : 'no';
+    }
 };
 /**
  * Method to get a Random OTP.
