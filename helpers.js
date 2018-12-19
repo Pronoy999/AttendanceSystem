@@ -233,6 +233,7 @@ helpers.getRandomKey = function (len) {
  * @param callback: The Method callback.
  */
 helpers.addInventoryPhone = function (data, callback) {
+    console.log(data);
     var model_name = data.model_name;
     var imei_1 = data.product_imei_1;
     var imei_2 = data.product_imei_2;
@@ -255,17 +256,16 @@ helpers.addInventoryPhone = function (data, callback) {
     var manual = data.manual;
     var connector = data.connector;
     var remarks = data.remarks;
-    var is_photo_taken = data.is_photo_taken;
     var values = "'','" + model_name + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
         price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "','" +
-        isApproved + "','" + "'," + is_photo_taken + ",'" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
+        isApproved + "','" + "'," + storage + ",'" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
         manual + "','" + connector + "','" + remarks + "'";
     database.insert("inventory", values, function (err, insertData) {
         var where = "imei LIKE '" + imei_1 + "'";
         if (!err) {
-            database.update("phone_details", "status", service_stock, where, function (err, updateData) {
+            /*database.update("phone_details", "status", service_stock, where, function (err, updateData) {
                 callback(err, updateData);
-            });
+            });*/
         } else {
             console.log(err);
             callback(err, {});

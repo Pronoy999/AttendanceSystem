@@ -55,20 +55,22 @@ handlers.otp = function (dataObject, callback) {
                         };
                         callback(err, 500, response);
                     } else {
-                        var serverOTP = data[0].otp;
-                        if (serverOTP === otp) {
-                            response = {
-                                'res': true,
-                                'data': data[0].random_data
-                            };
-                            callback(false, 200, response);
-                        } else {
-                            response = {
-                                'res': false,
-                            };
-                            callback(false, 200, response);
+                        if (data.length > 0) {
+                            var serverOTP = data[0].otp;
+                            if (serverOTP === otp) {
+                                response = {
+                                    'res': true,
+                                    'data': data[0].random_data
+                                };
+                                callback(false, 200, response);
+                            } else {
+                                response = {
+                                    'res': false,
+                                };
+                                callback(false, 200, response);
+                            }
+                            deleteOTP(otp);
                         }
-                        deleteOTP(otp);
                     }
                 });
             } else if (method === 'post') {
@@ -1491,6 +1493,45 @@ handlers.orderDetails = function (dataObject, callback) {
         });
     } else {
         callback(false, 400, {'res': messages.invalidRequestMessage});
+    }
+};
+/**
+ * This is the method to update the order status based on the condition.
+ * @param dataObject: The Request Object.
+ * @param callback: the method callback.
+ */
+handlers.orderStatus = function (dataObject, callback) {
+    if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var type, channelOrderID;
+                try {
+                    type = typeof (dataObject.queryString.type) === 'string' &&
+                    dataObject.queryString.type.length > 1 ? dataObject.queryString.type.trim() : false;
+                    channelOrderID = typeof (dataObject.queryString.orderid) === 'string' &&
+                    dataObject.queryString.orderid.length > 1 ? dataObject.queryString.orderid.trim() : false;
+                } catch (e) {
+                    type = false;
+                    channelOrderID = false;
+                }
+                if (type === 'photo') {
+                    var query = "UPDATE order_details SET is_photo_taken = 1" +
+                        " WHERE channel_order_id LIKE '" + channelOrderID + "'";
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
     }
 };
 /**
