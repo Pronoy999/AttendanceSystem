@@ -1545,7 +1545,7 @@ handlers.details = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var type;
+                let type;
                 try {
                     type = typeof (dataObject.queryString.type) === 'string' &&
                     dataObject.queryString.type.length > 1 ? dataObject.queryString.type.trim() : false;

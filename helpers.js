@@ -121,17 +121,21 @@ helpers.insertNewReport = function (data, callback) {
     var microphone = data.microphone;
     var screen_brightness = data.screen_brightness;
     var fingerprint = data.fingerprint;
+    var actualBattery = data.actual_battery_capacity;
+    var batteryWear = data.battery_wear_capacity;
     var overall_status = data.overall_status;
     var report_uuid = data.report_uuid;
-    var report_date = data.report_date;
+    var timeDate = Math.floor((new Date().getTime()) / 1000);
+    var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
     var email = data.email;
     var values = "'" + imei + "','" + ram + "','" + battery + "','" + wifi + "','" + bluetooth + "','" + nfc + "','" +
         flash + "','" + acclerometer + "','" + gyroscope + "','" + external_storage + "','" + touch + "','" +
         speaker + "','" + volume_up + "','" + volume_down + "','" + proximity + "','" + rear_camera + "','" +
         front_camera + "','" + back_button + "','" + home_button + "','" + power_button + "','" +
         vibration + "','" + charger + "','" + headphone + "','" + rgb + "','" + microphone + "','" +
-        screen_brightness + "','" + fingerprint + "','" + overall_status + "','" + report_uuid + "','" +
-        report_date + "','" + email + "'";
+        screen_brightness + "','" + fingerprint + "','" + actualBattery + "','" + batteryWear + "','" +
+        overall_status + "','" + report_uuid + "','" +
+        formattedDate + "','" + email + "'";
     database.insert("report_details", values, function (err, data) {
         callback(err, data);
     });
