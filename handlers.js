@@ -144,31 +144,45 @@ handlers.otp = function (dataObject, callback) {
 };
 /**
  * Handler to handle the normal text.
+ * This is the method to send the normal text with one or multiple numbers separated by commas.
+ * It tries to send the texts if any one fails it returns the 'overall' as false.
+ * Even if one is successful it will send 'Message send'.
  * @param dataObject: The Data Object.
  * @param callback: The method callback.
  */
 handlers.text = function (dataObject, callback) {
-    var response = {};
-    var phoneNumber = dataObject.postData.phoneNumber;
-    var text = dataObject.postData.text;
-    var method = dataObject.method;
-    var queryString = dataObject.queryString;
+    let response = {};
+    const phoneNumber = dataObject.postData.phoneNumber;
+    let array = phoneNumber.split(',');
+    let text = dataObject.postData.text;
+    const method = dataObject.method;
+    const queryString = dataObject.queryString;
+    var counter = 0, overallStatus = true;
+
+    /**
+     * Method to send the Text.
+     * @param number: The Phone number starting with +91.
+     * @param msg: The Text message to be send.
+     */
+    function sendText(number, msg) {
+        snsLib.sendMessage(number, msg, function (err) {
+            if (err) {
+                console.log(err);
+                sendResponse(false);
+                counter++;
+            } else {
+                sendResponse(true);
+                counter++;
+            }
+        });
+    }
+
     helpers.validateToken(queryString.key, function (isValid) {
         if (isValid) {
             if (method === 'post') {
-                snsLib.sendMessage(phoneNumber, text, function (err) {
-                    if (err) {
-                        response = {
-                            'res': 'Error'
-                        };
-                        callback(err, 500, response);
-                    } else {
-                        response = {
-                            'res': 'Message Send'
-                        };
-                        callback(false, 200, response);
-                    }
-                });
+                for (let i = 0; i < array.length; i++) {
+                    sendText(array[i], text);
+                }
             } else {
                 response = {
                     'res': 'Invalid Request'
@@ -179,6 +193,17 @@ handlers.text = function (dataObject, callback) {
             callback(false, 403, {'res': messages.tokenExpiredMessage});
         }
     });
+
+    /**
+     * Method to send the Response back to the caller.
+     * @param status: true if successfully send, else false.
+     */
+    function sendResponse(status) {
+        if (!status) overallStatus = false;
+        if (counter === array.length - 1) {
+            callback(false, 200, {'res': 'Message Send', 'overall': overallStatus});
+        }
+    }
 };
 /**
  * Method to either INSERT new Phones or to check for old ones.
