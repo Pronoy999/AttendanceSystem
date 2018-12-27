@@ -1531,7 +1531,7 @@ handlers.orderStatus = function (dataObject, callback) {
     if (dataObject.method === 'put') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var type, channelOrderID, hxorderid, status;
+                var type = false, channelOrderID = false, hxorderid = false, status = false;
                 try {
                     type = typeof (dataObject.queryString.type) === 'string' &&
                     dataObject.queryString.type.length > 1 ? dataObject.queryString.type : false;
@@ -1542,13 +1542,10 @@ handlers.orderStatus = function (dataObject, callback) {
                     status = typeof (dataObject.queryString.status) === 'string' &&
                     dataObject.queryString.status.length > 1 ? dataObject.queryString.status : false;
                 } catch (e) {
-                    type = false;
-                    channelOrderID = false;
-                    hxorderid = false;
-                    status = false;
+                    console.log(e);
                 }
-                if (type === 'photo') {
-                    const query = "UPDATE order_details SET is_photo_taken = 1" +
+                if (type === 'video') {
+                    const query = "UPDATE order_details SET is_video_taken = 1" +
                         " WHERE channel_order_id LIKE '" + channelOrderID + "'";
                     database.query(query, function (err, updateData) {
                         if (err) {
