@@ -119,6 +119,8 @@ handlers.otp = function (dataObject, callback) {
                         });
                     }
                 });
+            } else if (dataObject.method === 'options') {
+                callback(true, 200, {});//Accepting Options.
             } else {
                 callback(false, 400, {'res': 'Invalid Request Method.'});
             }
@@ -846,7 +848,7 @@ handlers.attendance = function (dataObject, callback) {
                             .split(' ');
                         var date = formattedDate[0];
                         var time = formattedDate[1];
-                        query = "INSERT INTO attendance_record VALUES (" + id + ",'" +
+                        query = "INSERT INTO attendance_record VALUES (''," + id + ",'" +
                             new_status + "','" + timestamp + "','" + location + "','" + date + "','" + time + "')";
                         console.log(query);
                         database.query(query, function (err, insertData) {
@@ -1529,18 +1531,24 @@ handlers.orderStatus = function (dataObject, callback) {
     if (dataObject.method === 'put') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var type, channelOrderID;
+                var type, channelOrderID, hxorderid, status;
                 try {
                     type = typeof (dataObject.queryString.type) === 'string' &&
-                    dataObject.queryString.type.length > 1 ? dataObject.queryString.type.trim() : false;
+                    dataObject.queryString.type.length > 1 ? dataObject.queryString.type : false;
                     channelOrderID = typeof (dataObject.queryString.orderid) === 'string' &&
-                    dataObject.queryString.orderid.length > 1 ? dataObject.queryString.orderid.trim() : false;
+                    dataObject.queryString.orderid.length > 1 ? dataObject.queryString.orderid : false;
+                    hxorderid = typeof (dataObject.queryString.hxorderid) === 'string' &&
+                    dataObject.queryString.hxorderid.length > 0 ? dataObject.queryString.hxorderid : false;
+                    status = typeof (dataObject.queryString.status) === 'string' &&
+                    dataObject.queryString.status.length > 1 ? dataObject.queryString.status : false;
                 } catch (e) {
                     type = false;
                     channelOrderID = false;
+                    hxorderid = false;
+                    status = false;
                 }
                 if (type === 'photo') {
-                    var query = "UPDATE order_details SET is_photo_taken = 1" +
+                    const query = "UPDATE order_details SET is_photo_taken = 1" +
                         " WHERE channel_order_id LIKE '" + channelOrderID + "'";
                     database.query(query, function (err, updateData) {
                         if (err) {
@@ -1550,6 +1558,20 @@ handlers.orderStatus = function (dataObject, callback) {
                             callback(false, 200, {'res': true});
                         }
                     });
+                } else if (type === 'status') {
+                    const query = "UPDATE order_details o, order_status_details s " +
+                        "SET o.order_status = s.id WHERE s.status= '" + status +
+                        "' AND o.hx_order_id= " + hxorderid;
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
                 }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
