@@ -119,6 +119,8 @@ handlers.otp = function (dataObject, callback) {
                         });
                     }
                 });
+            } else if (dataObject.method === 'options') {
+                callback(true, 200, {});//Accepting Options.
             } else {
                 callback(false, 400, {'res': 'Invalid Request Method.'});
             }
@@ -144,31 +146,45 @@ handlers.otp = function (dataObject, callback) {
 };
 /**
  * Handler to handle the normal text.
+ * This is the method to send the normal text with one or multiple numbers separated by commas.
+ * It tries to send the texts if any one fails it returns the 'overall' as false.
+ * Even if one is successful it will send 'Message send'.
  * @param dataObject: The Data Object.
  * @param callback: The method callback.
  */
 handlers.text = function (dataObject, callback) {
-    var response = {};
-    var phoneNumber = dataObject.postData.phoneNumber;
-    var text = dataObject.postData.text;
-    var method = dataObject.method;
-    var queryString = dataObject.queryString;
+    let response = {};
+    const phoneNumber = dataObject.postData.phoneNumber;
+    let array = phoneNumber.split(',');
+    let text = dataObject.postData.text;
+    const method = dataObject.method;
+    const queryString = dataObject.queryString;
+    var counter = 0, overallStatus = true;
+
+    /**
+     * Method to send the Text.
+     * @param number: The Phone number starting with +91.
+     * @param msg: The Text message to be send.
+     */
+    function sendText(number, msg) {
+        snsLib.sendMessage(number, msg, function (err) {
+            if (err) {
+                console.log(err);
+                sendResponse(false);
+                counter++;
+            } else {
+                sendResponse(true);
+                counter++;
+            }
+        });
+    }
+
     helpers.validateToken(queryString.key, function (isValid) {
         if (isValid) {
             if (method === 'post') {
-                snsLib.sendMessage(phoneNumber, text, function (err) {
-                    if (err) {
-                        response = {
-                            'res': 'Error'
-                        };
-                        callback(err, 500, response);
-                    } else {
-                        response = {
-                            'res': 'Message Send'
-                        };
-                        callback(false, 200, response);
-                    }
-                });
+                for (let i = 0; i < array.length; i++) {
+                    sendText(array[i], text);
+                }
             } else {
                 response = {
                     'res': 'Invalid Request'
@@ -179,6 +195,17 @@ handlers.text = function (dataObject, callback) {
             callback(false, 403, {'res': messages.tokenExpiredMessage});
         }
     });
+
+    /**
+     * Method to send the Response back to the caller.
+     * @param status: true if successfully send, else false.
+     */
+    function sendResponse(status) {
+        if (!status) overallStatus = false;
+        if (counter === array.length - 1) {
+            callback(false, 200, {'res': 'Message Send', 'overall': overallStatus});
+        }
+    }
 };
 /**
  * Method to either INSERT new Phones or to check for old ones.
@@ -821,7 +848,7 @@ handlers.attendance = function (dataObject, callback) {
                             .split(' ');
                         var date = formattedDate[0];
                         var time = formattedDate[1];
-                        query = "INSERT INTO attendance_record VALUES (" + id + ",'" +
+                        query = "INSERT INTO attendance_record VALUES (''," + id + ",'" +
                             new_status + "','" + timestamp + "','" + location + "','" + date + "','" + time + "')";
                         console.log(query);
                         database.query(query, function (err, insertData) {
@@ -1504,18 +1531,24 @@ handlers.orderStatus = function (dataObject, callback) {
     if (dataObject.method === 'put') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var type, channelOrderID;
+                var type, channelOrderID, hxorderid, status;
                 try {
                     type = typeof (dataObject.queryString.type) === 'string' &&
-                    dataObject.queryString.type.length > 1 ? dataObject.queryString.type.trim() : false;
+                    dataObject.queryString.type.length > 1 ? dataObject.queryString.type : false;
                     channelOrderID = typeof (dataObject.queryString.orderid) === 'string' &&
-                    dataObject.queryString.orderid.length > 1 ? dataObject.queryString.orderid.trim() : false;
+                    dataObject.queryString.orderid.length > 1 ? dataObject.queryString.orderid : false;
+                    hxorderid = typeof (dataObject.queryString.hxorderid) === 'string' &&
+                    dataObject.queryString.hxorderid.length > 0 ? dataObject.queryString.hxorderid : false;
+                    status = typeof (dataObject.queryString.status) === 'string' &&
+                    dataObject.queryString.status.length > 1 ? dataObject.queryString.status : false;
                 } catch (e) {
                     type = false;
                     channelOrderID = false;
+                    hxorderid = false;
+                    status = false;
                 }
                 if (type === 'photo') {
-                    var query = "UPDATE order_details SET is_photo_taken = 1" +
+                    const query = "UPDATE order_details SET is_photo_taken = 1" +
                         " WHERE channel_order_id LIKE '" + channelOrderID + "'";
                     database.query(query, function (err, updateData) {
                         if (err) {
@@ -1525,6 +1558,20 @@ handlers.orderStatus = function (dataObject, callback) {
                             callback(false, 200, {'res': true});
                         }
                     });
+                } else if (type === 'status') {
+                    const query = "UPDATE order_details o, order_status_details s " +
+                        "SET o.order_status = s.id WHERE s.status= '" + status +
+                        "' AND o.hx_order_id= " + hxorderid;
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
                 }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
@@ -1545,7 +1592,7 @@ handlers.details = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var type;
+                let type;
                 try {
                     type = typeof (dataObject.queryString.type) === 'string' &&
                     dataObject.queryString.type.length > 1 ? dataObject.queryString.type.trim() : false;
