@@ -123,19 +123,30 @@ helpers.insertNewReport = function (data, callback) {
     var fingerprint = data.fingerprint;
     var actualBattery = data.actual_battery_capacity;
     var batteryWear = data.battery_wear_capacity;
+    var matchIMEI = data.match_imei;
+    var scratches = data.scratches;
+    var dents = data.dents;
+    var appleId = data.apple_id_logout;
+    var temperedGlass = data.tempered_glass_removed;
+    var pasting = data.pasting;
+    var marks = data.marks;
+    var softSleeve = data.soft_sleeve;
+    var plasticWrap = data.plastic_wrap;
     var overall_status = data.overall_status;
     var report_uuid = data.report_uuid;
     var timeDate = Math.floor((new Date().getTime()) / 1000);
     var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
     var email = data.email;
+    var isUpdated = data.is_updated;
     var values = "'" + imei + "','" + ram + "','" + battery + "','" + wifi + "','" + bluetooth + "','" + nfc + "','" +
         flash + "','" + acclerometer + "','" + gyroscope + "','" + external_storage + "','" + touch + "','" +
         speaker + "','" + volume_up + "','" + volume_down + "','" + proximity + "','" + rear_camera + "','" +
         front_camera + "','" + back_button + "','" + home_button + "','" + power_button + "','" +
         vibration + "','" + charger + "','" + headphone + "','" + rgb + "','" + microphone + "','" +
-        screen_brightness + "','" + fingerprint + "','" + actualBattery + "','" + batteryWear + "'," +
-        "'','','','','','','','','','" + overall_status + "','" + report_uuid + "','" +
-        formattedDate + "','" + email + "'";
+        screen_brightness + "','" + fingerprint + "','" + actualBattery + "','" + batteryWear + "','" +
+        matchIMEI + "','" + scratches + "','" + dents + "','" + appleId + "','" + temperedGlass + "','" +
+        pasting + "','" + marks + "','" + softSleeve + "','" + plasticWrap + "','" + overall_status + "','" + report_uuid + "','" +
+        formattedDate + "','" + email + "'," + isUpdated;
     database.insert("report_details", values, function (err, data) {
         callback(err, data);
     });
@@ -366,8 +377,49 @@ helpers.updatePhoneReport = function (postData, callback) {
         set += x + " = '" + postData[x] + '\',';
     }
     set = set.substr(0, set.length - 1);
-    set = set + " WHERE imei LIKE '" + imei + "'";
+    set = set + " WHERE imei LIKE '" + imei + "' AND is_updated = 0";
     database.query(set, function (err, updateData) {
+        if (err) {
+            callback(err);
+        } else {
+            callback(false);
+        }
+    });
+};
+/**
+ * Method to insert the new Order.
+ * Calls back false if inserted, else false.
+ * @param postData: the POST body.
+ * @param callback: The method callback.
+ */
+helpers.insertOrder = function (postData, callback) {
+    const awbNumber = postData.awb_number;
+    const channelOrderId = postData.channel_order_id;
+    const channelName = postData.channel_name;
+    const productDetails = postData.product_details;
+    const customerName = postData.customer_name;
+    const customerEmail = postData.customer_email;
+    const customerPhone = postData.customer_phone;
+    const address = postData.shipping_address;
+    const courierId = postData.courier_id;
+    const orderDate = postData.order_date;
+    const orderTime = postData.order_time;
+    const dispatchBefore = postData.dispatch_before;
+    const invoiceNumber = postData.invoice_number;
+    const invoiceDate = postData.invoice_date;
+    const paymentMethod = postData.payment_method;
+    const productPrice = postData.product_price;
+    const orderStatus = postData.order_status;
+    const isVideoTaken = postData.is_video_taken;
+    const productGrade = postData.product_grade;
+    const imei = postData.imei_number;
+    const remarks = postData.remarks;
+    const values = "'','" + awbNumber + "','" + channelOrderId + "','" + channelName + "','" + productDetails + "','" +
+        customerName + "','" + customerEmail + "','" + customerPhone + "','" + address + "','" + courierId + "','" +
+        orderDate + "','" + orderTime + "','" + dispatchBefore + "','" + invoiceNumber + "','" + invoiceDate + "','" +
+        paymentMethod + "','" + productPrice + "','" + orderStatus + "','" + isVideoTaken + "','" +
+        productGrade + "','" + imei + "','" + remarks;
+    database.insert("order_details", values, function (err, insertData) {
         if (err) {
             callback(err);
         } else {

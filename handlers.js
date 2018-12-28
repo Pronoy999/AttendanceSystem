@@ -1523,6 +1523,14 @@ handlers.orderDetails = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
+    } else if (dataObject.method === 'post') {
+        helpers.insertOrder(dataObject.postData, function (err) {
+            if (err) {
+                callback(err, 500, {'res': messages.errorMessage});
+            } else {
+                callback(false, 200, {'res': true});
+            }
+        });
     } else {
         callback(false, 400, {'res': messages.invalidRequestMessage});
     }
@@ -1536,7 +1544,7 @@ handlers.orderStatus = function (dataObject, callback) {
     if (dataObject.method === 'put') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var type = false, channelOrderID = false, hxorderid = false, status = false;
+                var type = false, channelOrderID = false, hxorderid = false, status = false, invoiceNumber = false;
                 try {
                     type = typeof (dataObject.queryString.type) === 'string' &&
                     dataObject.queryString.type.length > 1 ? dataObject.queryString.type : false;
@@ -1546,6 +1554,8 @@ handlers.orderStatus = function (dataObject, callback) {
                     dataObject.queryString.hxorderid.length > 0 ? dataObject.queryString.hxorderid : false;
                     status = typeof (dataObject.queryString.status) === 'string' &&
                     dataObject.queryString.status.length > 1 ? dataObject.queryString.status : false;
+                    invoiceNumber = typeof (dataObject.queryString.invoiceNumber) === 'string' &&
+                    dataObject.queryString.invoiceNumber.length > 0 ? dataObject.queryString.invoiceNumber : false;
                 } catch (e) {
                     console.log(e);
                 }
@@ -1572,6 +1582,21 @@ handlers.orderStatus = function (dataObject, callback) {
                             callback(false, 200, {'res': true});
                         }
                     });
+                } else if (type === 'invoice') {
+                    if (hxorderid && invoiceNumber) {
+                        query = "UPDATE order_details o, order_status_details s" +
+                            " SET o.invoice_number='" + invoiceNumber + "', " +
+                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid + " AND s.status='Ready-to-Pack'";
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                callback(false, 200, {'res': true});
+                            }
+                        });
+                    } else {
+                        callback(type, 400, {'res': messages.insufficientData});
+                    }
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
@@ -1630,6 +1655,15 @@ handlers.details = function (dataObject, callback) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
                             callback(false, 200, {'res': serviceData});
+                        }
+                    });
+                } else if (type === 'orderStatus') {
+                    query = "SELECT * FROM order_status_details";
+                    database.query(query, function (err, orderData) {
+                        if (!err) {
+                            callback(false, 200, {'res': orderData});
+                        } else {
+                            callback(err, 500, {'res': messages.errorMessage});
                         }
                     });
                 } else {
