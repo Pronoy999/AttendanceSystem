@@ -1544,7 +1544,7 @@ handlers.orderStatus = function (dataObject, callback) {
     if (dataObject.method === 'put') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var type = false, channelOrderID = false, hxorderid = false, status = false, invoiceNumber = false;
+                var type = false, channelOrderID = false, hxorderid = false, status = false, value = false;
                 try {
                     type = typeof (dataObject.queryString.type) === 'string' &&
                     dataObject.queryString.type.length > 1 ? dataObject.queryString.type : false;
@@ -1554,8 +1554,8 @@ handlers.orderStatus = function (dataObject, callback) {
                     dataObject.queryString.hxorderid.length > 0 ? dataObject.queryString.hxorderid : false;
                     status = typeof (dataObject.queryString.status) === 'string' &&
                     dataObject.queryString.status.length > 1 ? dataObject.queryString.status : false;
-                    invoiceNumber = typeof (dataObject.queryString.invoiceNumber) === 'string' &&
-                    dataObject.queryString.invoiceNumber.length > 0 ? dataObject.queryString.invoiceNumber : false;
+                    value = typeof (dataObject.queryString.value) === 'string' &&
+                    dataObject.queryString.value.length > 0 ? dataObject.queryString.value : false;
                 } catch (e) {
                     console.log(e);
                 }
@@ -1583,9 +1583,9 @@ handlers.orderStatus = function (dataObject, callback) {
                         }
                     });
                 } else if (type === 'invoice') {
-                    if (hxorderid && invoiceNumber) {
-                        query = "UPDATE order_details o, order_status_details s" +
-                            " SET o.invoice_number='" + invoiceNumber + "', " +
+                    if (hxorderid && value) {
+                        const query = "UPDATE order_details o, order_status_details s" +
+                            " SET o.invoice_number='" + value + "', " +
                             "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid + " AND s.status='Ready-to-Pack'";
                         database.query(query, function (err, updateData) {
                             if (err) {
@@ -1596,6 +1596,36 @@ handlers.orderStatus = function (dataObject, callback) {
                         });
                     } else {
                         callback(type, 400, {'res': messages.insufficientData});
+                    }
+                } else if (type === 'pack') {
+                    if (hxorderid && value) {
+                        const query = "UPDATE order_details o, order_status_details s" +
+                            " SET o.battery_before_ship='" + value + "', " +
+                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid + " AND s.status='Ready-to-Ship'";
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                callback(false, 200, {'res': true});
+                            }
+                        });
+                    } else {
+                        callback(true, 400, {'res': messages.insufficientData});
+                    }
+                } else if (type === 'ship') {
+                    if (hxorderid && value) {
+                        const query = "UPDATE order_details o, order_status_details s" +
+                            " SET o.awb_number='" + value + "', " +
+                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid + " AND s.status='Shipped'";
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                callback(false, 200, {'res': true});
+                            }
+                        });
+                    } else {
+                        callback(true, 400, {'res': messages.insufficientData});
                     }
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
