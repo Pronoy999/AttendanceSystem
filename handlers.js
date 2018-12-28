@@ -285,11 +285,16 @@ handlers.report = function (dataObject, callback) {
                 callback(false, 200, response);
             }
         });
-    } else if (method === 'get') {
-        response = {
-            'res': 'Invalid Request Method'
-        };
-        callback(true, 404, response);
+    } else if (method === 'put') {
+        helpers.updatePhoneReport(dataObject.postData, function (err) {
+            if (err) {
+                callback(err, 500, {'res': messages.errorMessage});
+            } else {
+                callback(false, 200, {'res': true});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
     }
 };
 /**

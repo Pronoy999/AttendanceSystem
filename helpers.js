@@ -133,8 +133,8 @@ helpers.insertNewReport = function (data, callback) {
         speaker + "','" + volume_up + "','" + volume_down + "','" + proximity + "','" + rear_camera + "','" +
         front_camera + "','" + back_button + "','" + home_button + "','" + power_button + "','" +
         vibration + "','" + charger + "','" + headphone + "','" + rgb + "','" + microphone + "','" +
-        screen_brightness + "','" + fingerprint + "','" + actualBattery + "','" + batteryWear + "','" +
-        overall_status + "','" + report_uuid + "','" +
+        screen_brightness + "','" + fingerprint + "','" + actualBattery + "','" + batteryWear + "'," +
+        "'','','','','','','','','','" + overall_status + "','" + report_uuid + "','" +
         formattedDate + "','" + email + "'";
     database.insert("report_details", values, function (err, data) {
         callback(err, data);
@@ -350,6 +350,28 @@ helpers.addSellPhoneOrder = function (postData, callback) {
         } else {
             //console.log(err);
             callback(err);
+        }
+    });
+};
+/**
+ * Method to update the Report details table.
+ * @param postData: The Post Body data.
+ * @param callback: The Method Callback. If err, calls back the err else false.
+ */
+helpers.updatePhoneReport = function (postData, callback) {
+    var imei = postData.imei;
+    var set = "UPDATE report_details SET ";
+    delete postData.imei;
+    for (var x in postData) {
+        set += x + " = '" + postData[x] + '\',';
+    }
+    set = set.substr(0, set.length - 1);
+    set = set + " WHERE imei LIKE '" + imei + "'";
+    database.query(set, function (err, updateData) {
+        if (err) {
+            callback(err);
+        } else {
+            callback(false);
         }
     });
 };
