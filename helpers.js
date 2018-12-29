@@ -418,7 +418,7 @@ helpers.insertOrder = function (postData, callback) {
         customerName + "','" + customerEmail + "','" + customerPhone + "','" + address + "','" + courierId + "','" +
         orderDate + "','" + orderTime + "','" + dispatchBefore + "','" + invoiceNumber + "','" + invoiceDate + "','" +
         paymentMethod + "','" + productPrice + "','" + orderStatus + "','" + isVideoTaken + "','" +
-        productGrade + "','" + imei + "','" + remarks;
+        productGrade + "','" + imei + "','" + remarks + "',''";
     database.insert("order_details", values, function (err, insertData) {
         if (err) {
             callback(err);
@@ -426,6 +426,15 @@ helpers.insertOrder = function (postData, callback) {
             callback(false);
         }
     });
+    /*const query = "INSERT INTO order_details VALUES (" + values + ")";
+    database.query(query, function (err, orderData) {
+        if (err) {
+            console.log(err);
+            callback(err);
+        } else {
+            callback(false);
+        }
+    });*/
 };
 /**
  * Exporting the module.

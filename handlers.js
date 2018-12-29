@@ -1508,6 +1508,7 @@ handlers.orderDetails = function (dataObject, callback) {
                 } else {
                     query = "SELECT * FROM order_details";
                 }
+                console.log(query);
                 database.query(query, function (err, orderData) {
                     if (err) {
                         callback(err, 500, {'res': orderData});
@@ -1571,17 +1572,21 @@ handlers.orderStatus = function (dataObject, callback) {
                         }
                     });
                 } else if (type === 'status') {
-                    const query = "UPDATE order_details o, order_status_details s " +
-                        "SET o.order_status = s.id WHERE s.status= '" + status +
-                        "' AND o.hx_order_id= " + hxorderid;
-                    database.query(query, function (err, updateData) {
-                        if (err) {
-                            console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
-                        } else {
-                            callback(false, 200, {'res': true});
-                        }
-                    });
+                    if (status) {
+                        const query = "UPDATE order_details o, order_status_details s " +
+                            "SET o.order_status = s.id WHERE s.status= '" + status +
+                            "' AND o.hx_order_id= " + hxorderid;
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                console.log(err);
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                callback(false, 200, {'res': true});
+                            }
+                        });
+                    } else {
+                        callback(true, 400, {'res': messages.errorMessage});
+                    }
                 } else if (type === 'invoice') {
                     if (hxorderid && value) {
                         const query = "UPDATE order_details o, order_status_details s" +
@@ -1640,7 +1645,7 @@ handlers.orderStatus = function (dataObject, callback) {
 };
 /**
  * This is the method to get the Details of certain tables or the mapped values.
- * Such as Grade, service stock
+ * Such as Grade, service stock, courier.
  * @param dataObject: The Request Method.
  * @param callback: The Method callback.
  */
@@ -1694,6 +1699,16 @@ handlers.details = function (dataObject, callback) {
                             callback(false, 200, {'res': orderData});
                         } else {
                             callback(err, 500, {'res': messages.errorMessage});
+                        }
+                    });
+                } else if (type === 'courier') {
+                    query = "SELECT * FROM courier_details";
+                    database.query(query, function (err, courierData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': courierData});
                         }
                     });
                 } else {

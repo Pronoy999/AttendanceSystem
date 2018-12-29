@@ -75,7 +75,7 @@ var unifiedServer = function (req, res) {
                 res.setHeader('Content-Type', 'application/json');
                 res.writeHead(statusCode, message.headers);
                 res.end(responseObject);
-                console.log('Returning: ', responseObject, "For Path ", trimmedPath, statusCode);
+                console.log('Returning: ', "For Path ", trimmedPath, statusCode);
             } catch (e) {
                 console.log(e);
             }
