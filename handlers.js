@@ -654,7 +654,7 @@ handlers.token = function (dataObject, callback) {
  * @param dataObject
  * @param callback
  */
-handlers.getDistinctModel = function (dataObject, callback) {
+handlers.inventoryData = function (dataObject, callback) {
     var response = {};
     var singleObject = {};
     var phone_details = [];
@@ -680,6 +680,35 @@ handlers.getDistinctModel = function (dataObject, callback) {
                         callback(err, 500, {'res': messages.errorMessage});
                     }
                 });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                let imei = false, status = false;
+                try {
+                    imei = typeof (dataObject.queryString.imei) === 'string' &&
+                    dataObject.queryString.imei.length > 0 ? dataObject.queryString.imei : false;
+                    status = typeof (dataObject.queryString.status) === 'string' &&
+                    dataObject.queryString.status.length > 0 ? dataObject.queryString.status : false;
+                } catch (e) {
+                    console.log(e);
+                }
+                if (imei && status) {
+                    const query = "UPDATE inventory i, service_stock_sold_details s " +
+                        "SET i.service_stock=s.id WHERE i.product_imei_1 LIKE '" + imei +
+                        "' AND s.sold_stock_service LIKE '" + status + "'";
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        }
+                    });
+                } else {
+                    callback(true, 404, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }

@@ -23,7 +23,7 @@ const router = {
     'update': handlers.updateIphoneModel,
     'auth': handlers.token,
     'attendance': handlers.attendance,
-    'inventory-data': handlers.getDistinctModel,
+    'inventory-data': handlers.inventoryData,
     'employee': handlers.employee,
     'inventory-phone': handlers.inventoryPhone,
     'inventory-vendor': handlers.getVendor,
