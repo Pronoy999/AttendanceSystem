@@ -696,6 +696,7 @@ handlers.inventoryData = function (dataObject, callback) {
                 } catch (e) {
                     console.log(e);
                 }
+                console.log(imei, status);
                 if (imei && status) {
                     const query = "UPDATE inventory i, service_stock_sold_details s " +
                         "SET i.service_stock=s.id WHERE i.product_imei_1 LIKE '" + imei +
@@ -704,6 +705,8 @@ handlers.inventoryData = function (dataObject, callback) {
                         if (err) {
                             console.log(err);
                             callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
                         }
                     });
                 } else {
@@ -1620,12 +1623,18 @@ handlers.orderStatus = function (dataObject, callback) {
                     if (hxorderid && value) {
                         const query = "UPDATE order_details o, order_status_details s" +
                             " SET o.invoice_number='" + value + "', " +
-                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid + " AND s.status='Ready-to-Pack'";
+                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid +
+                            " AND s.status='Ready-to-Pack' AND o.is_video_taken=1";
                         database.query(query, function (err, updateData) {
+                            console.log(updateData);
                             if (err) {
                                 callback(err, 500, {'res': messages.errorMessage});
                             } else {
-                                callback(false, 200, {'res': true});
+                                if (updateData.affectedRows > 0) {
+                                    callback(false, 200, {'res': true});
+                                } else {
+                                    callback(false, 200, {'res': messages.noVideo});
+                                }
                             }
                         });
                     } else {
