@@ -1086,7 +1086,7 @@ handlers.inventoryAdd = function (dataObject, callback) {
 handlers.inventoryPin = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (isValid) {
-            /*if (dataObject.method === 'post') {
+            if (dataObject.method === 'post') {
                 var emailId = dataObject.postData.email.trim();
                 emailId = typeof (emailId) === 'string' && emailId.length >= 5 ? emailId : false;
                 if (emailId) {
@@ -1108,8 +1108,7 @@ handlers.inventoryPin = function (dataObject, callback) {
                 } else {
                     callback(false, 400, {'res': messages.insufficientData});
                 }
-            } */
-            if (dataObject.method === 'get') {
+            } else if (dataObject.method === 'get') {
                 var userPin = dataObject.queryString.pin;
                 query = "SELECT * FROM login_pin WHERE passcode=" + userPin;
                 database.query(query, function (err, Data) {
@@ -1526,7 +1525,7 @@ handlers.orderDetails = function (dataObject, callback) {
                 dataObject.queryString.orderid.length > 0 ? dataObject.queryString.orderid : false;
                 var query;
                 if (!status && date && channelname) {
-                    query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'  AND order_date " +
+                    query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'  AND insertion_date " +
                         "LIKE '" + date + "'";
                 } else if (status && !date && !channelname) {
                     query = "SELECT o.* FROM order_details o,order_status_details s " +

@@ -89,7 +89,7 @@ var unifiedServer = function (req, res) {
 var httpServer = http.createServer(function (req, res) {
     unifiedServer(req, res);
 });
-workers.checkOrderStatus();
+//workers.checkOrderStatus();
 /**
  * Method to listen on the port.
  */
