@@ -1279,6 +1279,7 @@ handlers.inventoryAuth = function (dataObject, callback) {
     function sendResponse(email) {
         if (!isLoggedIn && isPasswordValid) {
             var otp = helpers.createOTP();
+            console.log('otp', otp);
             const query = "INSERT INTO login_pin VALUES('" + email + "'," + otp + ")";
             database.query(query, function (err, pinData) {
                 if (err) {
