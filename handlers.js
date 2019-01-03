@@ -434,17 +434,18 @@ handlers.addVisitor = function (dataObject, callback) {
         var firstName = dataObject.postData.first_name;
         var lastName = dataObject.postData.last_name;
         var mobileNumber = dataObject.postData.mobile_number;
+        const isParking = dataObject.postData.is_parking;
         firstName = typeof (firstName) === 'string' ? firstName : false;
         lastName = typeof (lastName) === 'string' ? lastName : false;
         mobileNumber = typeof (mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
         if (firstName && lastName && mobileNumber) {
             var values = "'','" + firstName + "','" + lastName + "','" +
-                mobileNumber + "'";
+                mobileNumber + "'," + isParking;
             database.insert("visitor_details", values, function (err, data) {
                 if (err) {
                     var query = "UPDATE visitor_details SET first_name='" +
-                        firstName + "', last_name='" + lastName + "' " +
-                        "WHERE mobile_number LIKE '" + mobileNumber + "'";
+                        firstName + "', last_name='" + lastName + "', is_parking= " + isParking +
+                        " WHERE mobile_number LIKE '" + mobileNumber + "'";
                     database.query(query, function (err, data) {
                         if (err) {
                             response = {
@@ -1087,10 +1088,12 @@ handlers.inventoryPin = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (isValid) {
             if (dataObject.method === 'post') {
+                console.log(dataObject.postData);
                 var emailId = dataObject.postData.email.trim();
                 emailId = typeof (emailId) === 'string' && emailId.length >= 5 ? emailId : false;
                 if (emailId) {
                     var pin = helpers.createOTP();
+                    console.log(pin);
                     var query = "SELECT * FROM login_pin WHERE passcode=" + pin;
                     database.query(query, function (err, selectData) {
                         if (selectData.length > 0) {
