@@ -285,11 +285,16 @@ handlers.report = function (dataObject, callback) {
                 callback(false, 200, response);
             }
         });
-    } else if (method === 'get') {
-        response = {
-            'res': 'Invalid Request Method'
-        };
-        callback(true, 404, response);
+    } else if (method === 'put') {
+        helpers.updatePhoneReport(dataObject.postData, function (err) {
+            if (err) {
+                callback(err, 500, {'res': messages.errorMessage});
+            } else {
+                callback(false, 200, {'res': true});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage});
     }
 };
 /**
@@ -649,7 +654,7 @@ handlers.token = function (dataObject, callback) {
  * @param dataObject
  * @param callback
  */
-handlers.getDistinctModel = function (dataObject, callback) {
+handlers.inventoryData = function (dataObject, callback) {
     var response = {};
     var singleObject = {};
     var phone_details = [];
@@ -675,6 +680,38 @@ handlers.getDistinctModel = function (dataObject, callback) {
                         callback(err, 500, {'res': messages.errorMessage});
                     }
                 });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                let imei = false, status = false;
+                try {
+                    imei = typeof (dataObject.queryString.imei) === 'string' &&
+                    dataObject.queryString.imei.length > 0 ? dataObject.queryString.imei : false;
+                    status = typeof (dataObject.queryString.status) === 'string' &&
+                    dataObject.queryString.status.length > 0 ? dataObject.queryString.status : false;
+                } catch (e) {
+                    console.log(e);
+                }
+                console.log(imei, status);
+                if (imei && status) {
+                    const query = "UPDATE inventory i, service_stock_sold_details s " +
+                        "SET i.service_stock=s.id WHERE i.product_imei_1 LIKE '" + imei +
+                        "' AND s.sold_stock_service LIKE '" + status + "'";
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                } else {
+                    callback(true, 404, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
@@ -1049,7 +1086,7 @@ handlers.inventoryAdd = function (dataObject, callback) {
 handlers.inventoryPin = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (isValid) {
-            /*if (dataObject.method === 'post') {
+            if (dataObject.method === 'post') {
                 var emailId = dataObject.postData.email.trim();
                 emailId = typeof (emailId) === 'string' && emailId.length >= 5 ? emailId : false;
                 if (emailId) {
@@ -1071,8 +1108,7 @@ handlers.inventoryPin = function (dataObject, callback) {
                 } else {
                     callback(false, 400, {'res': messages.insufficientData});
                 }
-            } */
-            if (dataObject.method === 'get') {
+            } else if (dataObject.method === 'get') {
                 var userPin = dataObject.queryString.pin;
                 query = "SELECT * FROM login_pin WHERE passcode=" + userPin;
                 database.query(query, function (err, Data) {
@@ -1243,6 +1279,7 @@ handlers.inventoryAuth = function (dataObject, callback) {
     function sendResponse(email) {
         if (!isLoggedIn && isPasswordValid) {
             var otp = helpers.createOTP();
+            console.log('otp', otp);
             const query = "INSERT INTO login_pin VALUES('" + email + "'," + otp + ")";
             database.query(query, function (err, pinData) {
                 if (err) {
@@ -1489,7 +1526,7 @@ handlers.orderDetails = function (dataObject, callback) {
                 dataObject.queryString.orderid.length > 0 ? dataObject.queryString.orderid : false;
                 var query;
                 if (!status && date && channelname) {
-                    query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'  AND order_date " +
+                    query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'  AND insertion_date " +
                         "LIKE '" + date + "'";
                 } else if (status && !date && !channelname) {
                     query = "SELECT o.* FROM order_details o,order_status_details s " +
@@ -1503,6 +1540,7 @@ handlers.orderDetails = function (dataObject, callback) {
                 } else {
                     query = "SELECT * FROM order_details";
                 }
+                console.log(query);
                 database.query(query, function (err, orderData) {
                     if (err) {
                         callback(err, 500, {'res': orderData});
@@ -1518,6 +1556,14 @@ handlers.orderDetails = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
+    } else if (dataObject.method === 'post') {
+        helpers.insertOrder(dataObject.postData, function (err) {
+            if (err) {
+                callback(err, 500, {'res': messages.errorMessage});
+            } else {
+                callback(false, 200, {'res': true});
+            }
+        });
     } else {
         callback(false, 400, {'res': messages.invalidRequestMessage});
     }
@@ -1531,7 +1577,7 @@ handlers.orderStatus = function (dataObject, callback) {
     if (dataObject.method === 'put') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var type, channelOrderID, hxorderid, status;
+                var type = false, channelOrderID = false, hxorderid = false, status = false, value = false;
                 try {
                     type = typeof (dataObject.queryString.type) === 'string' &&
                     dataObject.queryString.type.length > 1 ? dataObject.queryString.type : false;
@@ -1541,14 +1587,13 @@ handlers.orderStatus = function (dataObject, callback) {
                     dataObject.queryString.hxorderid.length > 0 ? dataObject.queryString.hxorderid : false;
                     status = typeof (dataObject.queryString.status) === 'string' &&
                     dataObject.queryString.status.length > 1 ? dataObject.queryString.status : false;
+                    value = typeof (dataObject.queryString.value) === 'string' &&
+                    dataObject.queryString.value.length > 0 ? dataObject.queryString.value : false;
                 } catch (e) {
-                    type = false;
-                    channelOrderID = false;
-                    hxorderid = false;
-                    status = false;
+                    console.log(e);
                 }
-                if (type === 'photo') {
-                    const query = "UPDATE order_details SET is_photo_taken = 1" +
+                if (type === 'video') {
+                    const query = "UPDATE order_details SET is_video_taken = 1" +
                         " WHERE channel_order_id LIKE '" + channelOrderID + "'";
                     database.query(query, function (err, updateData) {
                         if (err) {
@@ -1559,17 +1604,72 @@ handlers.orderStatus = function (dataObject, callback) {
                         }
                     });
                 } else if (type === 'status') {
-                    const query = "UPDATE order_details o, order_status_details s " +
-                        "SET o.order_status = s.id WHERE s.status= '" + status +
-                        "' AND o.hx_order_id= " + hxorderid;
-                    database.query(query, function (err, updateData) {
-                        if (err) {
-                            console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
-                        } else {
-                            callback(false, 200, {'res': true});
-                        }
-                    });
+                    if (status) {
+                        const query = "UPDATE order_details o, order_status_details s " +
+                            "SET o.order_status = s.id WHERE s.status= '" + status +
+                            "' AND o.hx_order_id= " + hxorderid;
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                console.log(err);
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                callback(false, 200, {'res': true});
+                            }
+                        });
+                    } else {
+                        callback(true, 400, {'res': messages.errorMessage});
+                    }
+                } else if (type === 'invoice') {
+                    if (hxorderid && value) {
+                        const query = "UPDATE order_details o, order_status_details s" +
+                            " SET o.invoice_number='" + value + "', " +
+                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid +
+                            " AND s.status='Ready-to-Pack' AND o.is_video_taken=1";
+                        database.query(query, function (err, updateData) {
+                            console.log(updateData);
+                            if (err) {
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                if (updateData.affectedRows > 0) {
+                                    callback(false, 200, {'res': true});
+                                } else {
+                                    callback(false, 200, {'res': messages.noVideo});
+                                }
+                            }
+                        });
+                    } else {
+                        callback(type, 400, {'res': messages.insufficientData});
+                    }
+                } else if (type === 'pack') {
+                    if (hxorderid && value) {
+                        const query = "UPDATE order_details o, order_status_details s" +
+                            " SET o.battery_before_ship='" + value + "', " +
+                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid + " AND s.status='Ready-to-Ship'";
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                callback(false, 200, {'res': true});
+                            }
+                        });
+                    } else {
+                        callback(true, 400, {'res': messages.insufficientData});
+                    }
+                } else if (type === 'ship') {
+                    if (hxorderid && value) {
+                        const query = "UPDATE order_details o, order_status_details s" +
+                            " SET o.awb_number='" + value + "', " +
+                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid + " AND s.status='Shipped'";
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                callback(false, 200, {'res': true});
+                            }
+                        });
+                    } else {
+                        callback(true, 400, {'res': messages.insufficientData});
+                    }
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
@@ -1583,7 +1683,7 @@ handlers.orderStatus = function (dataObject, callback) {
 };
 /**
  * This is the method to get the Details of certain tables or the mapped values.
- * Such as Grade, service stock
+ * Such as Grade, service stock, courier.
  * @param dataObject: The Request Method.
  * @param callback: The Method callback.
  */
@@ -1628,6 +1728,25 @@ handlers.details = function (dataObject, callback) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
                             callback(false, 200, {'res': serviceData});
+                        }
+                    });
+                } else if (type === 'orderStatus') {
+                    query = "SELECT * FROM order_status_details";
+                    database.query(query, function (err, orderData) {
+                        if (!err) {
+                            callback(false, 200, {'res': orderData});
+                        } else {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        }
+                    });
+                } else if (type === 'courier') {
+                    query = "SELECT * FROM courier_details";
+                    database.query(query, function (err, courierData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': courierData});
                         }
                     });
                 } else {

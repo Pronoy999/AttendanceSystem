@@ -58,26 +58,28 @@ helpers.validateToken = function (key, callback) {
  * @param callback: The Method callback.
  */
 helpers.insertNewPhone = function (data, callback) {
-    var manufacturer = data.manufacturer;
-    var model = data.model;
-    var serial_number = data.serial_number;
-    var imei = data.imei;
-    var bssid = data.bssid;
-    var region = data.region;
-    var uuid = data.uuid;
-    var storage = data.storage;
-    var actual_battery_capacity = data.actual_battery_capacity;
-    var battery_wear_capacity = data.battery_wear_capacity;
-    var color = data.color;
-    var status = data.status;
-    var is_customer = data.is_customer;
+    const manufacturer = data.manufacturer;
+    const model = data.model;
+    const serial_number = data.serial_number;
+    const imei = data.imei;
+    const bssid = data.bssid;
+    const region = data.region;
+    const uuid = data.uuid;
+    const storage = data.storage;
+    const actual_battery_capacity = data.actual_battery_capacity;
+    const battery_wear_capacity = data.battery_wear_capacity;
+    const color = data.color;
+    const status = data.status;
+    const is_customer = data.is_customer;
     //var time_stamp = data.time_stamp;
     var timeDate = Math.floor((new Date().getTime()) / 1000);
-    var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
-    var values = "'" + manufacturer + "','" + model + "','" + serial_number + "','" +
+    const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
+    const location = data.location;
+    console.log(location);
+    const values = "'" + manufacturer + "','" + model + "','" + serial_number + "','" +
         imei + "','" + bssid + "','" + region + "','" + uuid + "','" + storage + "','" +
         actual_battery_capacity + "','" + battery_wear_capacity + "','" + color + "','" +
-        status + "','" + is_customer + "','" + formattedDate + "'";
+        status + "','" + is_customer + "','" + formattedDate + "','" + location + "'";
     database.insert("phone_details_duplicate", values, function (err, data) {
         if (err) {
             console.log(err);
@@ -123,19 +125,30 @@ helpers.insertNewReport = function (data, callback) {
     var fingerprint = data.fingerprint;
     var actualBattery = data.actual_battery_capacity;
     var batteryWear = data.battery_wear_capacity;
+    var matchIMEI = data.match_imei;
+    var scratches = data.scratches;
+    var dents = data.dents;
+    var appleId = data.apple_id_logout;
+    var temperedGlass = data.tempered_glass_removed;
+    var pasting = data.pasting;
+    var marks = data.marks;
+    var softSleeve = data.soft_sleeve;
+    var plasticWrap = data.plastic_wrap;
     var overall_status = data.overall_status;
     var report_uuid = data.report_uuid;
     var timeDate = Math.floor((new Date().getTime()) / 1000);
     var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
     var email = data.email;
+    var isUpdated = data.is_updated;
     var values = "'" + imei + "','" + ram + "','" + battery + "','" + wifi + "','" + bluetooth + "','" + nfc + "','" +
         flash + "','" + acclerometer + "','" + gyroscope + "','" + external_storage + "','" + touch + "','" +
         speaker + "','" + volume_up + "','" + volume_down + "','" + proximity + "','" + rear_camera + "','" +
         front_camera + "','" + back_button + "','" + home_button + "','" + power_button + "','" +
         vibration + "','" + charger + "','" + headphone + "','" + rgb + "','" + microphone + "','" +
         screen_brightness + "','" + fingerprint + "','" + actualBattery + "','" + batteryWear + "','" +
-        overall_status + "','" + report_uuid + "','" +
-        formattedDate + "','" + email + "'";
+        matchIMEI + "','" + scratches + "','" + dents + "','" + appleId + "','" + temperedGlass + "','" +
+        pasting + "','" + marks + "','" + softSleeve + "','" + plasticWrap + "','" + overall_status + "','" + report_uuid + "','" +
+        formattedDate + "','" + email + "'," + isUpdated;
     database.insert("report_details", values, function (err, data) {
         callback(err, data);
     });
@@ -352,6 +365,80 @@ helpers.addSellPhoneOrder = function (postData, callback) {
             callback(err);
         }
     });
+};
+/**
+ * Method to update the Report details table.
+ * @param postData: The Post Body data.
+ * @param callback: The Method Callback. If err, calls back the err else false.
+ */
+helpers.updatePhoneReport = function (postData, callback) {
+    var imei = postData.imei;
+    var set = "UPDATE report_details SET ";
+    delete postData.imei;
+    for (var x in postData) {
+        set += x + " = '" + postData[x] + '\',';
+    }
+    set = set.substr(0, set.length - 1);
+    set = set + " WHERE imei LIKE '" + imei + "' AND is_updated = 0";
+    database.query(set, function (err, updateData) {
+        if (err) {
+            callback(err);
+        } else {
+            callback(false);
+        }
+    });
+};
+/**
+ * Method to insert the new Order.
+ * Calls back false if inserted, else false.
+ * @param postData: the POST body.
+ * @param callback: The method callback.
+ */
+helpers.insertOrder = function (postData, callback) {
+    const awbNumber = postData.awb_number;
+    const channelOrderId = postData.channel_order_id;
+    const channelName = postData.channel_name;
+    const productDetails = postData.product_details;
+    const customerName = postData.customer_name;
+    const customerEmail = postData.customer_email;
+    const customerPhone = postData.customer_phone;
+    const address = postData.shipping_address;
+    const courierId = postData.courier_id;
+    const orderDate = postData.order_date;
+    const orderTime = postData.order_time;
+    var timeDate = Math.floor((new Date().getTime()) / 1000);
+    var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ')[0];
+    const dispatchBefore = postData.dispatch_before;
+    const invoiceNumber = postData.invoice_number;
+    const invoiceDate = postData.invoice_date;
+    const paymentMethod = postData.payment_method;
+    const productPrice = postData.product_price;
+    const orderStatus = postData.order_status;
+    const isVideoTaken = postData.is_video_taken;
+    const productGrade = postData.product_grade;
+    const imei = postData.imei_number;
+    const remarks = postData.remarks;
+    const values = "'','" + awbNumber + "','" + channelOrderId + "','" + channelName + "','" + productDetails + "','" +
+        customerName + "','" + customerEmail + "','" + customerPhone + "','" + address + "','" + courierId + "','" +
+        orderDate + "','" + orderTime + "','" + formattedDate + "','" + dispatchBefore + "','" + invoiceNumber + "','" + invoiceDate + "','" +
+        paymentMethod + "','" + productPrice + "','" + orderStatus + "','" + isVideoTaken + "','" +
+        productGrade + "','" + imei + "','" + remarks + "',''";
+    database.insert("order_details", values, function (err, insertData) {
+        if (err) {
+            callback(err);
+        } else {
+            callback(false);
+        }
+    });
+    /*const query = "INSERT INTO order_details VALUES (" + values + ")";
+    database.query(query, function (err, orderData) {
+        if (err) {
+            console.log(err);
+            callback(err);
+        } else {
+            callback(false);
+        }
+    });*/
 };
 /**
  * Exporting the module.

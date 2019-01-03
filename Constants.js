@@ -3,6 +3,7 @@ messages.tokenExpiredMessage="Invalid Token or Token Expired.";
 messages.invalidRequestMessage="Invalid Request Method.";
 messages.alreadyLoggedIn = "The User is already logged in";
 messages.errorMessage="Error.";
+messages.noVideo = "Missing Video for the Order.";
 messages.attendancePut="Attendance successful.";
 messages.invalidPassword = "Invalid Email or Password";
 messages.companyPrefix = "HX";

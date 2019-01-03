@@ -5,6 +5,7 @@ const StringDecoder = require('string_decoder').StringDecoder;
 const handlers = require('./handlers');
 const helpers = require('./helpers');
 const message = require('./Constants');
+const workers = require('./workers');
 /**
  * The Router Containing the end points.
  */
@@ -23,7 +24,7 @@ const router = {
     'update': handlers.updateIphoneModel,
     'auth': handlers.token,
     'attendance': handlers.attendance,
-    'inventory-data': handlers.getDistinctModel,
+    'inventory-data': handlers.inventoryData,
     'employee': handlers.employee,
     'inventory-phone': handlers.inventoryPhone,
     'inventory-vendor': handlers.getVendor,
@@ -88,6 +89,7 @@ var unifiedServer = function (req, res) {
 var httpServer = http.createServer(function (req, res) {
     unifiedServer(req, res);
 });
+//workers.checkOrderStatus();
 /**
  * Method to listen on the port.
  */
