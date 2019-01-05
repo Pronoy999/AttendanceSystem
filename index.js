@@ -39,7 +39,8 @@ const router = {
     'order-details': handlers.orderDetails,
     'order-returned': handlers.orderReturned,
     'order-status': handlers.orderStatus,
-    'details': handlers.details
+    'details': handlers.details,
+    'bio-auth': handlers.bioAuth
 };
 /**
  * Method which controls the Server.
@@ -47,27 +48,53 @@ const router = {
  * @param res: The RESPONSE.
  */
 var unifiedServer = function (req, res) {
-    var parsedUrl = url.parse(req.url, true);
-    var pathName = parsedUrl.pathname;
-    var trimmedPath = pathName.replace(/^\/+|\/+$/g, '');
-    var method = req.method.toLowerCase();
-    var queryString = parsedUrl.query;
-    var decoder = new StringDecoder('utf-8');
-    var postData = '';
-    req.on('data', function (data) {
-        postData += decoder.write(data);
-    });
-    req.on('end', function () {
-        postData += decoder.end();
-        postData = helpers.parseJsonToObjects(postData);
-        var chosenHandler = typeof (router[trimmedPath]) !== 'undefined' ? router[trimmedPath] : handlers.notFound;
-        //console.log(trimmedPath);
-        var data = {
-            'path': trimmedPath,
-            'method': method,
-            'queryString': queryString,
-            'postData': postData
-        };
+    const parsedUrl = url.parse(req.url, true);
+    const pathName = parsedUrl.pathname;
+    const trimmedPath = pathName.replace(/^\/+|\/+$/g, '');
+    const method = req.method.toLowerCase();
+    const queryString = parsedUrl.query;
+    const decoder = new StringDecoder('utf-8');
+    let postData = '';
+    const header = req.headers['content-type'];
+    const chosenHandler = typeof (router[trimmedPath]) !== 'undefined' ?
+        router[trimmedPath] : handlers.notFound;
+
+    if (header === 'application/octet-stream') {
+        var data = [];
+        req.on('data', d => {
+            data.push(d);
+        }).on('end', () => {
+            var buffer = Buffer.concat(data);
+            const handlerData = {
+                'path': trimmedPath,
+                'method': method,
+                'queryString': queryString,
+                data
+            };
+            execHandlers(handlerData);
+        });
+    } else {
+        req.on('data', function (data) {
+            postData += decoder.write(data);
+        });
+        req.on('end', function () {
+            postData += decoder.end();
+            postData = helpers.parseJsonToObjects(postData);
+            var data = {
+                'path': trimmedPath,
+                'method': method,
+                'queryString': queryString,
+                'postData': postData
+            };
+            execHandlers(data);
+        });
+    }
+
+    /**
+     * Method to invoke the Handlers and return the response object.
+     * @param data: The Request data for the handlers.
+     */
+    function execHandlers(data) {
         chosenHandler(data, function (err, statusCode, responseData) {
             responseData = typeof (responseData) === 'object' ? responseData : {};
             statusCode = typeof (statusCode) === 'number' ? statusCode : 400;
@@ -81,7 +108,7 @@ var unifiedServer = function (req, res) {
                 console.log(e);
             }
         });
-    });
+    }
 };
 /**
  * Method to create the Server.

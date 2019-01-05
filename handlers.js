@@ -434,17 +434,18 @@ handlers.addVisitor = function (dataObject, callback) {
         var firstName = dataObject.postData.first_name;
         var lastName = dataObject.postData.last_name;
         var mobileNumber = dataObject.postData.mobile_number;
+        const isParking = dataObject.postData.is_parking;
         firstName = typeof (firstName) === 'string' ? firstName : false;
         lastName = typeof (lastName) === 'string' ? lastName : false;
         mobileNumber = typeof (mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
         if (firstName && lastName && mobileNumber) {
             var values = "'','" + firstName + "','" + lastName + "','" +
-                mobileNumber + "'";
+                mobileNumber + "'," + isParking;
             database.insert("visitor_details", values, function (err, data) {
                 if (err) {
                     var query = "UPDATE visitor_details SET first_name='" +
-                        firstName + "', last_name='" + lastName + "' " +
-                        "WHERE mobile_number LIKE '" + mobileNumber + "'";
+                        firstName + "', last_name='" + lastName + "', is_parking= " + isParking +
+                        " WHERE mobile_number LIKE '" + mobileNumber + "'";
                     database.query(query, function (err, data) {
                         if (err) {
                             response = {
@@ -1087,10 +1088,12 @@ handlers.inventoryPin = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (isValid) {
             if (dataObject.method === 'post') {
+                console.log(dataObject.postData);
                 var emailId = dataObject.postData.email.trim();
                 emailId = typeof (emailId) === 'string' && emailId.length >= 5 ? emailId : false;
                 if (emailId) {
                     var pin = helpers.createOTP();
+                    console.log(pin);
                     var query = "SELECT * FROM login_pin WHERE passcode=" + pin;
                     database.query(query, function (err, selectData) {
                         if (selectData.length > 0) {
@@ -1624,17 +1627,13 @@ handlers.orderStatus = function (dataObject, callback) {
                         const query = "UPDATE order_details o, order_status_details s" +
                             " SET o.invoice_number='" + value + "', " +
                             "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid +
-                            " AND s.status='Ready-to-Pack' AND o.is_video_taken=1";
+                            " AND s.status='Ready-to-Pack'";
                         database.query(query, function (err, updateData) {
                             console.log(updateData);
                             if (err) {
                                 callback(err, 500, {'res': messages.errorMessage});
                             } else {
-                                if (updateData.affectedRows > 0) {
-                                    callback(false, 200, {'res': true});
-                                } else {
-                                    callback(false, 200, {'res': messages.noVideo});
-                                }
+                                callback(false, 200, {'res': true});
                             }
                         });
                     } else {
@@ -1644,12 +1643,17 @@ handlers.orderStatus = function (dataObject, callback) {
                     if (hxorderid && value) {
                         const query = "UPDATE order_details o, order_status_details s" +
                             " SET o.battery_before_ship='" + value + "', " +
-                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid + " AND s.status='Ready-to-Ship'";
+                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid +
+                            " AND s.status='Ready-to-Ship' AND o.is_video_taken=1";
                         database.query(query, function (err, updateData) {
                             if (err) {
                                 callback(err, 500, {'res': messages.errorMessage});
                             } else {
-                                callback(false, 200, {'res': true});
+                                if (updateData.affectedRows > 0) {
+                                    callback(false, 200, {'res': true});
+                                } else {
+                                    callback(false, 200, {'res': messages.noVideo});
+                                }
                             }
                         });
                     } else {
@@ -1759,6 +1763,14 @@ handlers.details = function (dataObject, callback) {
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
+};
+/**
+ * Method to Upload, generate and verfiy the fingerprint data for employee.
+ * @param dataObject: The Request data.
+ * @param callback: The Method callback.
+ */
+handlers.bioAuth = function (dataObject, callback) {
+
 };
 /**
  * Exporting the Handlers.
