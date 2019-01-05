@@ -1765,6 +1765,14 @@ handlers.details = function (dataObject, callback) {
     }
 };
 /**
+ * Method to Upload, generate and verfiy the fingerprint data for employee.
+ * @param dataObject: The Request data.
+ * @param callback: The Method callback.
+ */
+handlers.bioAuth = function (dataObject, callback) {
+
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;
