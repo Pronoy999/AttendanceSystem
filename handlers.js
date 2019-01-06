@@ -1092,21 +1092,30 @@ handlers.inventoryPin = function (dataObject, callback) {
                 var emailId = dataObject.postData.email.trim();
                 emailId = typeof (emailId) === 'string' && emailId.length >= 5 ? emailId : false;
                 if (emailId) {
-                    var pin = helpers.createOTP();
+                    const pin = helpers.createOTP();
                     console.log(pin);
-                    var query = "SELECT * FROM login_pin WHERE passcode=" + pin;
+                    let query = "SELECT * FROM login_pin WHERE email LIKE '" + emailId + "'";
                     database.query(query, function (err, selectData) {
                         if (selectData.length > 0) {
-                            pin = helpers.createOTP();
+                            query = "UPDATE login_pin SET passcode = " + pin + " WHERE email LIKE '" + emailId + "'";
+                            database.query(query, function (err, updateData) {
+                                if (err) {
+                                    console.log(err);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': pin});
+                                }
+                            });
+                        } else {
+                            var values = "'" + emailId + "'," + pin;
+                            database.insert("login_pin", values, function (err, insertData) {
+                                if (!err) {
+                                    callback(false, 200, {'res': pin});
+                                } else {
+                                    callback(true, 500, {'res': messages.errorMessage});
+                                }
+                            });
                         }
-                        var values = "'" + emailId + "'," + pin;
-                        database.insert("login_pin", values, function (err, insertData) {
-                            if (!err) {
-                                callback(false, 200, {'res': pin});
-                            } else {
-                                callback(true, 500, {'res': messages.errorMessage});
-                            }
-                        });
                     });
                 } else {
                     callback(false, 400, {'res': messages.insufficientData});
@@ -1608,9 +1617,26 @@ handlers.orderStatus = function (dataObject, callback) {
                     });
                 } else if (type === 'status') {
                     if (status) {
-                        const query = "UPDATE order_details o, order_status_details s " +
-                            "SET o.order_status = s.id WHERE s.status= '" + status +
-                            "' AND o.hx_order_id= " + hxorderid;
+                        const remarks = typeof (dataObject.postData.remarks) === 'string' &&
+                        dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
+                        const imei = typeof (dataObject.postData.imei) === 'string' &&
+                        dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                        let query;
+                        if (remarks) {
+                            query = "UPDATE order_details o, order_status_details s " +
+                                "SET o.order_status = s.id, o.remarks= '" + remarks + "'" +
+                                " WHERE s.status= '" + status +
+                                "' AND o.hx_order_id= " + hxorderid;
+                        } else if (imei && status === 'Ready-to-Invoice') {
+                            query = "UPDATE order_details o, order_status_details s " +
+                                "SET o.order_status = s.id, o.imei_number= '" + imei + "'" +
+                                " WHERE s.status= '" + status +
+                                "' AND o.hx_order_id= " + hxorderid;
+                        } else {
+                            query = "UPDATE order_details o, order_status_details s " +
+                                "SET o.order_status = s.id WHERE s.status= '" + status +
+                                "' AND o.hx_order_id= " + hxorderid;
+                        }
                         database.query(query, function (err, updateData) {
                             if (err) {
                                 console.log(err);
@@ -1620,7 +1646,7 @@ handlers.orderStatus = function (dataObject, callback) {
                             }
                         });
                     } else {
-                        callback(true, 400, {'res': messages.errorMessage});
+                        callback(true, 400, {'res': messages.insufficientData});
                     }
                 } else if (type === 'invoice') {
                     if (hxorderid && value) {
@@ -1765,7 +1791,7 @@ handlers.details = function (dataObject, callback) {
     }
 };
 /**
- * Method to Upload, generate and verfiy the fingerprint data for employee.
+ * Method to Upload, generate and verify the fingerprint data for employee.
  * @param dataObject: The Request data.
  * @param callback: The Method callback.
  */
