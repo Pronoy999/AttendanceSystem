@@ -40,7 +40,8 @@ const router = {
     'order-returned': handlers.orderReturned,
     'order-status': handlers.orderStatus,
     'details': handlers.details,
-    'bio-auth': handlers.bioAuth
+    'bio-auth': handlers.bioAuth,
+    'firebase-token': handlers.firebaseToken
 };
 /**
  * Method which controls the Server.

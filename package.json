@@ -2,9 +2,10 @@
   "name": "hyperxchangeapi",
   "version": "1.0.0",
   "dependencies": {
-    "mysql": "latest",
     "aws-sdk": "latest",
+    "firebase-admin": "^6.4.0",
     "moment": "latest",
-    "moment-timezone": "latest"
+    "moment-timezone": "latest",
+    "mysql": "latest"
   }
 }

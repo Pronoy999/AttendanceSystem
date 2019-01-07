@@ -4,6 +4,7 @@ const moment = require('moment');
 const tz = require('moment-timezone');
 const messages = require('./Constants');
 const snsLib = require('./snsLib');
+const admin = require('firebase-admin');
 /**
  * Method to parse JSON to Objects.
  * @param data
@@ -379,7 +380,8 @@ helpers.updatePhoneReport = function (postData, callback) {
         set += x + " = '" + postData[x] + '\',';
     }
     set = set.substr(0, set.length - 1);
-    set = set + " WHERE imei LIKE '" + imei + "' AND is_updated = 0";
+    set = set + " , is_updated = 1 WHERE imei LIKE '" + imei + "' AND is_updated = 0";
+    console.log(set);
     database.query(set, function (err, updateData) {
         if (err) {
             callback(err);
@@ -439,6 +441,38 @@ helpers.insertOrder = function (postData, callback) {
             callback(false);
         }
     });*/
+};
+/**
+ * Method to send the firebase notification.
+ * @param token: The Device token.
+ * @param msg: The Message to be send.
+ * @param content: The Content of the Message.
+ * @param callback: The method callback.
+ */
+helpers.sendFirebaseNotification = function (token, msg, content, callback) {
+    const serviceAccount = require('./firebaseService.json');
+    //token="eTxRb-dPHAc:APA91bGxiakY02DMiTUCP2UDgrGnEyrNPFZZ93bBGsnVALN_WiKMDwvK-51GNwfgv9uIjtcyraCfsUVPHW7k2KnHB9UonIt6aVSGSfwuFBG-tVSqTA8NmmHFCwfZQ5kRXBJhgzMqJjMo";
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        databaseURL: "https://hyperxchange-api.firebaseio.com"
+    });
+    const message = {
+        data: {
+            res: msg,
+            content: content
+        },
+        token: token
+    };
+    admin.messaging().send(message)
+        .then((response) => {
+            // Response is a message ID string.
+            console.log('Successfully sent message:', response);
+            callback(false, response);
+        })
+        .catch((error) => {
+            console.log('Error sending message:', error);
+            callback(error);
+        });
 };
 /**
  * Exporting the module.

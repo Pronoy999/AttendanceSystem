@@ -22,6 +22,13 @@ handlers.notFound = function (data, callback) {
  * @param callback
  */
 handlers.ping = function (dataObject, callback) {
+    helpers.sendFirebaseNotification("", "Hello from AWS.", function (err, data) {
+        if (!err) {
+            console.log(data);
+        } else {
+            console.log(err);
+        }
+    });
     callback(false, 200, {'res': 'Welcome to HyperXchange API version 1.0.'});
 };
 /**
@@ -730,7 +737,14 @@ handlers.employee = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (dataObject.method === 'get') {
             if (isValid) {
-                var query = "SELECT * FROM employee_details";
+                const id = typeof (dataObject.queryString.id) === 'string' &&
+                dataObject.queryString.id.length > 0 ? dataObject.queryString.id : false;
+                let query;
+                if (id) {
+                    query = "SELECT * FROM employee_details WHERE id = " + id;
+                } else {
+                    query = "SELECT * FROM employee_details";
+                }
                 database.query(query, function (err, data) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -1013,25 +1027,27 @@ handlers.inventoryPendingPhones = function (dataObject, callback) {
  */
 handlers.visit = function (dataObject, callback) {
     if (dataObject.method === 'post') {
-        var visitorID;
+        let visitorID;
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 var visitorPhone = typeof (dataObject.postData.visitor_phone) === 'string' ? dataObject.postData.visitor_phone.trim() : false;
                 if (visitorPhone) {
-                    var query = "SELECT id FROM visitor_details WHERE mobile_number LIKE '" + visitorPhone + "'";
+                    let query = "SELECT id FROM visitor_details WHERE mobile_number LIKE '" + visitorPhone + "'";
                     database.query(query, function (err, visitorData) {
                         if (!err) {
                             visitorID = visitorData[0].id;
                             console.log(visitorID);
-                            var employeeId = dataObject.postData.employee_id;
-                            var timeStamp = dataObject.postData.timestamp;
+                            var employeeId = dataObject.postData.id;
+                            var timeDate = Math.floor((new Date().getTime()) / 1000);
+                            var timeStamp = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
                             var location = dataObject.postData.location;
                             var values = employeeId + "," + visitorID + ",'" + location + "','" + timeStamp + "',3";
                             database.insert("visit_details", values, function (err, insertVisitData) {
                                 if (!err) {
-                                    callback(false, 200, {'res': 'Added new Visit.'});
+                                    callback(false, 200, {'res': true});
                                 } else {
                                     callback(err, 500, {'res': messages.errorMessage});
+                                    getTokenAndNotify(employeeId, visitorData[0]);
                                 }
                             });
                         } else {
@@ -1048,6 +1064,31 @@ handlers.visit = function (dataObject, callback) {
         });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+
+    /**
+     * Method to send FCM.
+     * @param employeeID: The Employee ID.
+     * @param visitorData: The Visitor details.
+     */
+    function getTokenAndNotify(employeeID, visitorData) {
+        const query = "SELECT * FROM employee_details WHERE id = " + employeeID;
+        database.query(query, function (err, employeeData) {
+            if (err) {
+                console.log(err);
+            } else {
+                const token = employeeData[0].device_token;
+                const msg = visitorData.first_name + " " + visitorData.last_name + " is waiting for you.";
+                const content = visitorData[0];
+                helpers.sendFirebaseNotification(token, msg, content, function (err, id) {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        console.log("Notification send.");
+                    }
+                });
+            }
+        })
     }
 };
 /**
@@ -1797,6 +1838,37 @@ handlers.details = function (dataObject, callback) {
  */
 handlers.bioAuth = function (dataObject, callback) {
 
+};
+/**
+ * Method to update the Firebase token.
+ * @param dataObject: The Request Object.
+ * @param callback: The method callback.
+ */
+handlers.firebaseToken = function (dataObject, callback) {
+    if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                const token = typeof (dataObject.postData.token) === 'string' &&
+                dataObject.postData.token.length > 10 ? dataObject.postData.token : false;
+                const employeeid = typeof (dataObject.postData.id) === 'string' &&
+                dataObject.postData.id.length > 0 ? dataObject.postData.id : false;
+                if (employeeid && token) {
+                    const query = "UPDATE employee_details SET device_token = '" + token + "' WHERE id= " + employeeid;
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                }
+            } else {
+                callback(true, 400, {'res': messages.insufficientData});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage})
+    }
 };
 /**
  * Exporting the Handlers.
