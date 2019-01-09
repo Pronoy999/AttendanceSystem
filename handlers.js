@@ -301,7 +301,6 @@ handlers.report = function (dataObject, callback) {
             } else {
                 callback(false, 200, {'res': true});
             }
-            //TODO: Update the status of the phone details.
         });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
@@ -1072,16 +1071,19 @@ handlers.visit = function (dataObject, callback) {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 const postData = dataObject.postData;
-                const employeeId = typeof (postData.id) === 'string' && postData.id.length > 0 ? postData.id : false;
+                const employeeId = postData.id > 0 ? postData.id : false;
                 const time = typeof (postData.time) === 'string' && postData.time.length > 2 ? postData.time : false;
                 const date = typeof (postData.date) === 'string' && postData.date.length > 2 ? postData.date : false;
                 const visitorPhone = typeof (postData.visitor_phone) === 'string' && postData.visitor_phone.length > 2 ? postData.visitor_phone : false;
                 const status = typeof (postData.status) === 'string' && postData.status.length > 1 ? postData.status : false;
-                if (employeeId && vistorId && time && date) {
-                    const dateTime = date + " " + time;
-                    const query = "UPDATE visit_details v,visit_status_details s,visitor_details d SET v.status=s.id" +
-                        " WHERE s.status LIKE '" + status + "' AND v.employee_id=" + employeeId + " AND" +
-                        " v.visitor_id= d.id AND d.mobile_number LIKE '" + visitorPhone + "' v.time_stamp LIKE '" + dateTime + "'";
+                if (employeeId && time && date) {
+                    const dateTime = date + "," + time;
+                    const query = "UPDATE visit_details v,visit_status_details s,visitor_details d " +
+                        "SET v.status=s.id " +
+                        "WHERE s.status LIKE '" + status + "' AND v.employee_id=8 " +
+                        "AND  d.mobile_number LIKE '" + visitorPhone +
+                        "' AND v.visitor_id= d.id AND v.time_stamp LIKE '" + dateTime + "'";
+                    console.log(query);
                     database.query(query, function (err, updateData) {
                         if (err) {
                             callback(err, 500, {'res': messages.errorMessage});
@@ -1903,7 +1905,7 @@ handlers.details = function (dataObject, callback) {
  * @param dataObject: The Request data.
  * @param callback: The Method callback.
  */
-handlers.bioAuth = function (dataObject, callback) {
+handlers.bioAuth = function (data, callback) {
     helpers.validateToken(data.queryString.key, valid => {
         if (!valid) {
             callback(true, 403, {'res': 'Token expired or invalid'});
@@ -1971,13 +1973,13 @@ handlers.bioAuth = function (dataObject, callback) {
 
                         fp_json[id][offsets[i].key] = fpT.serializeSync();
 
-                        let params = {Bucket: mesesages.bucketName, Key: filename, Body: fpd};
+                        let params = {Bucket: messages.bucketName, Key: filename, Body: fpd};
 
                         var upromise = S3.putObject(params).promise();
                         upromise.then(d => {
-                            console.log("Successfully uploaded data to " + mesesages.bucketName + "/" + filename)
+                            console.log("Successfully uploaded data to " + messages.bucketName + "/" + filename)
                         }).catch(e => {
-                            console.log("Error uploading data: " + mesesages.bucketName + "/" + filename);
+                            console.log("Error uploading data: " + messages.bucketName + "/" + filename);
                             console.err(e, e.stack)
                         })
                     }
@@ -2037,9 +2039,10 @@ handlers.bioAuth = function (dataObject, callback) {
 
             try {
                 fp_probe = fp_probe.dpiSync(500).createSync(java.newArray("byte", Array.prototype.slice.call(data.data, 0)))
-            } catch {
+            } catch (err) {
                 callback(true, 400, {'res': 'invalid fingerprint'});
                 console.log('error invalid fp');
+                console.error(err, err.stack);
                 return
             }
             if (!fp_probe) {

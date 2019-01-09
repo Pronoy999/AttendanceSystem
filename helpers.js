@@ -252,6 +252,7 @@ helpers.getRandomKey = function (len) {
  */
 helpers.addInventoryPhone = function (data, callback) {
     console.log(data);
+    var brand = data.brand;
     var model_name = data.model_name;
     var imei_1 = data.product_imei_1;
     var imei_2 = data.product_imei_2;
@@ -274,32 +275,46 @@ helpers.addInventoryPhone = function (data, callback) {
     var manual = data.manual;
     var connector = data.connector;
     var remarks = data.remarks;
+    var isManual = data.is_manual;
     charger = checkValid(charger);
     head_phone = checkValid(head_phone);
     ejectorTool = checkValid(ejectorTool);
     back_cover = checkValid(back_cover);
     manual = checkValid(manual);
     connector = checkValid(connector);
-    var values = "'','" + model_name + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
-        price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "','" +
-        isApproved + "','" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
-        manual + "','" + connector + "','" + remarks + "'";
-    database.insert("inventory", values, function (err, insertData) {
-        var where = "imei LIKE '" + imei_1 + "'";
+
+    var sku_query = "select sku from sku_master where brand = '" + brand + "' and model = '" + model_name
+        + "' and storage = " + storage + " and color = '" + color + "' or grade = '" + grade + "'";
+
+    database.query(sku_query, function (err, skuData) {
         if (!err) {
-            database.update("phone_details", "status", service_stock, where, function (err, updateData) {
-                if (err) {
-                    console.log(err);
-                    callback(err);
+            var sku = skuData[0].sku;
+            var values = "'','" + model_name + "','" + sku + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
+                price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "','" +
+                isApproved + "','" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
+                manual + "','" + connector + "','" + remarks + "','" + isManual + "'";
+            database.insert("inventory", values, function (err, insertData) {
+                var where = "imei LIKE '" + imei_1 + "'";
+                if (!err) {
+                    database.update("phone_details", "status", service_stock, where, function (err, updateData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err);
+                        } else {
+                            callback(false, updateData);
+                        }
+                    });
                 } else {
-                    callback(false, updateData);
+                    console.log(err);
+                    callback(err, {});
                 }
             });
         } else {
             console.log(err);
-            callback(err, {});
+            callback(err);
         }
     });
+
 
     /**
      * Method to check the validity of the accessories.
@@ -457,11 +472,13 @@ helpers.insertOrder = function (postData, callback) {
 helpers.sendFirebaseNotification = function (token, msg, content, extra, callback) {
     const serviceAccount = require('./firebaseService.json');
     //token="eTxRb-dPHAc:APA91bGxiakY02DMiTUCP2UDgrGnEyrNPFZZ93bBGsnVALN_WiKMDwvK-51GNwfgv9uIjtcyraCfsUVPHW7k2KnHB9UonIt6aVSGSfwuFBG-tVSqTA8NmmHFCwfZQ5kRXBJhgzMqJjMo";
-    if (admin.apps.length === 0) {
+    try {
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
             databaseURL: "https://hyperxchange-api.firebaseio.com"
-        }, messages.APP_INDENTIFIER);
+        });
+    } catch (e) {
+        console.log(e);
     }
     const message = {
         data: {
