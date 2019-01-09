@@ -4,6 +4,15 @@ const helpers = require('./helpers');
 const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
+const java = require('./initJava');
+const aws = require('./aws');
+const fs = require('fs');
+const fp_json_file_name = './fp_data.json';
+const fp_json = require(fp_json_file_name);
+const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
+const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
+const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
+const S3 = new aws.S3();
 var handlers = {};
 /**
  * Method for Invalid Path.
@@ -22,13 +31,6 @@ handlers.notFound = function (data, callback) {
  * @param callback
  */
 handlers.ping = function (dataObject, callback) {
-    helpers.sendFirebaseNotification("", "Hello from AWS.", function (err, data) {
-        if (!err) {
-            console.log(data);
-        } else {
-            console.log(err);
-        }
-    });
     callback(false, 200, {'res': 'Welcome to HyperXchange API version 1.0.'});
 };
 /**
@@ -299,6 +301,7 @@ handlers.report = function (dataObject, callback) {
             } else {
                 callback(false, 200, {'res': true});
             }
+            //TODO: Update the status of the phone details.
         });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
@@ -670,7 +673,7 @@ handlers.inventoryData = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                const query = "SELECT (model_name),count(model_name) as count FROM inventory group by model_name";
+                const query = "SELECT (model_name),count(model_name) as count FROM inventory group by model_name having status=2";
                 database.query(query, function (err, data) {
                     if (!err) {
                         for (var i = 0; i < data.length; i++) {
@@ -1003,8 +1006,7 @@ handlers.inventoryPendingPhones = function (dataObject, callback) {
         var key = dataObject.queryString.key;
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                //TODO: Change the status.
-                var query = "SELECT * FROM phone_details WHERE status = 1";
+                var query = "SELECT * FROM phone_details WHERE status = 5";
                 database.query(query, function (err, phoneData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -1032,25 +1034,29 @@ handlers.visit = function (dataObject, callback) {
             if (isValid) {
                 var visitorPhone = typeof (dataObject.postData.visitor_phone) === 'string' ? dataObject.postData.visitor_phone.trim() : false;
                 if (visitorPhone) {
-                    let query = "SELECT id FROM visitor_details WHERE mobile_number LIKE '" + visitorPhone + "'";
+                    let query = "SELECT * FROM visitor_details WHERE mobile_number LIKE '" + visitorPhone + "'";
                     database.query(query, function (err, visitorData) {
+                        console.log(visitorPhone);
                         if (!err) {
                             visitorID = visitorData[0].id;
                             console.log(visitorID);
-                            var employeeId = dataObject.postData.id;
-                            var timeDate = Math.floor((new Date().getTime()) / 1000);
-                            var timeStamp = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
-                            var location = dataObject.postData.location;
-                            var values = employeeId + "," + visitorID + ",'" + location + "','" + timeStamp + "',3";
+                            const employeeId = dataObject.postData.id;
+                            const timeDate = Math.floor((new Date().getTime()) / 1000);
+                            const timeStamp = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
+                            const location = dataObject.postData.location;
+                            const purpose = dataObject.postData.purpose;
+                            var values = "''," + employeeId + "," + visitorID + ",'" + location + "','" + timeStamp + "',3,'" + purpose + "'";
                             database.insert("visit_details", values, function (err, insertVisitData) {
                                 if (!err) {
                                     callback(false, 200, {'res': true});
+                                    getTokenAndNotify(employeeId, insertVisitData.insertId);
                                 } else {
                                     callback(err, 500, {'res': messages.errorMessage});
-                                    getTokenAndNotify(employeeId, visitorData[0]);
+                                    console.log(err);
                                 }
                             });
                         } else {
+                            console.error(err, err.stack);
                             callback(err, 500, {'res': messages.errorMessage});
                         }
                     });
@@ -1062,6 +1068,35 @@ handlers.visit = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
+    } else if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                const postData = dataObject.postData;
+                const employeeId = typeof (postData.id) === 'string' && postData.id.length > 0 ? postData.id : false;
+                const time = typeof (postData.time) === 'string' && postData.time.length > 2 ? postData.time : false;
+                const date = typeof (postData.date) === 'string' && postData.date.length > 2 ? postData.date : false;
+                const visitorPhone = typeof (postData.visitor_phone) === 'string' && postData.visitor_phone.length > 2 ? postData.visitor_phone : false;
+                const status = typeof (postData.status) === 'string' && postData.status.length > 1 ? postData.status : false;
+                if (employeeId && vistorId && time && date) {
+                    const dateTime = date + " " + time;
+                    const query = "UPDATE visit_details v,visit_status_details s,visitor_details d SET v.status=s.id" +
+                        " WHERE s.status LIKE '" + status + "' AND v.employee_id=" + employeeId + " AND" +
+                        " v.visitor_id= d.id AND d.mobile_number LIKE '" + visitorPhone + "' v.time_stamp LIKE '" + dateTime + "'";
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                            notifyVisitor(visitorPhone, status);
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
@@ -1069,26 +1104,58 @@ handlers.visit = function (dataObject, callback) {
     /**
      * Method to send FCM.
      * @param employeeID: The Employee ID.
-     * @param visitorData: The Visitor details.
+     * @param visitId: The Visit Id.
      */
-    function getTokenAndNotify(employeeID, visitorData) {
-        const query = "SELECT * FROM employee_details WHERE id = " + employeeID;
+    function getTokenAndNotify(employeeID, visitId) {
+        let query = "SELECT * FROM employee_details WHERE id = " + employeeID;
         database.query(query, function (err, employeeData) {
+            console.log(employeeData[0]);
             if (err) {
                 console.log(err);
             } else {
-                const token = employeeData[0].device_token;
-                const msg = visitorData.first_name + " " + visitorData.last_name + " is waiting for you.";
-                const content = visitorData[0];
-                helpers.sendFirebaseNotification(token, msg, content, function (err, id) {
+                query = "SELECT * FROM visit_details WHERE id = " + visitId;
+                database.query(query, function (err, visitData) {
+                    console.log(visitData[0]);
                     if (err) {
                         console.log(err);
                     } else {
-                        console.log("Notification send.");
+                        query = "SELECT * FROM visitor_details WHERE id = " + visitData[0].visitor_id;
+                        database.query(query, function (err, visitorData) {
+                            if (err) {
+                                console.error(err.stack);
+                            } else {
+                                const msg = new Buffer(JSON.stringify(employeeData[0])).toString('base64');
+                                const content = new Buffer(JSON.stringify(visitData[0])).toString('base64');
+                                const extra = new Buffer((JSON.stringify(visitorData[0]))).toString('base64');
+                                helpers.sendFirebaseNotification(employeeData[0].device_token, msg, content, extra, function (err) {
+                                    if (err) {
+                                        console.log(err);
+                                    } else {
+                                        console.log("Notification send.");
+                                    }
+                                });
+                            }
+                        });
                     }
-                });
+                })
             }
         })
+    }
+
+    /**
+     * Method to send the sms to the visitor.
+     * @param phone: The Phone number of the Visitor.
+     * @param status: the status of the visit.
+     */
+    function notifyVisitor(phone, status) {
+        let msg = status === 'Accepted' ? messages.acceptVistMessage : messages.rejectVisitMessage;
+        snsLib.sendMessage(phone, msg, function (err) {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log('Visitor Notified.');
+            }
+        });
     }
 };
 /**
@@ -1837,7 +1904,200 @@ handlers.details = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.bioAuth = function (dataObject, callback) {
+    helpers.validateToken(data.queryString.key, valid => {
+        if (!valid) {
+            callback(true, 403, {'res': 'Token expired or invalid'});
+            console.log('error token invalid');
+            return
+        }
 
+        if (data.method === 'put') {
+            let id = data.queryString.id;
+
+            if (data.queryString.type === 'enroll') {
+                let offsets = data.queryString.offsets;
+
+                if (!id || !offsets) {
+                    callback(true, 400, {'res': 'insuccfient data'});
+                    console.log('error no id or offsets');
+                    return
+                }
+
+                let fp_data_raw = data.data;
+
+                offsets = JSON.parse(offsets);
+
+                if (Object.values(offsets).some(isNaN)) {
+                    callback(true, 400, {'res': 'invalid offset data'});
+                    console.log('error invalid offsets');
+                    return
+                }
+
+                finger_names.forEach(n => {
+                    if (!Object.keys(offsets).includes(n)) {
+                        callback(true, 400, {'res': `fingerprint not found: ${n}`});
+                        console.log(`error fingerprint not found: ${n}`);
+                        return;
+                    }
+                });
+
+                offsets = Object.keys(offsets).map((key) => {
+                    var x = {};
+
+                    x.key = key;
+                    x.value = offsets[key];
+
+                    return x
+                }).sort((a, b) => a.value - b.value);
+
+                fp_json[id] = {};
+
+                try {
+                    for (let i = 0; i < offsets.length; i++) {
+                        let off = offsets[i].value;
+
+                        let end = (i === offsets.length - 1) ? fp_data_raw.byteLength : offsets[i + 1].value - 1;
+
+                        if (off > fp_data_raw.length || end > fp_data_raw.length) {
+                            callback(true, 400, {'res': 'invalid offset data'});
+                            console.log('error invalid offsets');
+                            return
+                        }
+
+                        let fpd = fp_data_raw.slice(off, end);
+                        let filename = `${id}_${offsets[i].key}.png`;
+
+                        let fpT = new FingerprintTemplate().dpiSync(500).createSync(java.newArray("byte", Array.prototype.slice.call(fpd)));
+
+                        fp_json[id][offsets[i].key] = fpT.serializeSync();
+
+                        let params = {Bucket: mesesages.bucketName, Key: filename, Body: fpd};
+
+                        var upromise = S3.putObject(params).promise();
+                        upromise.then(d => {
+                            console.log("Successfully uploaded data to " + mesesages.bucketName + "/" + filename)
+                        }).catch(e => {
+                            console.log("Error uploading data: " + mesesages.bucketName + "/" + filename);
+                            console.err(e, e.stack)
+                        })
+                    }
+
+                    fs.writeFile(fp_json_file_name, JSON.stringify(fp_json, null, 2), err => {
+                        if (err) return console.log(err)
+                    });
+
+                    callback(false, 200, {'res': 'successfully inserted fingerprint into database'});
+                    return
+                } catch (error) {
+                    console.log(error);
+                    callback(true, 400, {'res': 'invalid fingerprint'});
+                    console.log('error invalid fp');
+                    return
+                }
+            } else if (data.queryString.type === 'check') {
+                if (!id) {
+                    callback(true, 400, {'res': 'insuccfient data'});
+                    console.log('error no id or offsets');
+                    return
+                }
+
+                let fp_id = fp_json[id];
+
+                if (fp_id && fp_id.length < /* != */ 4) {
+                    fp_id = null
+                }
+
+                if (fp_id) {
+                    finger_names.forEach(x => {
+                        if (!Object.keys(fp_id).includes(x)) {
+                            fp_id = null;
+                            return
+                        }
+                    })
+                }
+
+                if (fp_id) {
+                    callback(false, 200, {res: fp_id})
+                } else {
+                    callback(false, 200, {res: {}})
+                }
+                return
+            } else {
+                callback(true, 400, {'res': 'invalid type'});
+                console.log('error invalid type')
+            }
+        } else if (data.method === 'post') {
+            if (!data.queryString.type) {
+                callback(true, 400, {'res': 'insuccfient data'});
+                console.log('error no type');
+                return
+            }
+
+            let fp_probe = new FingerprintTemplate();
+
+            try {
+                fp_probe = fp_probe.dpiSync(500).createSync(java.newArray("byte", Array.prototype.slice.call(data.data, 0)))
+            } catch {
+                callback(true, 400, {'res': 'invalid fingerprint'});
+                console.log('error invalid fp');
+                return
+            }
+            if (!fp_probe) {
+                callback(true, 400, {'res': 'invalid fingerprint'});
+                console.log('error invalid fp');
+                return
+            }
+
+            if (data.queryString.type === 'generate') {
+                callback(false, 200, {res: fp_probe.serializeSync()})
+            } else if (data.queryString.type === 'verify') {
+                let finger = data.queryString.finger;
+
+                let matcher = new FingerprintMatcher().indexSync(fp_probe);
+
+                let high = 0;
+                let match = null;
+
+                matchFinger = (f, fps, id) => {
+                    let fp = fps[f];
+                    let fp_template = new FingerprintTemplate().deserializeSync(fp);
+
+                    let score = matcher.matchSync(fp_template);
+                    if (score > high) {
+                        high = score;
+                        match = id;
+                        finger = f
+                    }
+                };
+
+                for (let id in fp_json) {
+                    let fps = fp_json[id];
+
+                    if (finger) {
+                        if (!finger_names.includes(finger) || !fps[finger]) {
+                            callback(true, 400, {'res': 'invalid finger specified'});
+                            console.log('error invalid finger');
+                            return
+                        }
+                        matchFinger(finger, fps, id);
+                        continue;
+                    }
+
+                    for (let f in fps) {
+                        matchFinger(f, fps, id)
+                    }
+                }
+
+                callback(false, 200, {res: high, match, finger})
+            } else {
+                callback(true, 400, {'res': 'invalid type'});
+                console.log('error invalid type')
+            }
+        } else {
+            callback(true, 400, {'res': 'invalid request method'});
+            console.log('error invalid method')
+        }
+    });
 };
 /**
  * Method to update the Firebase token.

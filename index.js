@@ -63,14 +63,14 @@ var unifiedServer = function (req, res) {
     if (header === 'application/octet-stream') {
         var data = [];
         req.on('data', d => {
-            data.push(d);
+            data.push(d)
         }).on('end', () => {
             var buffer = Buffer.concat(data);
             const handlerData = {
-                'path': trimmedPath,
-                'method': method,
-                'queryString': queryString,
-                data
+                path: trimmedPath,
+                method,
+                queryString,
+                data: buffer
             };
             execHandlers(handlerData);
         });

@@ -288,7 +288,12 @@ helpers.addInventoryPhone = function (data, callback) {
         var where = "imei LIKE '" + imei_1 + "'";
         if (!err) {
             database.update("phone_details", "status", service_stock, where, function (err, updateData) {
-                callback(err, updateData);
+                if (err) {
+                    console.log(err);
+                    callback(err);
+                } else {
+                    callback(false, updateData);
+                }
             });
         } else {
             console.log(err);
@@ -449,17 +454,20 @@ helpers.insertOrder = function (postData, callback) {
  * @param content: The Content of the Message.
  * @param callback: The method callback.
  */
-helpers.sendFirebaseNotification = function (token, msg, content, callback) {
+helpers.sendFirebaseNotification = function (token, msg, content, extra, callback) {
     const serviceAccount = require('./firebaseService.json');
     //token="eTxRb-dPHAc:APA91bGxiakY02DMiTUCP2UDgrGnEyrNPFZZ93bBGsnVALN_WiKMDwvK-51GNwfgv9uIjtcyraCfsUVPHW7k2KnHB9UonIt6aVSGSfwuFBG-tVSqTA8NmmHFCwfZQ5kRXBJhgzMqJjMo";
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        databaseURL: "https://hyperxchange-api.firebaseio.com"
-    });
+    if (admin.apps.length === 0) {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: "https://hyperxchange-api.firebaseio.com"
+        }, messages.APP_INDENTIFIER);
+    }
     const message = {
         data: {
             res: msg,
-            content: content
+            content: content,
+            extra: extra
         },
         token: token
     };
