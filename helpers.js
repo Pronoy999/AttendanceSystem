@@ -246,35 +246,49 @@ helpers.getRandomKey = function (len) {
     return key;
 };
 /**
+ * Method to generate an random IMEI.
+ * @param len: The length of the IMEI to be generated.
+ * @returns {string}: The Random IMEI.
+ */
+helpers.getRandomImei = function (len) {
+    const possibleCharacters = '1234567890xxxxxxxxxx1234567890xxxxxxxxxx';
+    len = typeof (len) === 'number' && len >= 15 ? len : 15;
+    let imei = '';
+    for (let i = 0; i < len; i++) {
+        imei += possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters * length));
+    }
+    return imei;
+}
+/**
  * Method to add the Phone to the Inventory and update the status of phone_details.
  * @param data: The Post Data.
  * @param callback: The Method callback.
  */
 helpers.addInventoryPhone = function (data, callback) {
     console.log(data);
-    var brand = data.brand;
-    var model_name = data.model_name;
-    var imei_1 = data.product_imei_1;
-    var imei_2 = data.product_imei_2;
-    var color = data.product_color;
+    var brand = data.brand.trim();
+    var model_name = data.model_name.trim();
+    var imei_1 = data.product_imei_1.trim();
+    var imei_2 = data.product_imei_2.trim();
+    var color = data.product_color.trim();
     var timeDate = Math.floor((new Date().getTime()) / 1000);
     var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
     var time = formattedDate[1];
     var date = formattedDate[0];
-    var price = data.product_price;
+    var price = data.product_price.trim();
     var grade = data.product_grade;
     var vendorId = data.vendor_id;
-    var email = data.operations_email;
+    var email = data.operations_email.trim();
     var service_stock = data.service_stock;
     var isApproved = data.is_approved;
     var storage = data.storage;
-    var charger = data.charger;
-    var head_phone = data.head_phone;
-    var ejectorTool = data.ejector_tool;
-    var back_cover = data.back_cover;
+    var charger = data.charger.trim();
+    var head_phone = data.head_phone.trim();
+    var ejectorTool = data.ejector_tool.trim();
+    var back_cover = data.back_cover.trim();
     var manual = data.manual;
     var connector = data.connector;
-    var remarks = data.remarks;
+    var remarks = data.remarks.trim();
     var isManual = data.is_manual;
     charger = checkValid(charger);
     head_phone = checkValid(head_phone);
@@ -282,13 +296,15 @@ helpers.addInventoryPhone = function (data, callback) {
     back_cover = checkValid(back_cover);
     manual = checkValid(manual);
     connector = checkValid(connector);
+    var modelArray = model_name.split(' ');
 
-    var sku_query = "select sku from sku_master where brand = '" + brand + "' and model = '" + model_name
-        + "' and storage = " + storage + " and color = '" + color + "' or grade = '" + grade + "'";
-
+    var sku_query = "select * from sku_master where brand LIKE '%" + brand + "%' and lower(model) LIKE lower('%" + model_name
+        + "%') and storage = " + storage + " and color LIKE '%" + color + "%' or grade LIKE '%" + grade + "%'";
+    console.log(sku_query);
     database.query(sku_query, function (err, skuData) {
         if (!err) {
             var sku = skuData[0].sku;
+            console.log(sku);
             var values = "'','" + model_name + "','" + sku + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
                 price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "','" +
                 isApproved + "','" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +

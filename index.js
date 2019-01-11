@@ -27,6 +27,7 @@ const router = {
     'inventory-data': handlers.inventoryData,
     'employee': handlers.employee,
     'inventory-phone': handlers.inventoryPhone,
+    'inventory-dead': handlers.inventoryDead,
     'inventory-vendor': handlers.getVendor,
     'inventory-imei': handlers.inventoryImei,
     'inventory-pending': handlers.inventoryPendingPhones,

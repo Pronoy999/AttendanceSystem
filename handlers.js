@@ -440,54 +440,64 @@ handlers.logCheck = function (dataObject, callback) {
 handlers.addVisitor = function (dataObject, callback) {
     var response = {};
     if (dataObject.method === 'post') {
-        var firstName = dataObject.postData.first_name;
-        var lastName = dataObject.postData.last_name;
-        var mobileNumber = dataObject.postData.mobile_number;
-        const isParking = dataObject.postData.is_parking;
-        firstName = typeof (firstName) === 'string' ? firstName : false;
-        lastName = typeof (lastName) === 'string' ? lastName : false;
-        mobileNumber = typeof (mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
-        if (firstName && lastName && mobileNumber) {
-            var values = "'','" + firstName + "','" + lastName + "','" +
-                mobileNumber + "'," + isParking;
-            database.insert("visitor_details", values, function (err, data) {
-                if (err) {
-                    var query = "UPDATE visitor_details SET first_name='" +
-                        firstName + "', last_name='" + lastName + "', is_parking= " + isParking +
-                        " WHERE mobile_number LIKE '" + mobileNumber + "'";
-                    database.query(query, function (err, data) {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var firstName = dataObject.postData.first_name;
+                var lastName = dataObject.postData.last_name;
+                var mobileNumber = dataObject.postData.mobile_number;
+                const isParking = dataObject.postData.is_parking;
+                firstName = typeof (firstName) === 'string' ? firstName : false;
+                lastName = typeof (lastName) === 'string' ? lastName : false;
+                mobileNumber = typeof (mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
+                if (firstName && lastName && mobileNumber) {
+                    var values = "'','" + firstName + "','" + lastName + "','" +
+                        mobileNumber + "'," + isParking;
+                    database.insert("visitor_details", values, function (err, data) {
                         if (err) {
-                            response = {
-                                'res': 'Error'
-                            };
-                            callback(err, 500, response);
+                            var query = "UPDATE visitor_details SET first_name='" +
+                                firstName + "', last_name='" + lastName + "', is_parking= " + isParking +
+                                " WHERE mobile_number LIKE '" + mobileNumber + "'";
+                            database.query(query, function (err, data) {
+                                if (err) {
+                                    response = {
+                                        'res': 'Error'
+                                    };
+                                    callback(err, 500, response);
+                                } else {
+                                    response = {
+                                        'res': 'Visitor may already Exist.'
+                                    };
+                                    callback(err, 200, response);
+                                }
+                            });
                         } else {
                             response = {
-                                'res': 'Visitor may already Exist.'
+                                'res': 'New visitor added.'
                             };
-                            callback(err, 200, response);
+                            callback(false, 200, response);
                         }
                     });
                 } else {
-                    response = {
-                        'res': 'New visitor added.'
-                    };
-                    callback(false, 200, response);
+                    callback(true, 403, {'res': messages.tokenExpiredMessage});
                 }
-            });
-        } else {
-            response = {
-                'res': messages.insufficientData
-            };
-            callback(false, 400, response);
-        }
+            } else {
+                response = {
+                    'res': messages.insufficientData
+                };
+                callback(false, 400, response);
+            }
+        });
+
+    } else if (dataObject.method === 'get') {
+
     } else {
         response = {
             'res': messages.invalidRequestMessage
         };
         callback(false, 400, response);
     }
-};
+}
+;
 /**
  * Method to get the Visit Log.
  * @param dataObject: The Request Object.
@@ -522,7 +532,7 @@ handlers.visitLog = function (dataObject, callback) {
         });
     } else {
         response = {
-            'res': 'Invalid Request'
+            'res': messages.invalidRequestMessage
         };
         callback(false, 400, response);
     }
@@ -672,7 +682,7 @@ handlers.inventoryData = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                const query = "SELECT (model_name),count(model_name) as count FROM inventory group by model_name having status=2";
+                const query = "SELECT (model_name),count(model_name) as count FROM inventory WHERE service_stock=2 group by model_name ";
                 database.query(query, function (err, data) {
                     if (!err) {
                         for (var i = 0; i < data.length; i++) {
@@ -806,6 +816,83 @@ handlers.inventoryPhone = function (dataObject, callback) {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
         }
     });
+};
+/**
+ * Method to insert or update the Dead phones or Lost or Dispute phones.
+ * It is also used get the list of dead phones with GET method.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.inventoryDead = function (dataObject, callback) {
+    if (dataObject.method === 'post') {
+        helper.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                let imei = helpers.getRandomImei(16);
+                const brand = typeof (dataObject.postData.brand) === 'string' &&
+                dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
+                const model = typeof (dataObject.postData.model) === 'string' &&
+                dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
+                const serviceCenter = dtypeof(dataObject.postData.service_center) === 'string' &&
+                dataObject.postData.service_center.length > 0 ? dataObject.postData.service_center : false;
+                const remarks = typeof (dataObject.postData.remarks) === 'string' &&
+                dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
+                if (brand && model && serviceCenter && remarks) {
+                    const query = "INSERT INTO dead_phone VALUES('" + imei + "','" + brand + "','"
+                        + model + "','" + serviceCenter + "','" + remarks + "')";
+                    database.query(query, function (err, insertData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': imei});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else if (dataObject.method === 'get') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                const query = "SELECT * FROM dead_phone";
+                database.query(query, function (err, deadData) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': deadData});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString, function (isValid) {
+            if (isValid) {
+                const imei = typeof (dataObject.postData.imei) === 'string' &&
+                dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                const remarks = typeof (dataObject.postData.remarks) === 'string' &&
+                dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
+                if (imei && dataObject) {
+                    const query = "UPDATE inventory i, service_stock_sold_details s" +
+                        " SET i.service_stock =s.id , i.remarks= '" + remarks + "'" +
+                        " WHERE s.sold_stock_service='Lost'";
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    }
 };
 /**
  * Method to get the Vendor Details.
@@ -1887,6 +1974,16 @@ handlers.details = function (dataObject, callback) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
                             callback(false, 200, {'res': courierData});
+                        }
+                    });
+                } else if (type === 'sku') {
+                    query = "SELECT * FROM sku_master";
+                    database.query(query, function (err, skuData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': skuData});
                         }
                     });
                 } else {
