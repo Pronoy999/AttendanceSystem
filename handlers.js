@@ -985,7 +985,8 @@ handlers.attendance = function (dataObject, callback) {
                 database.query(query, function (err, data) {
                     if (!err) {
                         var timeDate = Math.floor((new Date().getTime()) / 1000);
-                        var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat))
+                        var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata')
+                            .format(messages.dateFormat))
                             .split(' ');
                         var date = formattedDate[0];
                         var time = formattedDate[1];
@@ -1043,10 +1044,54 @@ handlers.attendance = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
+    } else if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+                if (isValid) {
+                    const employeeID = dataObject.queryString.id > 0 ? dataObject.queryString.id : false;
+                    if (employeeID) {
+                        let query = "update employee_details set current_status = CASE" +
+                            "When current_status = 'signed_out' then 'signed_in'" +
+                            "when current_status = 'signed_in' then 'signed_out'" +
+                            "end where id =  " + employeeID;
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                console.log(err);
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                var timeDate = Math.floor((new Date().getTime()) / 1000);
+                                var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata')
+                                    .format(messages.dateFormat))
+                                    .split(' ');
+                                var date = formattedDate[0];
+                                var time = formattedDate[1];
+                                query = "INSERT INTO attendance_record VALUES(''," + employeeID + "," +
+                                    "(SELECT current_status FROM employee_details WHERE id=" + employeeID + ")," +
+                                    "'" + timeDate + "',(SELECT location FROM staging_diagnostic_app.employee_details WHERE id=" +
+                                    employeeID + "),'" + date + "','" + time + "')";
+                                console.log(query);
+                                database.query(query, function (err, insertData) {
+                                    if (err) {
+                                        console.log(err);
+                                        callback(err, 500, {'res': messages.errorMessage});
+                                    } else {
+                                        callback(false, 200, {'res': true});
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        callback(true, 400, {'res': messages.insufficientData});
+                    }
+                } else {
+                    callback(true, 403, {'res': messages.tokenExpiredMessage});
+                }
+            }
+        );
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
-};
+}
+;
 /**
  * Method to get the Phone details with the IMEI from the Inventory.
  * @param dataObject: The Request Object.
@@ -1986,6 +2031,16 @@ handlers.details = function (dataObject, callback) {
                             callback(false, 200, {'res': skuData});
                         }
                     });
+                } else if (type === 'serviceCenter') {
+                    query = "SELECT * FROM service_center_details";
+                    database.query(query, function (err, serviceCenterData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': serviceCenterData});
+                        }
+                    })
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
@@ -2036,7 +2091,7 @@ handlers.bioAuth = function (data, callback) {
                     if (!Object.keys(offsets).includes(n)) {
                         callback(true, 400, {'res': `fingerprint not found: ${n}`});
                         console.log(`error fingerprint not found: ${n}`);
-                        return;
+
                     }
                 });
 
@@ -2086,16 +2141,16 @@ handlers.bioAuth = function (data, callback) {
                     });
 
                     callback(false, 200, {'res': 'successfully inserted fingerprint into database'});
-                    return
+
                 } catch (error) {
                     console.log(error);
                     callback(true, 400, {'res': 'invalid fingerprint'});
                     console.log('error invalid fp');
-                    return
+
                 }
             } else if (data.queryString.type === 'check') {
                 if (!id) {
-                    callback(true, 400, {'res': 'insuccfient data'});
+                    callback(true, 400, {'res': messages.insufficientData});
                     console.log('error no id or offsets');
                     return
                 }
@@ -2110,7 +2165,7 @@ handlers.bioAuth = function (data, callback) {
                     finger_names.forEach(x => {
                         if (!Object.keys(fp_id).includes(x)) {
                             fp_id = null;
-                            return
+
                         }
                     })
                 }
@@ -2120,7 +2175,7 @@ handlers.bioAuth = function (data, callback) {
                 } else {
                     callback(false, 200, {res: {}})
                 }
-                return
+
             } else {
                 callback(true, 400, {'res': 'invalid type'});
                 console.log('error invalid type')
