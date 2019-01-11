@@ -4,6 +4,7 @@ const moment = require('moment');
 const tz = require('moment-timezone');
 const messages = require('./Constants');
 const snsLib = require('./snsLib');
+const admin = require('firebase-admin');
 /**
  * Method to parse JSON to Objects.
  * @param data
@@ -245,55 +246,91 @@ helpers.getRandomKey = function (len) {
     return key;
 };
 /**
+ * Method to generate an random IMEI.
+ * @param len: The length of the IMEI to be generated.
+ * @returns {string}: The Random IMEI.
+ */
+helpers.getRandomImei = function (len) {
+    const possibleCharacters = '1234567890xxxxxxxxxx1234567890xxxxxxxxxx';
+    len = typeof (len) === 'number' && len >= 15 ? len : 15;
+    let imei = '';
+    for (let i = 0; i < len; i++) {
+        imei += possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters * length));
+    }
+    return imei;
+}
+/**
  * Method to add the Phone to the Inventory and update the status of phone_details.
  * @param data: The Post Data.
  * @param callback: The Method callback.
  */
 helpers.addInventoryPhone = function (data, callback) {
     console.log(data);
-    var model_name = data.model_name;
-    var imei_1 = data.product_imei_1;
-    var imei_2 = data.product_imei_2;
-    var color = data.product_color;
+    var brand = data.brand.trim();
+    var model_name = data.model_name.trim();
+    var imei_1 = data.product_imei_1.trim();
+    var imei_2 = data.product_imei_2.trim();
+    var color = data.product_color.trim();
     var timeDate = Math.floor((new Date().getTime()) / 1000);
     var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
     var time = formattedDate[1];
     var date = formattedDate[0];
-    var price = data.product_price;
+    var price = data.product_price.trim();
     var grade = data.product_grade;
     var vendorId = data.vendor_id;
-    var email = data.operations_email;
+    var email = data.operations_email.trim();
     var service_stock = data.service_stock;
     var isApproved = data.is_approved;
     var storage = data.storage;
-    var charger = data.charger;
-    var head_phone = data.head_phone;
-    var ejectorTool = data.ejector_tool;
-    var back_cover = data.back_cover;
+    var charger = data.charger.trim();
+    var head_phone = data.head_phone.trim();
+    var ejectorTool = data.ejector_tool.trim();
+    var back_cover = data.back_cover.trim();
     var manual = data.manual;
     var connector = data.connector;
-    var remarks = data.remarks;
+    var remarks = data.remarks.trim();
+    var isManual = data.is_manual;
     charger = checkValid(charger);
     head_phone = checkValid(head_phone);
     ejectorTool = checkValid(ejectorTool);
     back_cover = checkValid(back_cover);
     manual = checkValid(manual);
     connector = checkValid(connector);
-    var values = "'','" + model_name + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
-        price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "','" +
-        isApproved + "','" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
-        manual + "','" + connector + "','" + remarks + "'";
-    database.insert("inventory", values, function (err, insertData) {
-        var where = "imei LIKE '" + imei_1 + "'";
+    var modelArray = model_name.split(' ');
+
+    var sku_query = "select * from sku_master where brand LIKE '%" + brand + "%' and lower(model) LIKE lower('%" + model_name
+        + "%') and storage = " + storage + " and color LIKE '%" + color + "%' or grade LIKE '%" + grade + "%'";
+    console.log(sku_query);
+    database.query(sku_query, function (err, skuData) {
         if (!err) {
-            database.update("phone_details", "status", service_stock, where, function (err, updateData) {
-                callback(err, updateData);
+            var sku = skuData[0].sku;
+            console.log(sku);
+            var values = "'','" + model_name + "','" + sku + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
+                price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "','" +
+                isApproved + "','" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
+                manual + "','" + connector + "','" + remarks + "','" + isManual + "'";
+            database.insert("inventory", values, function (err, insertData) {
+                var where = "imei LIKE '" + imei_1 + "'";
+                if (!err) {
+                    database.update("phone_details", "status", service_stock, where, function (err, updateData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err);
+                        } else {
+                            callback(false, updateData);
+                        }
+                    });
+                } else {
+                    console.log(err);
+                    callback(err, {});
+                }
             });
         } else {
             console.log(err);
-            callback(err, {});
+            callback(err);
         }
     });
+
 
     /**
      * Method to check the validity of the accessories.
@@ -379,7 +416,8 @@ helpers.updatePhoneReport = function (postData, callback) {
         set += x + " = '" + postData[x] + '\',';
     }
     set = set.substr(0, set.length - 1);
-    set = set + " WHERE imei LIKE '" + imei + "' AND is_updated = 0";
+    set = set + " , is_updated = 1 WHERE imei LIKE '" + imei + "' AND is_updated = 0";
+    console.log(set);
     database.query(set, function (err, updateData) {
         if (err) {
             callback(err);
@@ -439,6 +477,43 @@ helpers.insertOrder = function (postData, callback) {
             callback(false);
         }
     });*/
+};
+/**
+ * Method to send the firebase notification.
+ * @param token: The Device token.
+ * @param msg: The Message to be send.
+ * @param content: The Content of the Message.
+ * @param callback: The method callback.
+ */
+helpers.sendFirebaseNotification = function (token, msg, content, extra, callback) {
+    const serviceAccount = require('./firebaseService.json');
+    //token="eTxRb-dPHAc:APA91bGxiakY02DMiTUCP2UDgrGnEyrNPFZZ93bBGsnVALN_WiKMDwvK-51GNwfgv9uIjtcyraCfsUVPHW7k2KnHB9UonIt6aVSGSfwuFBG-tVSqTA8NmmHFCwfZQ5kRXBJhgzMqJjMo";
+    try {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: "https://hyperxchange-api.firebaseio.com"
+        });
+    } catch (e) {
+        console.log(e);
+    }
+    const message = {
+        data: {
+            res: msg,
+            content: content,
+            extra: extra
+        },
+        token: token
+    };
+    admin.messaging().send(message)
+        .then((response) => {
+            // Response is a message ID string.
+            console.log('Successfully sent message:', response);
+            callback(false, response);
+        })
+        .catch((error) => {
+            console.log('Error sending message:', error);
+            callback(error);
+        });
 };
 /**
  * Exporting the module.

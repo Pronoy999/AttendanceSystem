@@ -4,6 +4,15 @@ const helpers = require('./helpers');
 const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
+const java = require('./initJava');
+const aws = require('./aws');
+const fs = require('fs');
+const fp_json_file_name = './fp_data.json';
+const fp_json = require(fp_json_file_name);
+const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
+const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
+const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
+const S3 = new aws.S3();
 var handlers = {};
 /**
  * Method for Invalid Path.
@@ -431,54 +440,64 @@ handlers.logCheck = function (dataObject, callback) {
 handlers.addVisitor = function (dataObject, callback) {
     var response = {};
     if (dataObject.method === 'post') {
-        var firstName = dataObject.postData.first_name;
-        var lastName = dataObject.postData.last_name;
-        var mobileNumber = dataObject.postData.mobile_number;
-        const isParking = dataObject.postData.is_parking;
-        firstName = typeof (firstName) === 'string' ? firstName : false;
-        lastName = typeof (lastName) === 'string' ? lastName : false;
-        mobileNumber = typeof (mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
-        if (firstName && lastName && mobileNumber) {
-            var values = "'','" + firstName + "','" + lastName + "','" +
-                mobileNumber + "'," + isParking;
-            database.insert("visitor_details", values, function (err, data) {
-                if (err) {
-                    var query = "UPDATE visitor_details SET first_name='" +
-                        firstName + "', last_name='" + lastName + "', is_parking= " + isParking +
-                        " WHERE mobile_number LIKE '" + mobileNumber + "'";
-                    database.query(query, function (err, data) {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                var firstName = dataObject.postData.first_name;
+                var lastName = dataObject.postData.last_name;
+                var mobileNumber = dataObject.postData.mobile_number;
+                const isParking = dataObject.postData.is_parking;
+                firstName = typeof (firstName) === 'string' ? firstName : false;
+                lastName = typeof (lastName) === 'string' ? lastName : false;
+                mobileNumber = typeof (mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
+                if (firstName && lastName && mobileNumber) {
+                    var values = "'','" + firstName + "','" + lastName + "','" +
+                        mobileNumber + "'," + isParking;
+                    database.insert("visitor_details", values, function (err, data) {
                         if (err) {
-                            response = {
-                                'res': 'Error'
-                            };
-                            callback(err, 500, response);
+                            var query = "UPDATE visitor_details SET first_name='" +
+                                firstName + "', last_name='" + lastName + "', is_parking= " + isParking +
+                                " WHERE mobile_number LIKE '" + mobileNumber + "'";
+                            database.query(query, function (err, data) {
+                                if (err) {
+                                    response = {
+                                        'res': 'Error'
+                                    };
+                                    callback(err, 500, response);
+                                } else {
+                                    response = {
+                                        'res': 'Visitor may already Exist.'
+                                    };
+                                    callback(err, 200, response);
+                                }
+                            });
                         } else {
                             response = {
-                                'res': 'Visitor may already Exist.'
+                                'res': 'New visitor added.'
                             };
-                            callback(err, 200, response);
+                            callback(false, 200, response);
                         }
                     });
                 } else {
-                    response = {
-                        'res': 'New visitor added.'
-                    };
-                    callback(false, 200, response);
+                    callback(true, 403, {'res': messages.tokenExpiredMessage});
                 }
-            });
-        } else {
-            response = {
-                'res': messages.insufficientData
-            };
-            callback(false, 400, response);
-        }
+            } else {
+                response = {
+                    'res': messages.insufficientData
+                };
+                callback(false, 400, response);
+            }
+        });
+
+    } else if (dataObject.method === 'get') {
+
     } else {
         response = {
             'res': messages.invalidRequestMessage
         };
         callback(false, 400, response);
     }
-};
+}
+;
 /**
  * Method to get the Visit Log.
  * @param dataObject: The Request Object.
@@ -513,7 +532,7 @@ handlers.visitLog = function (dataObject, callback) {
         });
     } else {
         response = {
-            'res': 'Invalid Request'
+            'res': messages.invalidRequestMessage
         };
         callback(false, 400, response);
     }
@@ -663,7 +682,7 @@ handlers.inventoryData = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                const query = "SELECT (model_name),count(model_name) as count FROM inventory group by model_name";
+                const query = "SELECT (model_name),count(model_name) as count FROM inventory WHERE service_stock=2 group by model_name ";
                 database.query(query, function (err, data) {
                     if (!err) {
                         for (var i = 0; i < data.length; i++) {
@@ -730,7 +749,14 @@ handlers.employee = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (dataObject.method === 'get') {
             if (isValid) {
-                var query = "SELECT * FROM employee_details";
+                const id = typeof (dataObject.queryString.id) === 'string' &&
+                dataObject.queryString.id.length > 0 ? dataObject.queryString.id : false;
+                let query;
+                if (id) {
+                    query = "SELECT * FROM employee_details WHERE id = " + id;
+                } else {
+                    query = "SELECT * FROM employee_details";
+                }
                 database.query(query, function (err, data) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -790,6 +816,83 @@ handlers.inventoryPhone = function (dataObject, callback) {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
         }
     });
+};
+/**
+ * Method to insert or update the Dead phones or Lost or Dispute phones.
+ * It is also used get the list of dead phones with GET method.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.inventoryDead = function (dataObject, callback) {
+    if (dataObject.method === 'post') {
+        helper.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                let imei = helpers.getRandomImei(16);
+                const brand = typeof (dataObject.postData.brand) === 'string' &&
+                dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
+                const model = typeof (dataObject.postData.model) === 'string' &&
+                dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
+                const serviceCenter = dtypeof(dataObject.postData.service_center) === 'string' &&
+                dataObject.postData.service_center.length > 0 ? dataObject.postData.service_center : false;
+                const remarks = typeof (dataObject.postData.remarks) === 'string' &&
+                dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
+                if (brand && model && serviceCenter && remarks) {
+                    const query = "INSERT INTO dead_phone VALUES('" + imei + "','" + brand + "','"
+                        + model + "','" + serviceCenter + "','" + remarks + "')";
+                    database.query(query, function (err, insertData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': imei});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else if (dataObject.method === 'get') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                const query = "SELECT * FROM dead_phone";
+                database.query(query, function (err, deadData) {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': deadData});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString, function (isValid) {
+            if (isValid) {
+                const imei = typeof (dataObject.postData.imei) === 'string' &&
+                dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                const remarks = typeof (dataObject.postData.remarks) === 'string' &&
+                dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
+                if (imei && dataObject) {
+                    const query = "UPDATE inventory i, service_stock_sold_details s" +
+                        " SET i.service_stock =s.id , i.remarks= '" + remarks + "'" +
+                        " WHERE s.sold_stock_service='Lost'";
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    }
 };
 /**
  * Method to get the Vendor Details.
@@ -989,8 +1092,7 @@ handlers.inventoryPendingPhones = function (dataObject, callback) {
         var key = dataObject.queryString.key;
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                //TODO: Change the status.
-                var query = "SELECT * FROM phone_details WHERE status = 1";
+                var query = "SELECT * FROM phone_details WHERE status = 5";
                 database.query(query, function (err, phoneData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -1013,28 +1115,34 @@ handlers.inventoryPendingPhones = function (dataObject, callback) {
  */
 handlers.visit = function (dataObject, callback) {
     if (dataObject.method === 'post') {
-        var visitorID;
+        let visitorID;
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 var visitorPhone = typeof (dataObject.postData.visitor_phone) === 'string' ? dataObject.postData.visitor_phone.trim() : false;
                 if (visitorPhone) {
-                    var query = "SELECT id FROM visitor_details WHERE mobile_number LIKE '" + visitorPhone + "'";
+                    let query = "SELECT * FROM visitor_details WHERE mobile_number LIKE '" + visitorPhone + "'";
                     database.query(query, function (err, visitorData) {
+                        console.log(visitorPhone);
                         if (!err) {
                             visitorID = visitorData[0].id;
                             console.log(visitorID);
-                            var employeeId = dataObject.postData.employee_id;
-                            var timeStamp = dataObject.postData.timestamp;
-                            var location = dataObject.postData.location;
-                            var values = employeeId + "," + visitorID + ",'" + location + "','" + timeStamp + "',3";
+                            const employeeId = dataObject.postData.id;
+                            const timeDate = Math.floor((new Date().getTime()) / 1000);
+                            const timeStamp = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
+                            const location = dataObject.postData.location;
+                            const purpose = dataObject.postData.purpose;
+                            var values = "''," + employeeId + "," + visitorID + ",'" + location + "','" + timeStamp + "',3,'" + purpose + "'";
                             database.insert("visit_details", values, function (err, insertVisitData) {
                                 if (!err) {
-                                    callback(false, 200, {'res': 'Added new Visit.'});
+                                    callback(false, 200, {'res': true});
+                                    getTokenAndNotify(employeeId, insertVisitData.insertId);
                                 } else {
                                     callback(err, 500, {'res': messages.errorMessage});
+                                    console.log(err);
                                 }
                             });
                         } else {
+                            console.error(err, err.stack);
                             callback(err, 500, {'res': messages.errorMessage});
                         }
                     });
@@ -1046,8 +1154,97 @@ handlers.visit = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
+    } else if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                const postData = dataObject.postData;
+                const employeeId = postData.id > 0 ? postData.id : false;
+                const time = typeof (postData.time) === 'string' && postData.time.length > 2 ? postData.time : false;
+                const date = typeof (postData.date) === 'string' && postData.date.length > 2 ? postData.date : false;
+                const visitorPhone = typeof (postData.visitor_phone) === 'string' && postData.visitor_phone.length > 2 ? postData.visitor_phone : false;
+                const status = typeof (postData.status) === 'string' && postData.status.length > 1 ? postData.status : false;
+                if (employeeId && time && date) {
+                    const dateTime = date + "," + time;
+                    const query = "UPDATE visit_details v,visit_status_details s,visitor_details d " +
+                        "SET v.status=s.id " +
+                        "WHERE s.status LIKE '" + status + "' AND v.employee_id=8 " +
+                        "AND  d.mobile_number LIKE '" + visitorPhone +
+                        "' AND v.visitor_id= d.id AND v.time_stamp LIKE '" + dateTime + "'";
+                    console.log(query);
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                            notifyVisitor(visitorPhone, status);
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+
+    /**
+     * Method to send FCM.
+     * @param employeeID: The Employee ID.
+     * @param visitId: The Visit Id.
+     */
+    function getTokenAndNotify(employeeID, visitId) {
+        let query = "SELECT * FROM employee_details WHERE id = " + employeeID;
+        database.query(query, function (err, employeeData) {
+            console.log(employeeData[0]);
+            if (err) {
+                console.log(err);
+            } else {
+                query = "SELECT * FROM visit_details WHERE id = " + visitId;
+                database.query(query, function (err, visitData) {
+                    console.log(visitData[0]);
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        query = "SELECT * FROM visitor_details WHERE id = " + visitData[0].visitor_id;
+                        database.query(query, function (err, visitorData) {
+                            if (err) {
+                                console.error(err.stack);
+                            } else {
+                                const msg = new Buffer(JSON.stringify(employeeData[0])).toString('base64');
+                                const content = new Buffer(JSON.stringify(visitData[0])).toString('base64');
+                                const extra = new Buffer((JSON.stringify(visitorData[0]))).toString('base64');
+                                helpers.sendFirebaseNotification(employeeData[0].device_token, msg, content, extra, function (err) {
+                                    if (err) {
+                                        console.log(err);
+                                    } else {
+                                        console.log("Notification send.");
+                                    }
+                                });
+                            }
+                        });
+                    }
+                })
+            }
+        })
+    }
+
+    /**
+     * Method to send the sms to the visitor.
+     * @param phone: The Phone number of the Visitor.
+     * @param status: the status of the visit.
+     */
+    function notifyVisitor(phone, status) {
+        let msg = status === 'Accepted' ? messages.acceptVistMessage : messages.rejectVisitMessage;
+        snsLib.sendMessage(phone, msg, function (err) {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log('Visitor Notified.');
+            }
+        });
     }
 };
 /**
@@ -1092,21 +1289,30 @@ handlers.inventoryPin = function (dataObject, callback) {
                 var emailId = dataObject.postData.email.trim();
                 emailId = typeof (emailId) === 'string' && emailId.length >= 5 ? emailId : false;
                 if (emailId) {
-                    var pin = helpers.createOTP();
+                    const pin = helpers.createOTP();
                     console.log(pin);
-                    var query = "SELECT * FROM login_pin WHERE passcode=" + pin;
+                    let query = "SELECT * FROM login_pin WHERE email LIKE '" + emailId + "'";
                     database.query(query, function (err, selectData) {
                         if (selectData.length > 0) {
-                            pin = helpers.createOTP();
+                            query = "UPDATE login_pin SET passcode = " + pin + " WHERE email LIKE '" + emailId + "'";
+                            database.query(query, function (err, updateData) {
+                                if (err) {
+                                    console.log(err);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': pin});
+                                }
+                            });
+                        } else {
+                            var values = "'" + emailId + "'," + pin;
+                            database.insert("login_pin", values, function (err, insertData) {
+                                if (!err) {
+                                    callback(false, 200, {'res': pin});
+                                } else {
+                                    callback(true, 500, {'res': messages.errorMessage});
+                                }
+                            });
                         }
-                        var values = "'" + emailId + "'," + pin;
-                        database.insert("login_pin", values, function (err, insertData) {
-                            if (!err) {
-                                callback(false, 200, {'res': pin});
-                            } else {
-                                callback(true, 500, {'res': messages.errorMessage});
-                            }
-                        });
                     });
                 } else {
                     callback(false, 400, {'res': messages.insufficientData});
@@ -1608,9 +1814,26 @@ handlers.orderStatus = function (dataObject, callback) {
                     });
                 } else if (type === 'status') {
                     if (status) {
-                        const query = "UPDATE order_details o, order_status_details s " +
-                            "SET o.order_status = s.id WHERE s.status= '" + status +
-                            "' AND o.hx_order_id= " + hxorderid;
+                        const remarks = typeof (dataObject.postData.remarks) === 'string' &&
+                        dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
+                        const imei = typeof (dataObject.postData.imei) === 'string' &&
+                        dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                        let query;
+                        if (remarks) {
+                            query = "UPDATE order_details o, order_status_details s " +
+                                "SET o.order_status = s.id, o.remarks= '" + remarks + "'" +
+                                " WHERE s.status= '" + status +
+                                "' AND o.hx_order_id= " + hxorderid;
+                        } else if (imei && status === 'Ready-to-Invoice') {
+                            query = "UPDATE order_details o, order_status_details s " +
+                                "SET o.order_status = s.id, o.imei_number= '" + imei + "'" +
+                                " WHERE s.status= '" + status +
+                                "' AND o.hx_order_id= " + hxorderid;
+                        } else {
+                            query = "UPDATE order_details o, order_status_details s " +
+                                "SET o.order_status = s.id WHERE s.status= '" + status +
+                                "' AND o.hx_order_id= " + hxorderid;
+                        }
                         database.query(query, function (err, updateData) {
                             if (err) {
                                 console.log(err);
@@ -1620,7 +1843,7 @@ handlers.orderStatus = function (dataObject, callback) {
                             }
                         });
                     } else {
-                        callback(true, 400, {'res': messages.errorMessage});
+                        callback(true, 400, {'res': messages.insufficientData});
                     }
                 } else if (type === 'invoice') {
                     if (hxorderid && value) {
@@ -1753,6 +1976,16 @@ handlers.details = function (dataObject, callback) {
                             callback(false, 200, {'res': courierData});
                         }
                     });
+                } else if (type === 'sku') {
+                    query = "SELECT * FROM sku_master";
+                    database.query(query, function (err, skuData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': skuData});
+                        }
+                    });
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
@@ -1765,12 +1998,237 @@ handlers.details = function (dataObject, callback) {
     }
 };
 /**
- * Method to Upload, generate and verfiy the fingerprint data for employee.
+ * Method to Upload, generate and verify the fingerprint data for employee.
  * @param dataObject: The Request data.
  * @param callback: The Method callback.
  */
-handlers.bioAuth = function (dataObject, callback) {
+handlers.bioAuth = function (data, callback) {
+    helpers.validateToken(data.queryString.key, valid => {
+        if (!valid) {
+            callback(true, 403, {'res': 'Token expired or invalid'});
+            console.log('error token invalid');
+            return
+        }
 
+        if (data.method === 'put') {
+            let id = data.queryString.id;
+
+            if (data.queryString.type === 'enroll') {
+                let offsets = data.queryString.offsets;
+
+                if (!id || !offsets) {
+                    callback(true, 400, {'res': 'insuccfient data'});
+                    console.log('error no id or offsets');
+                    return
+                }
+
+                let fp_data_raw = data.data;
+
+                offsets = JSON.parse(offsets);
+
+                if (Object.values(offsets).some(isNaN)) {
+                    callback(true, 400, {'res': 'invalid offset data'});
+                    console.log('error invalid offsets');
+                    return
+                }
+
+                finger_names.forEach(n => {
+                    if (!Object.keys(offsets).includes(n)) {
+                        callback(true, 400, {'res': `fingerprint not found: ${n}`});
+                        console.log(`error fingerprint not found: ${n}`);
+                        return;
+                    }
+                });
+
+                offsets = Object.keys(offsets).map((key) => {
+                    var x = {};
+
+                    x.key = key;
+                    x.value = offsets[key];
+
+                    return x
+                }).sort((a, b) => a.value - b.value);
+
+                fp_json[id] = {};
+
+                try {
+                    for (let i = 0; i < offsets.length; i++) {
+                        let off = offsets[i].value;
+
+                        let end = (i === offsets.length - 1) ? fp_data_raw.byteLength : offsets[i + 1].value - 1;
+
+                        if (off > fp_data_raw.length || end > fp_data_raw.length) {
+                            callback(true, 400, {'res': 'invalid offset data'});
+                            console.log('error invalid offsets');
+                            return
+                        }
+
+                        let fpd = fp_data_raw.slice(off, end);
+                        let filename = `${id}_${offsets[i].key}.png`;
+
+                        let fpT = new FingerprintTemplate().dpiSync(500).createSync(java.newArray("byte", Array.prototype.slice.call(fpd)));
+
+                        fp_json[id][offsets[i].key] = fpT.serializeSync();
+
+                        let params = {Bucket: messages.bucketName, Key: filename, Body: fpd};
+
+                        var upromise = S3.putObject(params).promise();
+                        upromise.then(d => {
+                            console.log("Successfully uploaded data to " + messages.bucketName + "/" + filename)
+                        }).catch(e => {
+                            console.log("Error uploading data: " + messages.bucketName + "/" + filename);
+                            console.err(e, e.stack)
+                        })
+                    }
+
+                    fs.writeFile(fp_json_file_name, JSON.stringify(fp_json, null, 2), err => {
+                        if (err) return console.log(err)
+                    });
+
+                    callback(false, 200, {'res': 'successfully inserted fingerprint into database'});
+                    return
+                } catch (error) {
+                    console.log(error);
+                    callback(true, 400, {'res': 'invalid fingerprint'});
+                    console.log('error invalid fp');
+                    return
+                }
+            } else if (data.queryString.type === 'check') {
+                if (!id) {
+                    callback(true, 400, {'res': 'insuccfient data'});
+                    console.log('error no id or offsets');
+                    return
+                }
+
+                let fp_id = fp_json[id];
+
+                if (fp_id && fp_id.length < /* != */ 4) {
+                    fp_id = null
+                }
+
+                if (fp_id) {
+                    finger_names.forEach(x => {
+                        if (!Object.keys(fp_id).includes(x)) {
+                            fp_id = null;
+                            return
+                        }
+                    })
+                }
+
+                if (fp_id) {
+                    callback(false, 200, {res: fp_id})
+                } else {
+                    callback(false, 200, {res: {}})
+                }
+                return
+            } else {
+                callback(true, 400, {'res': 'invalid type'});
+                console.log('error invalid type')
+            }
+        } else if (data.method === 'post') {
+            if (!data.queryString.type) {
+                callback(true, 400, {'res': 'insuccfient data'});
+                console.log('error no type');
+                return
+            }
+
+            let fp_probe = new FingerprintTemplate();
+
+            try {
+                fp_probe = fp_probe.dpiSync(500).createSync(java.newArray("byte", Array.prototype.slice.call(data.data, 0)))
+            } catch (err) {
+                callback(true, 400, {'res': 'invalid fingerprint'});
+                console.log('error invalid fp');
+                console.error(err, err.stack);
+                return
+            }
+            if (!fp_probe) {
+                callback(true, 400, {'res': 'invalid fingerprint'});
+                console.log('error invalid fp');
+                return
+            }
+
+            if (data.queryString.type === 'generate') {
+                callback(false, 200, {res: fp_probe.serializeSync()})
+            } else if (data.queryString.type === 'verify') {
+                let finger = data.queryString.finger;
+
+                let matcher = new FingerprintMatcher().indexSync(fp_probe);
+
+                let high = 0;
+                let match = null;
+
+                matchFinger = (f, fps, id) => {
+                    let fp = fps[f];
+                    let fp_template = new FingerprintTemplate().deserializeSync(fp);
+
+                    let score = matcher.matchSync(fp_template);
+                    if (score > high) {
+                        high = score;
+                        match = id;
+                        finger = f
+                    }
+                };
+
+                for (let id in fp_json) {
+                    let fps = fp_json[id];
+
+                    if (finger) {
+                        if (!finger_names.includes(finger) || !fps[finger]) {
+                            callback(true, 400, {'res': 'invalid finger specified'});
+                            console.log('error invalid finger');
+                            return
+                        }
+                        matchFinger(finger, fps, id);
+                        continue;
+                    }
+
+                    for (let f in fps) {
+                        matchFinger(f, fps, id)
+                    }
+                }
+
+                callback(false, 200, {res: high, match, finger})
+            } else {
+                callback(true, 400, {'res': 'invalid type'});
+                console.log('error invalid type')
+            }
+        } else {
+            callback(true, 400, {'res': 'invalid request method'});
+            console.log('error invalid method')
+        }
+    });
+};
+/**
+ * Method to update the Firebase token.
+ * @param dataObject: The Request Object.
+ * @param callback: The method callback.
+ */
+handlers.firebaseToken = function (dataObject, callback) {
+    if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                const token = typeof (dataObject.postData.token) === 'string' &&
+                dataObject.postData.token.length > 10 ? dataObject.postData.token : false;
+                const employeeid = typeof (dataObject.postData.id) === 'string' &&
+                dataObject.postData.id.length > 0 ? dataObject.postData.id : false;
+                if (employeeid && token) {
+                    const query = "UPDATE employee_details SET device_token = '" + token + "' WHERE id= " + employeeid;
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                }
+            } else {
+                callback(true, 400, {'res': messages.insufficientData});
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.invalidRequestMessage})
+    }
 };
 /**
  * Exporting the Handlers.

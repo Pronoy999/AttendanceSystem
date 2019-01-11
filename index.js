@@ -27,6 +27,7 @@ const router = {
     'inventory-data': handlers.inventoryData,
     'employee': handlers.employee,
     'inventory-phone': handlers.inventoryPhone,
+    'inventory-dead': handlers.inventoryDead,
     'inventory-vendor': handlers.getVendor,
     'inventory-imei': handlers.inventoryImei,
     'inventory-pending': handlers.inventoryPendingPhones,
@@ -40,7 +41,8 @@ const router = {
     'order-returned': handlers.orderReturned,
     'order-status': handlers.orderStatus,
     'details': handlers.details,
-    'bio-auth': handlers.bioAuth
+    'bio-auth': handlers.bioAuth,
+    'firebase-token': handlers.firebaseToken
 };
 /**
  * Method which controls the Server.
@@ -62,14 +64,14 @@ var unifiedServer = function (req, res) {
     if (header === 'application/octet-stream') {
         var data = [];
         req.on('data', d => {
-            data.push(d);
+            data.push(d)
         }).on('end', () => {
             var buffer = Buffer.concat(data);
             const handlerData = {
-                'path': trimmedPath,
-                'method': method,
-                'queryString': queryString,
-                data
+                path: trimmedPath,
+                method,
+                queryString,
+                data: buffer
             };
             execHandlers(handlerData);
         });
