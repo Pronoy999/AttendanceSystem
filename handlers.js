@@ -13,7 +13,7 @@ const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
 const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
 const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
 const S3 = new aws.S3();
-var handlers = {};
+const handlers = {};
 /**
  * Method for Invalid Path.
  * @param data: The Data Object for the REQUEST.
@@ -39,22 +39,22 @@ handlers.ping = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.otp = function (dataObject, callback) {
-    var response = {};
-    var method = dataObject.method;
-    var queryString = dataObject.queryString;
-    var phoneNumber;
+    let response = {};
+    const method = dataObject.method;
+    const queryString = dataObject.queryString;
+    let phoneNumber;
     helpers.validateToken(queryString.key, function (isValid) {
         if (isValid) {
             if (method === 'get') {
                 phoneNumber = queryString.phoneNumber;
-                var otp;
+                let otp;
                 try {
                     otp = Number(queryString.otp);
                 } catch (e) {
                     console.log(e);
                     otp = 0;
                 }
-                var queryStatement = "SELECT * FROM otp WHERE mobile_number LIKE '" +
+                const queryStatement = "SELECT * FROM otp WHERE mobile_number LIKE '" +
                     phoneNumber + "' AND otp = " + otp;
                 database.query(queryStatement, function (err, data) {
                     if (err) {
@@ -65,7 +65,7 @@ handlers.otp = function (dataObject, callback) {
                         callback(err, 500, response);
                     } else {
                         if (data.length > 0) {
-                            var serverOTP = data[0].otp;
+                            const serverOTP = data[0].otp;
                             if (serverOTP === otp) {
                                 response = {
                                     'res': true,
@@ -84,7 +84,7 @@ handlers.otp = function (dataObject, callback) {
                 });
             } else if (method === 'post') {
                 phoneNumber = dataObject.postData.phoneNumber;
-                var randomData;
+                let randomData;
                 try {
                     randomData = dataObject.postData.randomData;
                 } catch (e) {
@@ -98,7 +98,7 @@ handlers.otp = function (dataObject, callback) {
                         };
                         callback(err, 500, response);
                     } else {
-                        var values = "'" + phoneNumber + "'," + randomOTP + ",'" + randomData + "'";
+                        const values = "'" + phoneNumber + "'," + randomOTP + ",'" + randomData + "'";
                         database.insert("otp", values, function (err, data) {
                             if (err) {
                                 //console.log(err);
@@ -168,7 +168,7 @@ handlers.text = function (dataObject, callback) {
     let text = dataObject.postData.text;
     const method = dataObject.method;
     const queryString = dataObject.queryString;
-    var counter = 0, overallStatus = true;
+    let counter = 0, overallStatus = true;
 
     /**
      * Method to send the Text.
@@ -222,14 +222,14 @@ handlers.text = function (dataObject, callback) {
  * @param callback: The method callback.
  */
 handlers.phone = function (dataObject, callback) {
-    var method = dataObject.method;
-    var response = {};
+    const method = dataObject.method;
+    let response = {};
     const key = dataObject.queryString.key;
     helpers.validateToken(key, function (isValid) {
         if (isValid) {
             if (method === 'get') {
-                var imei = dataObject.queryString.imei;
-                var query = "SELECT * FROM phone_details WHERE imei LIKE '" + imei + "'";
+                const imei = dataObject.queryString.imei;
+                const query = "SELECT * FROM phone_details WHERE imei LIKE '" + imei + "'";
                 database.query(query, function (err, data) {
                     if (err) {
                         response = {
@@ -248,9 +248,9 @@ handlers.phone = function (dataObject, callback) {
                     }
                 });
             } else if (method === 'post') {
-                var postData = dataObject.postData;
+                const postData = dataObject.postData;
                 helpers.insertNewPhone(postData, function (err, data) {
-                    var response = {};
+                    let response = {};
                     if (err) {
                         callback(err, 202, {
                             'res': false,
@@ -278,8 +278,8 @@ handlers.phone = function (dataObject, callback) {
  * @param callback: The method callback.
  */
 handlers.report = function (dataObject, callback) {
-    var method = dataObject.method;
-    var response = {};
+    const method = dataObject.method;
+    let response = {};
     if (method === 'post') {
         helpers.insertNewReport(dataObject.postData, function (err, data) {
             if (err) {
@@ -312,10 +312,10 @@ handlers.report = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.orderId = function (dataObject, callback) {
-    var paymentMethod, productType, pincode, autoIncrVal;
-    var response = {};
+    let paymentMethod, productType, pincode, autoIncrVal;
+    let response = {};
     if (dataObject.method === 'post') {
-        var isResponded = false;
+        let isResponded = false;
         helpers.getPaymentMethod(dataObject.postData.payment_method, function (err, data) {
             if (err) {
                 response = {
@@ -366,7 +366,7 @@ handlers.orderId = function (dataObject, callback) {
         function checkResponse() {
             if (!isResponded && paymentMethod && productType && pincode && autoIncrVal) {
                 isResponded = true;
-                var orderId = messages.companyPrefix + paymentMethod + productType + pincode + autoIncrVal;
+                const orderId = messages.companyPrefix + paymentMethod + productType + pincode + autoIncrVal;
                 response = {
                     'res': orderId
                 };
@@ -386,10 +386,10 @@ handlers.orderId = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.logCheck = function (dataObject, callback) {
-    var response = {};
+    let response = {};
     if (dataObject.method === 'get') {
-        var mobileNumber = dataObject.queryString.mobileNumber;
-        var query = "SELECT * FROM employee_details " +
+        const mobileNumber = dataObject.queryString.mobileNumber;
+        let query = "SELECT * FROM employee_details " +
             "WHERE mobile_number LIKE '" + mobileNumber + "'";
         database.query(query, function (err, data) {
             if (typeof (data[0]) === 'undefined') {
@@ -438,23 +438,23 @@ handlers.logCheck = function (dataObject, callback) {
  * @param callback: The method callback.
  */
 handlers.addVisitor = function (dataObject, callback) {
-    var response = {};
+    let response = {};
     if (dataObject.method === 'post') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var firstName = dataObject.postData.first_name;
-                var lastName = dataObject.postData.last_name;
-                var mobileNumber = dataObject.postData.mobile_number;
+                let firstName = dataObject.postData.first_name;
+                let lastName = dataObject.postData.last_name;
+                let mobileNumber = dataObject.postData.mobile_number;
                 const isParking = dataObject.postData.is_parking;
                 firstName = typeof (firstName) === 'string' ? firstName : false;
                 lastName = typeof (lastName) === 'string' ? lastName : false;
                 mobileNumber = typeof (mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
                 if (firstName && lastName && mobileNumber) {
-                    var values = "'','" + firstName + "','" + lastName + "','" +
+                    const values = "'','" + firstName + "','" + lastName + "','" +
                         mobileNumber + "'," + isParking;
                     database.insert("visitor_details", values, function (err, data) {
                         if (err) {
-                            var query = "UPDATE visitor_details SET first_name='" +
+                            const query = "UPDATE visitor_details SET first_name='" +
                                 firstName + "', last_name='" + lastName + "', is_parking= " + isParking +
                                 " WHERE mobile_number LIKE '" + mobileNumber + "'";
                             database.query(query, function (err, data) {
@@ -504,16 +504,16 @@ handlers.addVisitor = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.visitLog = function (dataObject, callback) {
-    var method = dataObject.method;
-    var response = {};
-    var log = {};
+    const method = dataObject.method;
+    let response = {};
+    const log = {};
     if (method === 'post') {
-        var postData = dataObject.postData;
-        var employeeID = postData.employee_id;
-        var vistorID = postData.visitor_id;
-        var location = postData.location;
-        var timeStamp = postData.timeStamp;
-        var status = postData.status;
+        const postData = dataObject.postData;
+        const employeeID = postData.employee_id;
+        const vistorID = postData.visitor_id;
+        const location = postData.location;
+        const timeStamp = postData.timeStamp;
+        const status = postData.status;
         helpers.getStatusValue(status, function (statusID) {
             if (employeeID)
                 log['employee_id'] = employeeID;
@@ -530,6 +530,32 @@ handlers.visitLog = function (dataObject, callback) {
             const where = Object.keys(log).map(x => x + " = '" + log[x] + "'").join(" AND ");
             getLog(where);
         });
+    } else if (dataObject.method === 'get') {
+        const employeeID = dataObject.queryString.id > 0 ? dataObject.queryString.id : false;
+        if (employeeID) {
+            helpers.validateToken(dataObject.queryString.key, function (isValid) {
+                if (isValid) {
+                    const query = "SELECT v.first_name as v_fName, v.last_name as v_lName, v.mobile_number as v_mobile_number," +
+                        "v.is_parking, vi.time_stamp ,vi.status,vi.purpose, e.* FROM visitor_details v , " +
+                        "employee_details e, visit_details vi, visit_status_details s " +
+                        "WHERE vi.employee_id=8 AND s.id=vi.status AND v.id in" +
+                        " (SELECT visitor_id FROM visit_details WHERE employee_id=" + employeeID + ") AND " +
+                        "e.id in (SELECT id FROM staging_diagnostic_app.employee_details WHERE id=" + employeeID + ")";
+                    database.query(query, function (err, visitData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': visitData});
+                        }
+                    });
+                } else {
+                    callback(true, 403, {'res': messages.tokenExpiredMessage});
+                }
+            })
+        } else {
+            callback(true, 400, {'res': messages.insufficientData});
+        }
     } else {
         response = {
             'res': messages.invalidRequestMessage
@@ -538,7 +564,7 @@ handlers.visitLog = function (dataObject, callback) {
     }
 
     function getLog(where) {
-        var query = "SELECT * FROM visit_details WHERE " + where;
+        const query = "SELECT * FROM visit_details WHERE " + where;
         database.query(query, function (err, data) {
             if (err) {
                 response = {
@@ -560,13 +586,13 @@ handlers.visitLog = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.updateIphoneModel = function (dataObject, callback) {
-    var postData = dataObject.postData;
-    var response = {};
+    const postData = dataObject.postData;
+    let response = {};
     if (dataObject.method === 'post') {
-        var modelName = postData.model_name;
-        var newModel = postData.new_model;
-        var color = postData.color;
-        var storage = Number(postData.storage);
+        const modelName = postData.model_name;
+        const newModel = postData.new_model;
+        const color = postData.color;
+        const storage = Number(postData.storage);
         const query = "UPDATE phone_details SET model = '" + newModel + "', storage = " + storage + ", color = '" + color + "'" +
             " WHERE model LIKE '" + modelName + "'";
         console.log(query);
@@ -596,10 +622,10 @@ handlers.updateIphoneModel = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.token = function (dataObject, callback) {
-    var response = {};
+    let response = {};
     if (dataObject.method === 'get') {
-        var token = helpers.getRandomKey(16);
-        var apiKey = dataObject.queryString.apikey.trim();
+        const token = helpers.getRandomKey(16);
+        let apiKey = dataObject.queryString.apikey.trim();
         apiKey = typeof (apiKey) === 'string' && apiKey.length === 32 ? apiKey : false;
         var validity = Date.now() + 6000 * 60 * 60;
         if (apiKey && token) {
@@ -608,10 +634,10 @@ handlers.token = function (dataObject, callback) {
                 'token': token,
                 'validity': validity
             };
-            var values = "'" + apiKey + "','" + token + "'," + validity;
+            const values = "'" + apiKey + "','" + token + "'," + validity;
             database.insert("api_token", values, function (err, data) {
                 if (err) {
-                    var query = "UPDATE api_token SET token = '" + token + "', validity = '" +
+                    const query = "UPDATE api_token SET token = '" + token + "', validity = '" +
                         validity + "' WHERE api_key LIKE '" + apiKey + "'";
                     database.query(query, function (err, data) {
                         if (!err) {
@@ -628,9 +654,9 @@ handlers.token = function (dataObject, callback) {
             callback(true, 400, {'res': 'Missing Required Fields'});
         }
     } else if (dataObject.method === 'put') {
-        var extend = dataObject.postData.extend;
+        let extend = dataObject.postData.extend;
         extend = typeof (extend) === 'boolean' ? extend : false;
-        var apikey = dataObject.postData.apikey.trim();
+        let apikey = dataObject.postData.apikey.trim();
         apikey = typeof (apikey) === 'string' && apikey.length === 32 ? apikey : false;
         if (apikey && extend) {
             var query = "SELECT * FROM api_token WHERE api_key LIKE '" + apikey + "'";
@@ -638,18 +664,18 @@ handlers.token = function (dataObject, callback) {
                 if (err) {
                     callback(err, 404, {'res': 'Invalid Api Key'});
                 } else {
-                    var validity = data[0].validity;
+                    const validity = data[0].validity;
                     console.log(validity);
                     console.log(Date.now());
                     if (validity > Date.now()) {
-                        var newValidity = Date.now() + 6000 * 60 * 60;
+                        const newValidity = Date.now() + 6000 * 60 * 60;
                         query = "UPDATE api_token SET validity= " + newValidity + " " +
                             "WHERE api_key LIKE '" + apikey + "'";
                         database.query(query, function (err, updateData) {
                             if (err) {
                                 callback(err, 500, {'res': 'Error'});
                             } else {
-                                var response = {
+                                const response = {
                                     'apikey': apikey,
                                     'token': data[0].token,
                                     'validity': newValidity
@@ -675,17 +701,17 @@ handlers.token = function (dataObject, callback) {
  * @param callback
  */
 handlers.inventoryData = function (dataObject, callback) {
-    var response = {};
-    var singleObject = {};
-    var phone_details = [];
-    var key = dataObject.queryString.key;
+    let response = {};
+    let singleObject = {};
+    const phone_details = [];
+    const key = dataObject.queryString.key;
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
                 const query = "SELECT (model_name),count(model_name) as count FROM inventory WHERE service_stock=2 group by model_name ";
                 database.query(query, function (err, data) {
                     if (!err) {
-                        for (var i = 0; i < data.length; i++) {
+                        for (let i = 0; i < data.length; i++) {
                             singleObject = {
                                 'model_name': data[i].model_name.trim(),
                                 'count': data[i].count
@@ -761,11 +787,11 @@ handlers.employee = function (dataObject, callback) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
                     } else {
-                        var employee = [];
-                        for (var i = 0; i < data.length; i++) {
+                        const employee = [];
+                        for (let i = 0; i < data.length; i++) {
                             employee.push(data[i]);
                         }
-                        var response = {
+                        const response = {
                             'res': employee
                         };
                         callback(false, 200, response);
@@ -785,12 +811,12 @@ handlers.employee = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.inventoryPhone = function (dataObject, callback) {
-    var key = dataObject.queryString.key;
+    const key = dataObject.queryString.key;
     helpers.validateToken(key, function (isValid) {
         if (isValid) {
             if (dataObject.method === 'post') {
-                var modelName = dataObject.postData.model_name;
-                var query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name, p.status " +
+                const modelName = dataObject.postData.model_name;
+                const query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name, p.status " +
                     "FROM inventory i,vendor_details v ,phone_grade_details p " +
                     "WHERE i.vendor_id = v.vendor_id AND model_name LIKE '" + modelName + "' AND i.product_grade=p.id";
                 console.log(query);
@@ -798,11 +824,11 @@ handlers.inventoryPhone = function (dataObject, callback) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
                     } else {
-                        var array = [];
-                        for (var i = 0; i < phoneData.length; i++) {
+                        const array = [];
+                        for (let i = 0; i < phoneData.length; i++) {
                             array.push(phoneData[i]);
                         }
-                        var response = {
+                        const response = {
                             'res': array
                         };
                         callback(false, 200, response);
@@ -900,15 +926,15 @@ handlers.inventoryDead = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.getVendor = function (dataObject, callback) {
-    var key = dataObject.queryString.key;
-    var method = dataObject.method;
+    const key = dataObject.queryString.key;
+    const method = dataObject.method;
     if (method === 'post') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                var vendorId = Number(dataObject.postData.vendor_id);
+                let vendorId = Number(dataObject.postData.vendor_id);
                 vendorId = typeof (vendorId) === 'number' ? vendorId : false;
                 if (vendorId) {
-                    var query = "SELECT * FROM vendor_details WHERE vendor_id = " + vendorId;
+                    const query = "SELECT * FROM vendor_details WHERE vendor_id = " + vendorId;
                     database.query(query, function (err, data) {
                         if (err) {
                             callback(err, 500, {'res': messages.errorMessage});
@@ -937,7 +963,7 @@ handlers.inventoryState = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var state;
+                let state;
                 try {
                     state = dataObject.queryString.state.trim();
                     state = typeof (state) === 'string' && state.length > 1 ? state : false;
@@ -972,24 +998,24 @@ handlers.inventoryState = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.attendance = function (dataObject, callback) {
-    var key = dataObject.queryString.key;
+    const key = dataObject.queryString.key;
     if (dataObject.method === 'post') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                var postData = dataObject.postData;
-                var id = Number(postData.id);
-                var new_status = postData.new_status;
-                var location = postData.location;
-                var timestamp = postData.timestamp;
-                var query = "UPDATE employee_details SET current_status = '" + new_status + "' WHERE id = " + id;
+                const postData = dataObject.postData;
+                const id = Number(postData.id);
+                const new_status = postData.new_status;
+                const location = postData.location;
+                const timestamp = postData.timestamp;
+                let query = "UPDATE employee_details SET current_status = '" + new_status + "' WHERE id = " + id;
                 database.query(query, function (err, data) {
                     if (!err) {
-                        var timeDate = Math.floor((new Date().getTime()) / 1000);
-                        var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata')
+                        const timeDate = Math.floor((new Date().getTime()) / 1000);
+                        const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata')
                             .format(messages.dateFormat))
                             .split(' ');
-                        var date = formattedDate[0];
-                        var time = formattedDate[1];
+                        const date = formattedDate[0];
+                        const time = formattedDate[1];
                         query = "INSERT INTO attendance_record VALUES (''," + id + ",'" +
                             new_status + "','" + timestamp + "','" + location + "','" + date + "','" + time + "')";
                         console.log(query);
@@ -1012,10 +1038,10 @@ handlers.attendance = function (dataObject, callback) {
             }
         });
     } else if (dataObject.method === 'get') {
-        var token = dataObject.queryString.key;
+        const token = dataObject.queryString.key;
         helpers.validateToken(token, function (isValid) {
             if (isValid) {
-                var employeeID;
+                let employeeID;
                 try {
                     employeeID = Number(dataObject.queryString.employeeid);
                     employeeID = typeof (employeeID) === 'number' ? employeeID : false;
@@ -1025,13 +1051,13 @@ handlers.attendance = function (dataObject, callback) {
                     callback(e, 400, {'res': messages.errorMessage});
                 }
                 if (employeeID) {
-                    var query = "SELECT * FROM attendance_record WHERE employee_id = " + employeeID;
+                    const query = "SELECT * FROM attendance_record WHERE employee_id = " + employeeID;
                     database.query(query, function (err, empData) {
                         if (err) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                            var attendanceRecord = [];
-                            for (var i = 0; i < empData.length; i++) {
+                            const attendanceRecord = [];
+                            for (let i = 0; i < empData.length; i++) {
                                 attendanceRecord.push(empData[i]);
                             }
                             callback(false, 200, {'res': attendanceRecord});
@@ -1058,12 +1084,12 @@ handlers.attendance = function (dataObject, callback) {
                                 console.log(err);
                                 callback(err, 500, {'res': messages.errorMessage});
                             } else {
-                                var timeDate = Math.floor((new Date().getTime()) / 1000);
-                                var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata')
+                                const timeDate = Math.floor((new Date().getTime()) / 1000);
+                                const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata')
                                     .format(messages.dateFormat))
                                     .split(' ');
-                                var date = formattedDate[0];
-                                var time = formattedDate[1];
+                                const date = formattedDate[0];
+                                const time = formattedDate[1];
                                 query = "INSERT INTO attendance_record VALUES(''," + employeeID + "," +
                                     "(SELECT current_status FROM employee_details WHERE id=" + employeeID + ")," +
                                     "'" + timeDate + "',(SELECT location FROM staging_diagnostic_app.employee_details WHERE id=" +
@@ -1098,15 +1124,15 @@ handlers.attendance = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.inventoryImei = function (dataObject, callback) {
-    var key = dataObject.queryString.key;
+    const key = dataObject.queryString.key;
     if (dataObject.method === 'post') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                var imei = typeof (dataObject.postData.imei) === 'string' &&
+                const imei = typeof (dataObject.postData.imei) === 'string' &&
                 dataObject.postData.imei.trim().length > 10 ?
                     dataObject.postData.imei.trim() : false;
                 if (imei) {
-                    var query = "SELECT i.*,v.first_name as vendor_first_name, v.last_name as vendor_last_name FROM " +
+                    const query = "SELECT i.*,v.first_name as vendor_first_name, v.last_name as vendor_last_name FROM " +
                         "inventory i , vendor_details v " +
                         "WHERE i.product_imei_1 LIKE '" + imei + "' AND i.vendor_id = v.vendor_id ";
                     database.query(query, function (err, data) {
@@ -1134,10 +1160,10 @@ handlers.inventoryImei = function (dataObject, callback) {
  */
 handlers.inventoryPendingPhones = function (dataObject, callback) {
     if (dataObject.method === 'get') {
-        var key = dataObject.queryString.key;
+        const key = dataObject.queryString.key;
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                var query = "SELECT * FROM phone_details WHERE status = 5";
+                const query = "SELECT * FROM phone_details WHERE status = 5";
                 database.query(query, function (err, phoneData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -1163,7 +1189,8 @@ handlers.visit = function (dataObject, callback) {
         let visitorID;
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var visitorPhone = typeof (dataObject.postData.visitor_phone) === 'string' ? dataObject.postData.visitor_phone.trim() : false;
+                const visitorPhone = typeof (dataObject.postData.visitor_phone) === 'string' ? dataObject.postData.visitor_phone.trim() : false;
+                console.log(visitorPhone);
                 if (visitorPhone) {
                     let query = "SELECT * FROM visitor_details WHERE mobile_number LIKE '" + visitorPhone + "'";
                     database.query(query, function (err, visitorData) {
@@ -1176,7 +1203,7 @@ handlers.visit = function (dataObject, callback) {
                             const timeStamp = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
                             const location = dataObject.postData.location;
                             const purpose = dataObject.postData.purpose;
-                            var values = "''," + employeeId + "," + visitorID + ",'" + location + "','" + timeStamp + "',3,'" + purpose + "'";
+                            const values = "''," + employeeId + "," + visitorID + ",'" + location + "','" + timeStamp + "',3,'" + purpose + "'";
                             database.insert("visit_details", values, function (err, insertVisitData) {
                                 if (!err) {
                                     callback(false, 200, {'res': true});
@@ -1208,6 +1235,7 @@ handlers.visit = function (dataObject, callback) {
                 const date = typeof (postData.date) === 'string' && postData.date.length > 2 ? postData.date : false;
                 const visitorPhone = typeof (postData.visitor_phone) === 'string' && postData.visitor_phone.length > 2 ? postData.visitor_phone : false;
                 const status = typeof (postData.status) === 'string' && postData.status.length > 1 ? postData.status : false;
+                console.log(postData);
                 if (employeeId && time && date) {
                     const dateTime = date + "," + time;
                     const query = "UPDATE visit_details v,visit_status_details s,visitor_details d " +
@@ -1301,7 +1329,7 @@ handlers.inventoryAdd = function (dataObject, callback) {
     if (dataObject.method === 'post') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var type = dataObject.queryString.type;
+                const type = dataObject.queryString.type;
                 if (type === 'business') {
                     helpers.addInventoryPhone(dataObject.postData, function (err, data) {
                         if (err) {
@@ -1331,7 +1359,7 @@ handlers.inventoryPin = function (dataObject, callback) {
         if (isValid) {
             if (dataObject.method === 'post') {
                 console.log(dataObject.postData);
-                var emailId = dataObject.postData.email.trim();
+                let emailId = dataObject.postData.email.trim();
                 emailId = typeof (emailId) === 'string' && emailId.length >= 5 ? emailId : false;
                 if (emailId) {
                     const pin = helpers.createOTP();
@@ -1349,7 +1377,7 @@ handlers.inventoryPin = function (dataObject, callback) {
                                 }
                             });
                         } else {
-                            var values = "'" + emailId + "'," + pin;
+                            const values = "'" + emailId + "'," + pin;
                             database.insert("login_pin", values, function (err, insertData) {
                                 if (!err) {
                                     callback(false, 200, {'res': pin});
@@ -1363,7 +1391,7 @@ handlers.inventoryPin = function (dataObject, callback) {
                     callback(false, 400, {'res': messages.insufficientData});
                 }
             } else if (dataObject.method === 'get') {
-                var userPin = dataObject.queryString.pin;
+                const userPin = dataObject.queryString.pin;
                 query = "SELECT * FROM login_pin WHERE passcode=" + userPin;
                 database.query(query, function (err, Data) {
                     if (err) {
@@ -1393,7 +1421,7 @@ handlers.inventoryPin = function (dataObject, callback) {
  * @param callback: The method callback.
  */
 handlers.inventoryAuth = function (dataObject, callback) {
-    var isLoggedIn = true, isPasswordValid = false;
+    let isLoggedIn = true, isPasswordValid = false;
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (isValid) {
             if (dataObject.method === 'post') {
@@ -1451,7 +1479,7 @@ handlers.inventoryAuth = function (dataObject, callback) {
                     }
                 }
             } else if (dataObject.method === 'put') {
-                var session;
+                let session;
                 try {
                     email = typeof (dataObject.postData.email) === 'string' && dataObject.postData.email.length > 0 ?
                         dataObject.postData.email.trim() : false;
@@ -1486,7 +1514,7 @@ handlers.inventoryAuth = function (dataObject, callback) {
      * @param email: The email of the user.
      */
     function checkLoggedIn(email) {
-        var query = "SELECT * FROM login_pin WHERE email LIKE '" + email + "'";
+        const query = "SELECT * FROM login_pin WHERE email LIKE '" + email + "'";
         database.query(query, function (err, pinData) {
             if (err) {
                 callback(err, 500, {'res': messages.errorMessage});
@@ -1532,7 +1560,7 @@ handlers.inventoryAuth = function (dataObject, callback) {
      */
     function sendResponse(email) {
         if (!isLoggedIn && isPasswordValid) {
-            var otp = helpers.createOTP();
+            const otp = helpers.createOTP();
             console.log('otp', otp);
             const query = "INSERT INTO login_pin VALUES('" + email + "'," + otp + ")";
             database.query(query, function (err, pinData) {
@@ -1573,8 +1601,8 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
     } else if (dataObject.method === 'get') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var imei = dataObject.queryString.imei;
-                var query = "SELECT * FROM buy_back_phone_order WHERE imei LIKE '" + imei + "'";
+                const imei = dataObject.queryString.imei;
+                const query = "SELECT * FROM buy_back_phone_order WHERE imei LIKE '" + imei + "'";
                 database.query(query, function (err, sellData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -1589,9 +1617,9 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
     } else if (dataObject.method === 'put') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var imei = dataObject.postData.imei;
-                var orderId = dataObject.postData.orderid;
-                var query = "UPDATE buy_back_phone_order SET status = 4 WHERE imei LIKE '" + imei + "' " +
+                const imei = dataObject.postData.imei;
+                const orderId = dataObject.postData.orderid;
+                const query = "UPDATE buy_back_phone_order SET status = 4 WHERE imei LIKE '" + imei + "' " +
                     "AND order_id = " + orderId;
                 database.query(query, function (err, updateData) {
                     if (err) {
@@ -1614,14 +1642,14 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.sellPhone = function (dataObject, callback) {
-    var query;
+    let query;
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (isValid) {
             if (dataObject.method === 'post') {
-                var postData = dataObject.postData;
-                var brandName = typeof (postData.brand) === 'string' && postData.brand.trim().length > 0 ?
+                const postData = dataObject.postData;
+                const brandName = typeof (postData.brand) === 'string' && postData.brand.trim().length > 0 ?
                     postData.brand.trim() : false;
-                var modelName = typeof (postData.model) === 'string' && postData.model.trim().length > 0 ?
+                const modelName = typeof (postData.model) === 'string' && postData.model.trim().length > 0 ?
                     postData.model.trim() : false;
                 if (brandName && !modelName) {
                     query = "SELECT model FROM buy_back_phone WHERE brand LIKE '" + brandName + "'";
@@ -1629,8 +1657,8 @@ handlers.sellPhone = function (dataObject, callback) {
                         if (err) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                            var arr = [];
-                            for (var i = 0; i < modelData.length; i++) {
+                            const arr = [];
+                            for (let i = 0; i < modelData.length; i++) {
                                 arr[i] = modelData[i].model;
                             }
                             callback(false, 200, {'res': arr});
@@ -1643,7 +1671,7 @@ handlers.sellPhone = function (dataObject, callback) {
                         if (err) {
                             callback(true, 500, {'res': messages.errorMessage});
                         } else {
-                            var id = phoneIdData[0].id;
+                            const id = phoneIdData[0].id;
                             query = "SELECT storage,price FROM buy_back_phone_price WHERE phoneId = " + id;
                             database.query(query, function (err, phoneData) {
                                 if (err) {
@@ -1660,8 +1688,8 @@ handlers.sellPhone = function (dataObject, callback) {
                         if (err) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                            var arr = [];
-                            for (var i = 0; i < brandData.length; i++) {
+                            const arr = [];
+                            for (let i = 0; i < brandData.length; i++) {
                                 arr[i] = brandData[i].brand;
                             }
                             callback(false, 200, {'res': arr});
@@ -1689,23 +1717,23 @@ handlers.phonePrice = function (dataObject, callback) {
     if (dataObject.method === 'post') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var postData = dataObject.postData;
-                var brand = typeof (postData.brand) === 'string' && postData.brand.trim().length > 0 ? postData.brand.trim() : false;
-                var model = typeof (postData.model) === 'string' && postData.model.trim().length > 0 ? postData.model.trim() : false;
-                var storage = postData.storage > 0 ? postData.storage : false;
+                const postData = dataObject.postData;
+                const brand = typeof (postData.brand) === 'string' && postData.brand.trim().length > 0 ? postData.brand.trim() : false;
+                const model = typeof (postData.model) === 'string' && postData.model.trim().length > 0 ? postData.model.trim() : false;
+                const storage = postData.storage > 0 ? postData.storage : false;
                 if (brand && model && storage) {
-                    var query = "SELECT * FROM buy_back_phone WHERE brand LIKE '" + brand + "' AND model LIKE '" + model + "'";
+                    let query = "SELECT * FROM buy_back_phone WHERE brand LIKE '" + brand + "' AND model LIKE '" + model + "'";
                     database.query(query, function (err, phoneData) {
                         if (err) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                            var id = phoneData[0].id;
+                            const id = phoneData[0].id;
                             query = "SELECT * FROM buy_back_phone_price WHERE phoneId = " + id;
                             database.query(query, function (err, priceData) {
                                 if (err) {
                                     callback(err, 500, {'res': messages.errorMessage});
                                 } else {
-                                    var response = {
+                                    const response = {
                                         'storage': priceData[0].storage,
                                         'ram': priceData[0].ram,
                                         'price': priceData[0].price
@@ -1733,17 +1761,17 @@ handlers.phonePrice = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.orderReturned = function (dataObject, callback) {
-    var key = dataObject.queryString.key;
+    const key = dataObject.queryString.key;
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                var query = "SELECT * FROM order_details o,order_status_details d WHERE d.status LIKE 'Returned' AND " +
+                const query = "SELECT * FROM order_details o,order_status_details d WHERE d.status LIKE 'Returned' AND " +
                     "d.id=o.order_status";
                 database.query(query, function (err, returnedData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
                     } else {
-                        var array = [];
+                        const array = [];
                         for (let i = 0; i < returnedData.length; i++) {
                             array.push(returnedData[i]);
                         }
@@ -1766,19 +1794,19 @@ handlers.orderReturned = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.orderDetails = function (dataObject, callback) {
-    var key = dataObject.queryString.key;
+    const key = dataObject.queryString.key;
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                var status = dataObject.queryString.status;
-                var date = typeof (dataObject.queryString.date) === 'string' &&
+                let status = dataObject.queryString.status;
+                const date = typeof (dataObject.queryString.date) === 'string' &&
                 dataObject.queryString.date.length > 1 ? dataObject.queryString.date : false;
-                var channelname = typeof (dataObject.queryString.channel) === 'string' &&
+                const channelname = typeof (dataObject.queryString.channel) === 'string' &&
                 dataObject.queryString.channel.length > 1 ? dataObject.queryString.channel : false;
                 status = typeof (status) === 'string' && status.length > 1 ? status : false;
-                var hxOrderId = typeof (dataObject.queryString.orderid) === 'string' &&
+                const hxOrderId = typeof (dataObject.queryString.orderid) === 'string' &&
                 dataObject.queryString.orderid.length > 0 ? dataObject.queryString.orderid : false;
-                var query;
+                let query;
                 if (!status && date && channelname) {
                     query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'  AND insertion_date " +
                         "LIKE '" + date + "'";
@@ -1799,7 +1827,7 @@ handlers.orderDetails = function (dataObject, callback) {
                     if (err) {
                         callback(err, 500, {'res': orderData});
                     } else {
-                        var array = [];
+                        const array = [];
                         for (let i = 0; i < orderData.length; i++) {
                             array.push(orderData[i]);
                         }
@@ -1831,7 +1859,7 @@ handlers.orderStatus = function (dataObject, callback) {
     if (dataObject.method === 'put') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                var type = false, channelOrderID = false, hxorderid = false, status = false, value = false;
+                let type = false, channelOrderID = false, hxorderid = false, status = false, value = false;
                 try {
                     type = typeof (dataObject.queryString.type) === 'string' &&
                     dataObject.queryString.type.length > 1 ? dataObject.queryString.type : false;
@@ -1960,7 +1988,7 @@ handlers.orderStatus = function (dataObject, callback) {
  * @param callback: The Method callback.
  */
 handlers.details = function (dataObject, callback) {
-    var query;
+    let query;
     if (dataObject.method === 'get') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
@@ -2096,7 +2124,7 @@ handlers.bioAuth = function (data, callback) {
                 });
 
                 offsets = Object.keys(offsets).map((key) => {
-                    var x = {};
+                    const x = {};
 
                     x.key = key;
                     x.value = offsets[key];
@@ -2127,7 +2155,7 @@ handlers.bioAuth = function (data, callback) {
 
                         let params = {Bucket: messages.bucketName, Key: filename, Body: fpd};
 
-                        var upromise = S3.putObject(params).promise();
+                        const upromise = S3.putObject(params).promise();
                         upromise.then(d => {
                             console.log("Successfully uploaded data to " + messages.bucketName + "/" + filename)
                         }).catch(e => {
