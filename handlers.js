@@ -531,8 +531,8 @@ handlers.visitLog = function (dataObject, callback) {
             getLog(where);
         });
     } else if (dataObject.method === 'get') {
-        const employeeID = dataObject.queryString.id > 0 ? dataObject.queryString.id : false;
-        if (employeeID) {
+        const employeeID = dataObject.queryString.id > -1 ? dataObject.queryString.id : false;
+        if (employeeID > 0) {
             helpers.validateToken(dataObject.queryString.key, function (isValid) {
                 if (isValid) {
                     const query = "SELECT v.first_name as v_fName, v.last_name as v_lName, v.mobile_number as v_mobile_number," +
@@ -552,7 +552,27 @@ handlers.visitLog = function (dataObject, callback) {
                 } else {
                     callback(true, 403, {'res': messages.tokenExpiredMessage});
                 }
-            })
+            });
+        } else if (employeeID == 0) {
+            helpers.validateToken(dataObject.queryString.key, function (isValid) {
+                if (isValid) {
+                    const query = "SELECT v.first_name as v_fName, v.last_name as v_lName, v.mobile_number as v_mobile_number,v.is_parking, vi.time_stamp ,vi.status,vi.purpose, e.* FROM " +
+                        "visitor_details v , employee_details e," +
+                        " visit_details vi, visit_status_details s WHERE  s.id=vi.status AND" +
+                        " v.id in (SELECT visitor_id FROM visit_details) AND " +
+                        "e.id in (SELECT id FROM employee_details WHERE id=vi.employee_id) ";
+                    database.query(query, function (err, visitData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': visitData});
+                        }
+                    });
+                } else {
+                    callback(true, 403, {'res': messages.tokenExpiredMessage});
+                }
+            });
         } else {
             callback(true, 400, {'res': messages.insufficientData});
         }
@@ -816,10 +836,16 @@ handlers.inventoryPhone = function (dataObject, callback) {
         if (isValid) {
             if (dataObject.method === 'post') {
                 const modelName = dataObject.postData.model_name;
-                const query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name, p.status " +
-                    "FROM inventory i,vendor_details v ,phone_grade_details p " +
-                    "WHERE i.vendor_id = v.vendor_id AND model_name LIKE '" + modelName + "' AND i.product_grade=p.id";
-                console.log(query);
+                const flag = typeof (dataObject.postData.flag) === 'string' ? dataObject.postData.flag : false;
+                let query;
+                if (flag) {
+                    query = "SELECT d.*, s.service_center FROM dead_phone d, service_center_details s WHERE model_name LIKE '" + modelName + "' AND d.service_center = s.id";
+                } else {
+                    query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name, p.status " +
+                        "FROM inventory i,vendor_details v ,phone_grade_details p " +
+                        "WHERE i.vendor_id = v.vendor_id AND model_name LIKE '" + modelName + "' AND i.product_grade=p.id";
+                    console.log(query);
+                }
                 database.query(query, function (err, phoneData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -851,19 +877,18 @@ handlers.inventoryPhone = function (dataObject, callback) {
  */
 handlers.inventoryDead = function (dataObject, callback) {
     if (dataObject.method === 'post') {
-        helper.validateToken(dataObject.queryString.key, function (isValid) {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 let imei = helpers.getRandomImei(16);
                 const brand = typeof (dataObject.postData.brand) === 'string' &&
                 dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
                 const model = typeof (dataObject.postData.model) === 'string' &&
                 dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
-                const serviceCenter = dtypeof(dataObject.postData.service_center) === 'string' &&
-                dataObject.postData.service_center.length > 0 ? dataObject.postData.service_center : false;
+                const serviceCenter = dataObject.postData.service_center.length > 0 ? dataObject.postData.service_center : false;
                 const remarks = typeof (dataObject.postData.remarks) === 'string' &&
                 dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
                 if (brand && model && serviceCenter && remarks) {
-                    const query = "INSERT INTO dead_phone VALUES('" + imei + "','" + brand + "','"
+                    const query = "INSERT INTO dead_phone VALUES('','" + imei + "','" + brand + "','"
                         + model + "','" + serviceCenter + "','" + remarks + "')";
                     database.query(query, function (err, insertData) {
                         if (err) {
@@ -882,7 +907,7 @@ handlers.inventoryDead = function (dataObject, callback) {
     } else if (dataObject.method === 'get') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                const query = "SELECT * FROM dead_phone";
+                const query = "SELECT model_name, count(model_name) as count FROM dead_phone group by model_name";
                 database.query(query, function (err, deadData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -1271,13 +1296,13 @@ handlers.visit = function (dataObject, callback) {
     function getTokenAndNotify(employeeID, visitId) {
         let query = "SELECT * FROM employee_details WHERE id = " + employeeID;
         database.query(query, function (err, employeeData) {
-            console.log(employeeData[0]);
+            //console.log(employeeData[0]);
             if (err) {
                 console.log(err);
             } else {
                 query = "SELECT * FROM visit_details WHERE id = " + visitId;
                 database.query(query, function (err, visitData) {
-                    console.log(visitData[0]);
+                    //console.log(visitData[0]);
                     if (err) {
                         console.log(err);
                     } else {
@@ -1316,6 +1341,35 @@ handlers.visit = function (dataObject, callback) {
                 console.log(err);
             } else {
                 console.log('Visitor Notified.');
+                notifySecurity();
+            }
+        });
+    }
+
+    /**
+     * Method to send a notification to the security.
+     */
+    function notifySecurity() {
+        const query = "SELECT *  FROM employee_details WHERE designation LIKE 'security'";
+        database.query(query, function (err, secrityData) {
+            if (err) {
+                console.log(err);
+            } else {
+                let deviceToken = "";
+                try {
+                    deviceToken = secrityData[0].device_token;
+                } catch (e) {
+                    console.log(e);
+                }
+                const msg = true;
+                const content = "security";
+                helpers.sendFirebaseNotification(deviceToken, msg, content, "", function (err) {
+                    if (err)
+                        console.log(err);
+                    else {
+                        console.log("Security Notified.");
+                    }
+                });
             }
         });
     }
@@ -2210,7 +2264,7 @@ handlers.bioAuth = function (data, callback) {
             }
         } else if (data.method === 'post') {
             if (!data.queryString.type) {
-                callback(true, 400, {'res': 'insuccfient data'});
+                callback(true, 400, {'res': messages.insufficientData});
                 console.log('error no type');
                 return
             }
