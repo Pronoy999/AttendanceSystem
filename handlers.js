@@ -827,6 +827,7 @@ handlers.employee = function (dataObject, callback) {
 };
 /**
  * Method to get details of phones with Vendor names for a particular model name.
+ * It is also used to get the details of the Dead phones.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
@@ -839,7 +840,8 @@ handlers.inventoryPhone = function (dataObject, callback) {
                 const flag = typeof (dataObject.postData.flag) === 'string' ? dataObject.postData.flag : false;
                 let query;
                 if (flag) {
-                    query = "SELECT d.*, s.service_center FROM dead_phone d, service_center_details s WHERE model_name LIKE '" + modelName + "' AND d.service_center = s.id";
+                    query = "SELECT d.*, s.service_center FROM dead_phone d, service_center_details s" +
+                        " WHERE model_name LIKE '" + modelName + "' AND d.service_center = s.id";
                 } else {
                     query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name, p.status " +
                         "FROM inventory i,vendor_details v ,phone_grade_details p " +
@@ -1265,8 +1267,8 @@ handlers.visit = function (dataObject, callback) {
                     const dateTime = date + "," + time;
                     const query = "UPDATE visit_details v,visit_status_details s,visitor_details d " +
                         "SET v.status=s.id " +
-                        "WHERE s.status LIKE '" + status + "' AND v.employee_id=8 " +
-                        "AND  d.mobile_number LIKE '" + visitorPhone +
+                        "WHERE s.status LIKE '" + status + "' AND v.employee_id= " + employeeId +
+                        " AND  d.mobile_number LIKE '" + visitorPhone +
                         "' AND v.visitor_id= d.id AND v.time_stamp LIKE '" + dateTime + "'";
                     console.log(query);
                     database.query(query, function (err, updateData) {
@@ -1274,7 +1276,7 @@ handlers.visit = function (dataObject, callback) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
                             callback(false, 200, {'res': true});
-                            notifyVisitor(visitorPhone, status);
+                            notifyVisitor(visitorPhone, status, employeeID);
                         }
                     });
                 } else {
@@ -1334,23 +1336,23 @@ handlers.visit = function (dataObject, callback) {
      * @param phone: The Phone number of the Visitor.
      * @param status: the status of the visit.
      */
-    function notifyVisitor(phone, status) {
+    function notifyVisitor(phone, status, employeeID) {
         let msg = status === 'Accepted' ? messages.acceptVistMessage : messages.rejectVisitMessage;
         snsLib.sendMessage(phone, msg, function (err) {
             if (err) {
                 console.log(err);
             } else {
                 console.log('Visitor Notified.');
-                notifySecurity();
+                notifySecurity(phone, status, employeeID);
             }
         });
     }
 
     /**
-     * Method to send a notification to the security.
+     * Method to send a notification to the security that a visit status has been updated.
      */
-    function notifySecurity() {
-        const query = "SELECT *  FROM employee_details WHERE designation LIKE 'security'";
+    function notifySecurity(visitorPhone, status, employeeID) {
+        let query = "SELECT *  FROM employee_details WHERE designation LIKE 'security'";
         database.query(query, function (err, secrityData) {
             if (err) {
                 console.log(err);
@@ -1361,9 +1363,10 @@ handlers.visit = function (dataObject, callback) {
                 } catch (e) {
                     console.log(e);
                 }
-                const msg = true;
+                const msg = status;
                 const content = "security";
-                helpers.sendFirebaseNotification(deviceToken, msg, content, "", function (err) {
+                const extraObj = new Buffer(JSON.stringify({visitorPhone, employeeID})).toString('base64');
+                helpers.sendFirebaseNotification(deviceToken, msg, content, extraObj, function (err) {
                     if (err)
                         console.log(err);
                     else {
