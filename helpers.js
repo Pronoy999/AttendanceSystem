@@ -1,4 +1,4 @@
-var helpers = {};
+const helpers = {};
 const database = require('./databaseHandler');
 const moment = require('moment');
 const tz = require('moment-timezone');
@@ -11,7 +11,7 @@ const admin = require('firebase-admin');
  * @returns {*}
  */
 helpers.parseJsonToObjects = function (data) {
-    var obj = {};
+    let obj = {};
     try {
         obj = JSON.parse(data);
         return obj;
@@ -31,7 +31,7 @@ helpers.validateToken = function (key, callback) {
         key = false;
     }
     if (key) {
-        var query = "SELECT * FROM api_token WHERE token LIKE '" + key + "'";
+        const query = "SELECT * FROM api_token WHERE token LIKE '" + key + "'";
         database.query(query, function (err, data) {
             if (err) {
                 callback(false);
@@ -73,7 +73,7 @@ helpers.insertNewPhone = function (data, callback) {
     const status = data.status;
     const is_customer = data.is_customer;
     //var time_stamp = data.time_stamp;
-    var timeDate = Math.floor((new Date().getTime()) / 1000);
+    const timeDate = Math.floor((new Date().getTime()) / 1000);
     const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
     const location = data.location;
     console.log(location);
@@ -97,51 +97,51 @@ helpers.insertNewPhone = function (data, callback) {
  * @param callback: The method callback.
  */
 helpers.insertNewReport = function (data, callback) {
-    var imei = data.imei;
-    var ram = data.ram;
-    var battery = data.battery;
-    var wifi = data.wifi;
-    var bluetooth = data.bluetooth;
-    var nfc = data.nfc;
-    var flash = data.flash;
-    var acclerometer = data.acclerometer;
-    var gyroscope = data.gyroscope;
-    var external_storage = data.external_storage;
-    var touch = data.touch;
-    var speaker = data.speaker;
-    var volume_up = data.volume_up;
-    var volume_down = data.volume_down;
-    var proximity = data.proximity;
-    var rear_camera = data.rear_camera;
-    var front_camera = data.front_camera;
-    var back_button = data.back_button;
-    var power_button = data.power_button;
-    var home_button = data.home_button;
-    var vibration = data.vibration;
-    var charger = data.charger;
-    var headphone = data.headphone;
-    var rgb = data.rgb;
-    var microphone = data.microphone;
-    var screen_brightness = data.screen_brightness;
-    var fingerprint = data.fingerprint;
-    var actualBattery = data.actual_battery_capacity;
-    var batteryWear = data.battery_wear_capacity;
-    var matchIMEI = data.match_imei;
-    var scratches = data.scratches;
-    var dents = data.dents;
-    var appleId = data.apple_id_logout;
-    var temperedGlass = data.tempered_glass_removed;
-    var pasting = data.pasting;
-    var marks = data.marks;
-    var softSleeve = data.soft_sleeve;
-    var plasticWrap = data.plastic_wrap;
-    var overall_status = data.overall_status;
-    var report_uuid = data.report_uuid;
-    var timeDate = Math.floor((new Date().getTime()) / 1000);
-    var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
-    var email = data.email;
-    var isUpdated = data.is_updated;
-    var values = "'" + imei + "','" + ram + "','" + battery + "','" + wifi + "','" + bluetooth + "','" + nfc + "','" +
+    const imei = data.imei;
+    const ram = data.ram;
+    const battery = data.battery;
+    const wifi = data.wifi;
+    const bluetooth = data.bluetooth;
+    const nfc = data.nfc;
+    const flash = data.flash;
+    const acclerometer = data.acclerometer;
+    const gyroscope = data.gyroscope;
+    const external_storage = data.external_storage;
+    const touch = data.touch;
+    const speaker = data.speaker;
+    const volume_up = data.volume_up;
+    const volume_down = data.volume_down;
+    const proximity = data.proximity;
+    const rear_camera = data.rear_camera;
+    const front_camera = data.front_camera;
+    const back_button = data.back_button;
+    const power_button = data.power_button;
+    const home_button = data.home_button;
+    const vibration = data.vibration;
+    const charger = data.charger;
+    const headphone = data.headphone;
+    const rgb = data.rgb;
+    const microphone = data.microphone;
+    const screen_brightness = data.screen_brightness;
+    const fingerprint = data.fingerprint;
+    const actualBattery = data.actual_battery_capacity;
+    const batteryWear = data.battery_wear_capacity;
+    const matchIMEI = data.match_imei;
+    const scratches = data.scratches;
+    const dents = data.dents;
+    const appleId = data.apple_id_logout;
+    const temperedGlass = data.tempered_glass_removed;
+    const pasting = data.pasting;
+    const marks = data.marks;
+    const softSleeve = data.soft_sleeve;
+    const plasticWrap = data.plastic_wrap;
+    const overall_status = data.overall_status;
+    const report_uuid = data.report_uuid;
+    const timeDate = Math.floor((new Date().getTime()) / 1000);
+    const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
+    const email = data.email;
+    const isUpdated = data.is_updated;
+    const values = "'" + imei + "','" + ram + "','" + battery + "','" + wifi + "','" + bluetooth + "','" + nfc + "','" +
         flash + "','" + acclerometer + "','" + gyroscope + "','" + external_storage + "','" + touch + "','" +
         speaker + "','" + volume_up + "','" + volume_down + "','" + proximity + "','" + rear_camera + "','" +
         front_camera + "','" + back_button + "','" + home_button + "','" + power_button + "','" +
@@ -160,7 +160,7 @@ helpers.insertNewReport = function (data, callback) {
  * @param callback: The method callback.
  */
 helpers.getPaymentMethod = function (data, callback) {
-    var query = "SELECT value FROM payment_method_details WHERE payment_methods LIKE '" + data + "'";
+    const query = "SELECT value FROM payment_method_details WHERE payment_methods LIKE '" + data + "'";
     database.query(query, function (err, data) {
         if (err) {
             callback(err, {});
@@ -175,7 +175,7 @@ helpers.getPaymentMethod = function (data, callback) {
  * @param callback: The method callback.
  */
 helpers.getProductType = function (data, callback) {
-    var query = "SELECT value FROM product_type_details WHERE product_type LIKE '" + data + "'";
+    const query = "SELECT value FROM product_type_details WHERE product_type LIKE '" + data + "'";
     database.query(query, function (err, data) {
         if (err) {
             callback(err, {});
@@ -189,7 +189,7 @@ helpers.getProductType = function (data, callback) {
  * @param callback: The method callback.
  */
 helpers.getAutoIncrementedValue = function (callback) {
-    var query = "SELECT max(value) as value FROM order_incremented_value";
+    const query = "SELECT max(value) as value FROM order_incremented_value";
     database.query(query, function (err, data) {
         if (err) {
             callback(err, {});
@@ -203,7 +203,7 @@ helpers.getAutoIncrementedValue = function (callback) {
  * @param mobileNumber: The mobile Number of the Employee.
  */
 helpers.getEmployeeID = function (mobileNumber) {
-    var query = "SELECT id FROM employee_details WHERE mobile_number LIKE '" + mobileNumber + "'";
+    const query = "SELECT id FROM employee_details WHERE mobile_number LIKE '" + mobileNumber + "'";
     database.query(query, function (err, data) {
         if (err) {
             return {};
@@ -218,7 +218,7 @@ helpers.getEmployeeID = function (mobileNumber) {
  * @param callback: The Method callback.
  */
 helpers.getStatusValue = function (status, callback) {
-    var query = "SELECT id FROM visit_status_details WHERE status LIKE '" + status + "'";
+    const query = "SELECT id FROM visit_status_details WHERE status LIKE '" + status + "'";
     database.query(query, function (err, data) {
         if (err) {
             callback(-1);
@@ -237,10 +237,10 @@ helpers.getStatusValue = function (status, callback) {
  * @returns {string}
  */
 helpers.getRandomKey = function (len) {
-    var possibleCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const possibleCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
     len = typeof (len) === 'number' && len > 0 ? len : 16;
-    var key = '';
-    for (var i = 1; i <= len; i++) {
+    let key = '';
+    for (let i = 1; i <= len; i++) {
         key += possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters.length));
     }
     return key;
@@ -251,11 +251,11 @@ helpers.getRandomKey = function (len) {
  * @returns {string}: The Random IMEI.
  */
 helpers.getRandomImei = function (len) {
-    const possibleCharacters = '1234567890xxxxxxxxxx1234567890xxxxxxxxxx';
+    let possibleCharacters = '123456789xxxxxxxx01234567890xxxxxx';
     len = typeof (len) === 'number' && len >= 15 ? len : 15;
     let imei = '';
     for (let i = 0; i < len; i++) {
-        imei += possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters * length));
+        imei += possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters.length));
     }
     return imei;
 }
@@ -266,51 +266,58 @@ helpers.getRandomImei = function (len) {
  */
 helpers.addInventoryPhone = function (data, callback) {
     console.log(data);
-    var brand = data.brand.trim();
-    var model_name = data.model_name.trim();
-    var imei_1 = data.product_imei_1.trim();
-    var imei_2 = data.product_imei_2.trim();
-    var color = data.product_color.trim();
-    var timeDate = Math.floor((new Date().getTime()) / 1000);
-    var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
-    var time = formattedDate[1];
-    var date = formattedDate[0];
-    var price = data.product_price.trim();
-    var grade = data.product_grade;
-    var vendorId = data.vendor_id;
-    var email = data.operations_email.trim();
-    var service_stock = data.service_stock;
-    var isApproved = data.is_approved;
-    var storage = data.storage;
-    var charger = data.charger.trim();
-    var head_phone = data.head_phone.trim();
-    var ejectorTool = data.ejector_tool.trim();
-    var back_cover = data.back_cover.trim();
-    var manual = data.manual;
-    var connector = data.connector;
-    var remarks = data.remarks.trim();
-    var isManual = data.is_manual;
+    const brand = data.brand.trim();
+    const model_name = data.model_name.trim();
+    const imei_1 = data.product_imei_1.trim();
+    const imei_2 = data.product_imei_2.trim();
+    const color = data.product_color.trim();
+    const timeDate = Math.floor((new Date().getTime()) / 1000);
+    const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
+    const time = formattedDate[1];
+    const date = formattedDate[0];
+    const price = data.product_price.trim();
+    const grade = data.product_grade;
+    const vendorId = data.vendor_id;
+    const email = data.operations_email.trim();
+    const service_stock = data.service_stock;
+    const isApproved = data.is_approved;
+    const storage = data.storage;
+    let charger = data.charger.trim();
+    let head_phone = data.head_phone.trim();
+    let ejectorTool = data.ejector_tool.trim();
+    let back_cover = data.back_cover.trim();
+    let manual = data.manual;
+    let connector = data.connector;
+    const remarks = data.remarks.trim();
+    let isManual = data.is_manual;
+    isManual = typeof (isManual) === 'string' ? isManual : "no";
     charger = checkValid(charger);
     head_phone = checkValid(head_phone);
     ejectorTool = checkValid(ejectorTool);
     back_cover = checkValid(back_cover);
     manual = checkValid(manual);
     connector = checkValid(connector);
-    var modelArray = model_name.split(' ');
+    const modelArray = model_name.split(' ');
 
-    var sku_query = "select * from sku_master where brand LIKE '%" + brand + "%' and lower(model) LIKE lower('%" + model_name
+    const sku_query = "select * from sku_master where brand LIKE '%" + brand + "%' and lower(model) LIKE lower('%" + model_name
         + "%') and storage = " + storage + " and color LIKE '%" + color + "%' or grade LIKE '%" + grade + "%'";
     console.log(sku_query);
     database.query(sku_query, function (err, skuData) {
+        let sku;
         if (!err) {
-            var sku = skuData[0].sku;
-            console.log(sku);
-            var values = "'','" + model_name + "','" + sku + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
+            try {
+                sku = skuData[0].sku;
+                console.log(sku);
+            } catch (e) {
+                console.log("NO SKU FOUND");
+                sku = "";
+            }
+            const values = "'','" + model_name + "','" + sku + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
                 price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "','" +
                 isApproved + "','" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
                 manual + "','" + connector + "','" + remarks + "','" + isManual + "'";
             database.insert("inventory", values, function (err, insertData) {
-                var where = "imei LIKE '" + imei_1 + "'";
+                const where = "imei LIKE '" + imei_1 + "'";
                 if (!err) {
                     database.update("phone_details", "status", service_stock, where, function (err, updateData) {
                         if (err) {
@@ -353,43 +360,43 @@ helpers.createOTP = function () {
  * @param postData: The POST Request Data.
  */
 helpers.addSellPhoneOrder = function (postData, callback) {
-    var firstName = postData.seller_first_name;
-    var lastName = postData.seller_last_name;
-    var email = postData.seller_email;
-    var phone = postData.seller_phone_number;
-    var address = postData.seller_address;
-    var modelName = postData.model_name;
-    var imei = postData.imei;
-    var price = postData.buy_back_price_offered;
-    var timeDate = Math.floor((new Date().getTime()) / 1000);
-    var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
-    var date = formattedDate[0];
-    var time = formattedDate[1];
-    var touch = postData.touch_not_working;
-    var screen = postData.screen_not_working;
-    var camera = postData.camera_not_working;
-    var volume = postData.volume_button_not_working;
-    var power = postData.power_button_not_working;
-    var home = postData.home_button_not_working;
-    var headphone = postData.headphone_port_damaged;
-    var wifi = postData.wifi_damaged;
-    var speaker = postData.speaker_damaged;
-    var microphone = postData.microphone_damaged;
-    var charging = postData.charging_defect;
-    var battery = postData.battery_damaged;
-    var wallCharger = postData.wall_charger;
-    var box = postData.box;
-    var usbCable = postData.usb_cable;
-    var earphones = postData.earphones;
-    var status = postData.status;
-    var values = "'','" + firstName + "','" + lastName + "','" + email + "','" + phone + "','" + address + "','" +
+    const firstName = postData.seller_first_name;
+    const lastName = postData.seller_last_name;
+    const email = postData.seller_email;
+    const phone = postData.seller_phone_number;
+    const address = postData.seller_address;
+    const modelName = postData.model_name;
+    const imei = postData.imei;
+    const price = postData.buy_back_price_offered;
+    const timeDate = Math.floor((new Date().getTime()) / 1000);
+    const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
+    const date = formattedDate[0];
+    const time = formattedDate[1];
+    const touch = postData.touch_not_working;
+    const screen = postData.screen_not_working;
+    const camera = postData.camera_not_working;
+    const volume = postData.volume_button_not_working;
+    const power = postData.power_button_not_working;
+    const home = postData.home_button_not_working;
+    const headphone = postData.headphone_port_damaged;
+    const wifi = postData.wifi_damaged;
+    const speaker = postData.speaker_damaged;
+    const microphone = postData.microphone_damaged;
+    const charging = postData.charging_defect;
+    const battery = postData.battery_damaged;
+    const wallCharger = postData.wall_charger;
+    const box = postData.box;
+    const usbCable = postData.usb_cable;
+    const earphones = postData.earphones;
+    const status = postData.status;
+    const values = "'','" + firstName + "','" + lastName + "','" + email + "','" + phone + "','" + address + "','" +
         modelName + "','" + imei + "','" + price + "','" + date + "','" + time + "','" + touch + "','" + screen + "','" + camera +
         "','" + volume + "','" + power + "','" + home + "','" + headphone + "','" + wifi + "','" + speaker + "','" +
         microphone + "','" + charging + "','" + battery + "','" + wallCharger + "','" + box + "','" + usbCable +
         "','" + earphones + "','" + status + "'";
     database.insert("buy_back_phone_order", values, function (err, insertData) {
         if (!err) {
-            var msg = "Hi " + firstName + ", " + messages.sellPhoneMessage;
+            const msg = "Hi " + firstName + ", " + messages.sellPhoneMessage;
             snsLib.sendMessage(phone, msg, function (err) {
                 if (err) {
                     callback(err);
@@ -409,10 +416,10 @@ helpers.addSellPhoneOrder = function (postData, callback) {
  * @param callback: The Method Callback. If err, calls back the err else false.
  */
 helpers.updatePhoneReport = function (postData, callback) {
-    var imei = postData.imei;
-    var set = "UPDATE report_details SET ";
+    const imei = postData.imei;
+    let set = "UPDATE report_details SET ";
     delete postData.imei;
-    for (var x in postData) {
+    for (let x in postData) {
         set += x + " = '" + postData[x] + '\',';
     }
     set = set.substr(0, set.length - 1);
@@ -444,8 +451,8 @@ helpers.insertOrder = function (postData, callback) {
     const courierId = postData.courier_id;
     const orderDate = postData.order_date;
     const orderTime = postData.order_time;
-    var timeDate = Math.floor((new Date().getTime()) / 1000);
-    var formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ')[0];
+    const timeDate = Math.floor((new Date().getTime()) / 1000);
+    const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ')[0];
     const dispatchBefore = postData.dispatch_before;
     const invoiceNumber = postData.invoice_number;
     const invoiceDate = postData.invoice_date;

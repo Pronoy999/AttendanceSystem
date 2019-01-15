@@ -4,6 +4,7 @@
   "dependencies": {
     "aws-sdk": "latest",
     "firebase-admin": "^6.4.0",
+    "java": "^0.11.0",
     "moment": "latest",
     "moment-timezone": "latest",
     "mysql": "latest"
