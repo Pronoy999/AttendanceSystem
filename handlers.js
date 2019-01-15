@@ -839,9 +839,19 @@ handlers.inventoryPhone = function (dataObject, callback) {
                 const modelName = dataObject.postData.model_name;
                 const flag = typeof (dataObject.postData.flag) === 'string' ? dataObject.postData.flag : false;
                 let query;
-                if (flag) {
+                if (flag === 'dead') {
                     query = "SELECT d.*, s.service_center FROM dead_phone d, service_center_details s" +
                         " WHERE model_name LIKE '" + modelName + "' AND d.service_center = s.id";
+                } else if (flag === 'repair') {
+                    query = "SELECT * FROM inventory WHERE model_name LIKE '" + modelName + "' AND service_stock = 3";
+                    database.query(query, function (err, repairData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': repairData});
+                        }
+                    })
                 } else {
                     query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name, p.status " +
                         "FROM inventory i,vendor_details v ,phone_grade_details p " +
@@ -1052,6 +1062,7 @@ handlers.attendance = function (dataObject, callback) {
                                     'res': messages.attendancePut,
                                     'current_status': new_status
                                 });
+                                notifyEmployeeAttendance(id, new_status);
                             } else {
                                 callback(err, 500, {'res': messages.errorMessage});
                             }
@@ -1102,7 +1113,7 @@ handlers.attendance = function (dataObject, callback) {
                 if (isValid) {
                     const employeeID = dataObject.queryString.id > 0 ? dataObject.queryString.id : false;
                     if (employeeID) {
-                        let query = "update employee_details set current_status = CASE" +
+                        let query = "update employee_details set current_status = CASE " +
                             "When current_status = 'signed_out' then 'signed_in'" +
                             "when current_status = 'signed_in' then 'signed_out'" +
                             "end where id =  " + employeeID;
@@ -1128,6 +1139,7 @@ handlers.attendance = function (dataObject, callback) {
                                         callback(err, 500, {'res': messages.errorMessage});
                                     } else {
                                         callback(false, 200, {'res': true});
+                                        notifyEmployeeAttendance(employeeID);
                                     }
                                 });
                             }
@@ -1142,6 +1154,31 @@ handlers.attendance = function (dataObject, callback) {
         );
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+
+    /**
+     * Method to send the notification to the Employee for the Attendance.
+     * @param employeeID: The Employee ID.
+     * @param status: The New status.
+     */
+    function notifyEmployeeAttendance(employeeID, status) {
+        const query = "SELECT * FROM employee_details WHERE id=" + employeeID;
+        database.query(query, function (err, employeeData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                const deviceToken = employeeData[0].device_token;
+                const content = "Attendance";
+                status = employeeData[0].current_status;
+                helpers.sendFirebaseNotification(deviceToken, status, content, "", function (err) {
+                    if (err) {
+                        console.error(err.stack);
+                    } else {
+                        console.log("Employee Notified for Attendance.");
+                    }
+                });
+            }
+        });
     }
 }
 ;
@@ -1276,7 +1313,7 @@ handlers.visit = function (dataObject, callback) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
                             callback(false, 200, {'res': true});
-                            notifyVisitor(visitorPhone, status, employeeID);
+                            notifyVisitor(visitorPhone, status, employeeId);
                         }
                     });
                 } else {
@@ -1365,7 +1402,10 @@ handlers.visit = function (dataObject, callback) {
                 }
                 const msg = status;
                 const content = "security";
-                const extraObj = new Buffer(JSON.stringify({visitorPhone, employeeID})).toString('base64');
+                const extraObj = new Buffer(JSON.stringify({
+                    "visitor_phone": visitorPhone,
+                    "id": employeeID
+                })).toString('base64');
                 helpers.sendFirebaseNotification(deviceToken, msg, content, extraObj, function (err) {
                     if (err)
                         console.log(err);

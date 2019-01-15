@@ -33,12 +33,12 @@ database.insert = function (tableName, values, callback) {
                 }
             });
         }
-        pool.on('release', function (con) {
+        /*pool.on('release', function (con) {
             //Connection released.
         });
         pool.on('acquire', function (con) {
             //Connection acquired.
-        });
+        });*/
     });
 };
 /**
@@ -64,12 +64,12 @@ database.query = function (queryStatement, callback) {
                 }
             });
         }
-        pool.on('release', function (con) {
+        /*pool.on('release', function (con) {
             //Released.
         });
         pool.on('acquire', function (con) {
             //Acquired.
-        });
+        });*/
     });
 };
 /**
@@ -98,12 +98,12 @@ database.update = function (tableName, updateCol, updateVal, where, callback) {
                 }
             });
         }
-        pool.on('release', function (con) {
+        /*pool.on('release', function (con) {
             //Connection released.
         });
         pool.on('acquire', function (con) {
             //Connection Acquired.
-        });
+        });*/
     });
 };
 /**
