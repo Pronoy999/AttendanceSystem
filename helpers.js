@@ -246,7 +246,7 @@ helpers.getRandomKey = function (len) {
     return key;
 };
 /**
- * Method to generate an random IMEI.
+ * Method to generate a random IMEI.
  * @param len: The length of the IMEI to be generated.
  * @returns {string}: The Random IMEI.
  */
@@ -494,14 +494,13 @@ helpers.insertOrder = function (postData, callback) {
  */
 helpers.sendFirebaseNotification = function (token, msg, content, extra, callback) {
     const serviceAccount = require('./firebaseService.json');
-    //token="eTxRb-dPHAc:APA91bGxiakY02DMiTUCP2UDgrGnEyrNPFZZ93bBGsnVALN_WiKMDwvK-51GNwfgv9uIjtcyraCfsUVPHW7k2KnHB9UonIt6aVSGSfwuFBG-tVSqTA8NmmHFCwfZQ5kRXBJhgzMqJjMo";
     try {
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
             databaseURL: "https://hyperxchange-api.firebaseio.com"
         });
     } catch (e) {
-        console.log(e);
+        console.log("Firebase app already initialized.");
     }
     const message = {
         data: {

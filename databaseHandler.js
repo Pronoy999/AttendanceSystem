@@ -9,7 +9,7 @@ const pool = mysql.createPool({
     password: 'hxadmin123',
     port: '3306'
 });
-var database = {};
+let database = {};
 /**
  * Method to insert into the database.
  * @param tableName: The tableName.
@@ -106,4 +106,7 @@ database.update = function (tableName, updateCol, updateVal, where, callback) {
         });
     });
 };
+/**
+ * Exporting the database module.
+ */
 module.exports = database;

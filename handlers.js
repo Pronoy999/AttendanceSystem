@@ -1326,9 +1326,9 @@ handlers.visit = function (dataObject, callback) {
                             }
                         });
                     }
-                })
+                });
             }
-        })
+        });
     }
 
     /**
@@ -2139,7 +2139,7 @@ handlers.details = function (dataObject, callback) {
 };
 /**
  * Method to Upload, generate and verify the fingerprint data for employee.
- * @param dataObject: The Request data.
+ * @param data
  * @param callback: The Method callback.
  */
 handlers.bioAuth = function (data, callback) {
