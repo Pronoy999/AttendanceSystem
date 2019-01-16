@@ -553,7 +553,7 @@ handlers.visitLog = function (dataObject, callback) {
                     callback(true, 403, {'res': messages.tokenExpiredMessage});
                 }
             });
-        } else if (employeeID == 0) {
+        } else if (employeeID === 0) {
             helpers.validateToken(dataObject.queryString.key, function (isValid) {
                 if (isValid) {
                     const query = "SELECT v.first_name as v_fName, v.last_name as v_lName, v.mobile_number as v_mobile_number,v.is_parking, vi.time_stamp ,vi.status,vi.purpose, e.* FROM " +
@@ -717,6 +717,8 @@ handlers.token = function (dataObject, callback) {
 };
 /**
  * Method to get the Distinct Models and Count for all the phones present in the inventory.
+ * POST method to get the details of a Phone with respect to IMEI.
+ * POST Method {imei:""} To get the details of the device with IMEI.
  * @param dataObject
  * @param callback
  */
@@ -744,6 +746,29 @@ handlers.inventoryData = function (dataObject, callback) {
                         callback(false, 200, response);
                     } else {
                         callback(err, 500, {'res': messages.errorMessage});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else if (dataObject.method === 'post') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                let imei = "";
+                try {
+                    imei = typeof (dataObject.postData.imei) === 'string'
+                    && dataObject.postData.imei.length > 0 ? dataObject.postData.imei : false;
+                } catch (e) {
+                    console.log(e);
+                }
+                const query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+                database.query(query, function (err, selectData) {
+                    if (err) {
+                        console.log(err);
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': selectData});
                     }
                 });
             } else {
@@ -828,6 +853,7 @@ handlers.employee = function (dataObject, callback) {
 /**
  * Method to get details of phones with Vendor names for a particular model name.
  * It is also used to get the details of the Dead phones.
+ * It is used to Update the Service Center Data for an existing phone.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
@@ -843,7 +869,8 @@ handlers.inventoryPhone = function (dataObject, callback) {
                     query = "SELECT d.*, s.service_center FROM dead_phone d, service_center_details s" +
                         " WHERE model_name LIKE '" + modelName + "' AND d.service_center = s.id";
                 } else if (flag === 'repair') {
-                    query = "SELECT * FROM inventory WHERE model_name LIKE '" + modelName + "' AND service_stock = 3";
+                    query = "SELECT i.*, s.service_center FROM inventory i,service_center_details s WHERE " +
+                        "i.model_name LIKE '" + modelName + "' AND i.service_stock = 3 AND s.id=i.service_center";
                     database.query(query, function (err, repairData) {
                         if (err) {
                             console.log(err);
@@ -851,7 +878,7 @@ handlers.inventoryPhone = function (dataObject, callback) {
                         } else {
                             callback(false, 200, {'res': repairData});
                         }
-                    })
+                    });
                 } else {
                     query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name, p.status " +
                         "FROM inventory i,vendor_details v ,phone_grade_details p " +
@@ -873,6 +900,21 @@ handlers.inventoryPhone = function (dataObject, callback) {
                     }
                 });
 
+            } else if (dataObject.method === 'put') {
+                const imei = typeof (dataObject.postData.imei) === 'string' &&
+                dataObject.postData.imei.length > 0 ? dataObject.postData.imei : false;
+                const serviceCenter = dataObject.postData.service_center > 0 ? dataObject.postData.service_center : false;
+                if (imei && serviceCenter) {
+                    const query = "UPDATE inventory SET service_center = " + serviceCenter + " WHERE product_imei_1 LIKE '" + imei + "'";
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                }
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
             }
@@ -993,6 +1035,7 @@ handlers.getVendor = function (dataObject, callback) {
 /**
  * This is the method to get the count of distinct model based on the state.
  * It returns count and model name based on a particular state, referred to 'service_stock_sold' table.
+ * PUT Request to update the state of the phone with IMEI and Remarks.
  * @param dataObject: The Request Object. GET Method ?state=''
  * @param callback: The method callback.
  */
@@ -1025,6 +1068,34 @@ handlers.inventoryState = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
+    } else if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                let imei, remarks, state;
+                try {
+                    imei = typeof (dataObject.postData.imei) === 'string' && dataObject.postData.imei.length > 0 ? dataObject.postData.imei : false;
+                    remarks = typeof (dataObject.postData.remarks) === 'string' && dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
+                    state = typeof (dataObject.postData.state) === 'string' && dataObject.postData.state.length > 0 ? dataObject.postData.state : false;
+                } catch (e) {
+                    console.log(e);
+                    imei = "";
+                    remarks = "";
+                    state = "";
+                }
+                const query = "UPDATE inventory i, service_stock_sold_details s " +
+                    "SET i.remarks= '" + remarks + "' , i.service_stock = s.id WHERE i.product_imei_1= '" + imei + "' AND s.sold_stock_service= '" + state + "'";
+                database.query(query, function (err, updateData) {
+                    if (err) {
+                        console.error(err.stack);
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': true});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        })
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
@@ -1353,13 +1424,17 @@ handlers.visit = function (dataObject, callback) {
                                 const msg = new Buffer(JSON.stringify(employeeData[0])).toString('base64');
                                 const content = new Buffer(JSON.stringify(visitData[0])).toString('base64');
                                 const extra = new Buffer((JSON.stringify(visitorData[0]))).toString('base64');
-                                helpers.sendFirebaseNotification(employeeData[0].device_token, msg, content, extra, function (err) {
-                                    if (err) {
-                                        console.log(err);
-                                    } else {
-                                        console.log("Notification send.");
-                                    }
-                                });
+                                if (employeeData[0].device_token.length > 0) {
+                                    helpers.sendFirebaseNotification(employeeData[0].device_token, msg, content, extra, function (err) {
+                                        if (err) {
+                                            console.log(err);
+                                        } else {
+                                            console.log("Notification send.");
+                                        }
+                                    });
+                                } else {
+                                    console.log("No device Token found.");
+                                }
                             }
                         });
                     }

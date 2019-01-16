@@ -289,7 +289,7 @@ helpers.addInventoryPhone = function (data, callback) {
     let manual = data.manual;
     let connector = data.connector;
     const remarks = data.remarks.trim();
-    let isManual = data.is_manual;
+    let isManual = checkValid(data.is_manual);
     isManual = typeof (isManual) === 'string' ? isManual : "no";
     charger = checkValid(charger);
     head_phone = checkValid(head_phone);
@@ -313,8 +313,8 @@ helpers.addInventoryPhone = function (data, callback) {
                 sku = "";
             }
             const values = "'','" + model_name + "','" + sku + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
-                price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "','" +
-                isApproved + "','" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
+                price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "',2," +
+                isApproved + ",'" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
                 manual + "','" + connector + "','" + remarks + "','" + isManual + "'";
             database.insert("inventory", values, function (err, insertData) {
                 const where = "imei LIKE '" + imei_1 + "'";
