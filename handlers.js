@@ -997,7 +997,7 @@ handlers.inventoryDead = function (dataObject, callback) {
             }
         });
     } else if (dataObject.method === 'put') {
-        helpers.validateToken(dataObject.queryString, function (isValid) {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 const imei = typeof (dataObject.postData.imei) === 'string' &&
                 dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
@@ -1006,7 +1006,7 @@ handlers.inventoryDead = function (dataObject, callback) {
                 if (imei && dataObject) {
                     const query = "UPDATE inventory i, service_stock_sold_details s" +
                         " SET i.service_stock =s.id , i.remarks= '" + remarks + "'" +
-                        " WHERE s.sold_stock_service='Lost'";
+                        " WHERE s.sold_stock_service='Lost-dispute' AND i.product_imei_1 LIKE '" + imei + "'";
                     database.query(query, function (err, updateData) {
                         if (err) {
                             console.log(err);
