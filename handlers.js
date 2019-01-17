@@ -264,6 +264,29 @@ handlers.phone = function (dataObject, callback) {
                         callback(false, 200, response);
                     }
                 });
+            } else if (method === 'put') {
+                const imei = typeof (dataObject.postData.imei) === 'string' &&
+                dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                const status = typeof (dataObject.postData.status) === 'string' &&
+                dataObject.postData.status.length > 1 ? dataObject.postData.status : false;
+
+                if (imei && status) {
+                    const query = "UPDATE phone_details p, service_stock_sold_details s" +
+                        " SET p.status=s.id " +
+                        "WHERE p.imei LIKE '" + imei + "' AND s.sold_stock_service LIKE '" + status + "'";
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                } else {
+                    console.log("IMEI: ", imei);
+                    console.log('STATUS: ', status);
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
             }
@@ -1298,7 +1321,7 @@ handlers.inventoryPendingPhones = function (dataObject, callback) {
         const key = dataObject.queryString.key;
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                const query = "SELECT * FROM phone_details WHERE status = 5";
+                const query = "SELECT * FROM phone_details WHERE status = 5 AND is_customer=0";
                 database.query(query, function (err, phoneData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -1978,6 +2001,8 @@ handlers.orderDetails = function (dataObject, callback) {
                 status = typeof (status) === 'string' && status.length > 1 ? status : false;
                 const hxOrderId = typeof (dataObject.queryString.orderid) === 'string' &&
                 dataObject.queryString.orderid.length > 0 ? dataObject.queryString.orderid : false;
+                const imei = typeof (dataObject.queryString.imei) === 'string' &&
+                dataObject.queryString.imei.length > 0 ? dataObject.queryString.imei : false;
                 let query;
                 if (!status && date && channelname) {
                     query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'  AND insertion_date " +
@@ -1991,6 +2016,8 @@ handlers.orderDetails = function (dataObject, callback) {
                     query = "SELECT * FROM order_details WHERE order_date LIKE '" + date + "'";
                 } else if (hxOrderId) {
                     query = "SELECT * FROM order_details WHERE hx_order_id = " + hxOrderId;
+                } else if (imei) {
+                    query = "SELECT * FROM order_details WHERE imei_number LIKE '" + imei + "'";
                 } else {
                     query = "SELECT * FROM order_details";
                 }
