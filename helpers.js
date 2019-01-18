@@ -141,6 +141,7 @@ helpers.insertNewReport = function (data, callback) {
     const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
     const email = data.email;
     const isUpdated = data.is_updated;
+    const orderIdReturn = data.return_order_id;
     const values = "'" + imei + "','" + ram + "','" + battery + "','" + wifi + "','" + bluetooth + "','" + nfc + "','" +
         flash + "','" + acclerometer + "','" + gyroscope + "','" + external_storage + "','" + touch + "','" +
         speaker + "','" + volume_up + "','" + volume_down + "','" + proximity + "','" + rear_camera + "','" +
@@ -149,7 +150,7 @@ helpers.insertNewReport = function (data, callback) {
         screen_brightness + "','" + fingerprint + "','" + actualBattery + "','" + batteryWear + "','" +
         matchIMEI + "','" + scratches + "','" + dents + "','" + appleId + "','" + temperedGlass + "','" +
         pasting + "','" + marks + "','" + softSleeve + "','" + plasticWrap + "','" + overall_status + "','" + report_uuid + "','" +
-        formattedDate + "','" + email + "'," + isUpdated;
+        formattedDate + "','" + email + "'," + isUpdated + ",'" + orderIdReturn + "'";
     database.insert("report_details", values, function (err, data) {
         callback(err, data);
     });
@@ -278,7 +279,7 @@ helpers.addInventoryPhone = function (data, callback) {
     const price = data.product_price.trim();
     const grade = data.product_grade;
     const vendorId = data.vendor_id;
-    const email = data.operations_email.trim();
+    const email = data.operations_email;
     const service_stock = data.service_stock;
     const isApproved = data.is_approved;
     const storage = data.storage;

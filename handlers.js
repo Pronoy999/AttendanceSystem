@@ -274,6 +274,7 @@ handlers.phone = function (dataObject, callback) {
                     const query = "UPDATE phone_details p, service_stock_sold_details s" +
                         " SET p.status=s.id " +
                         "WHERE p.imei LIKE '" + imei + "' AND s.sold_stock_service LIKE '" + status + "'";
+                    console.log(query);
                     database.query(query, function (err, updateData) {
                         if (err) {
                             console.error(err.stack);
@@ -742,6 +743,7 @@ handlers.token = function (dataObject, callback) {
  * Method to get the Distinct Models and Count for all the phones present in the inventory.
  * POST method to get the details of a Phone with respect to IMEI.
  * POST Method {imei:""} To get the details of the device with IMEI.
+ * PUT to update the status of a device in Inventory.
  * @param dataObject
  * @param callback
  */
@@ -875,8 +877,8 @@ handlers.employee = function (dataObject, callback) {
 };
 /**
  * Method to get details of phones with Vendor names for a particular model name.
- * It is also used to get the details of the Dead phones.
- * It is used to Update the Service Center Data for an existing phone.
+ * It is also used to get the details of the Dead phones by model name.
+ * It is used to Update the Service Center Data for an existing phone by model name.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
@@ -902,6 +904,9 @@ handlers.inventoryPhone = function (dataObject, callback) {
                             callback(false, 200, {'res': repairData});
                         }
                     });
+                } else if (flag === 'lost') {
+                    query = "SELECT * FROM inventory WHERE model_name LIKE '" + modelName + "' AND service_stock = 6";
+                    console.log(query);
                 } else {
                     query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name, p.status " +
                         "FROM inventory i,vendor_details v ,phone_grade_details p " +
