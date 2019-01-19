@@ -2439,7 +2439,7 @@ handlers.bioAuth = function (data, callback) {
                 callback(false, 200, {res: fp_probe.serializeSync()})
             } else if (data.queryString.type === 'verify') {
                 let finger = data.queryString.finger;
-
+                let fingerParam = finger;
                 let matcher = new FingerprintMatcher().indexSync(fp_probe);
 
                 let high = 0;
@@ -2460,7 +2460,7 @@ handlers.bioAuth = function (data, callback) {
                 for (let id in fp_json) {
                     let fps = fp_json[id];
 
-                    if (finger) {
+                    if (fingerParam) {
                         if (!finger_names.includes(finger) || !fps[finger]) {
                             callback(true, 400, {'res': 'invalid finger specified'});
                             console.log('error invalid finger');
