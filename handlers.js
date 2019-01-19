@@ -3,7 +3,7 @@ const snsLib = require('./snsLib');
 const helpers = require('./helpers');
 const messages = require('./Constants');
 const moment = require('moment');
-const tz = require('moment-timezone');
+const tz = require('moment-timezone');/*
 const java = require('./initJava');
 const aws = require('./aws');
 const fs = require('fs');
@@ -12,7 +12,7 @@ const fp_json = require(fp_json_file_name);
 const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
 const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
 const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
-const S3 = new aws.S3();
+const S3 = new aws.S3();*/
 const handlers = {};
 /**
  * Method for Invalid Path.
@@ -555,7 +555,10 @@ handlers.visitLog = function (dataObject, callback) {
             getLog(where);
         });
     } else if (dataObject.method === 'get') {
-        const employeeID = dataObject.queryString.id > -1 ? dataObject.queryString.id : false;
+        let employeeID = dataObject.queryString.id > -1 ? dataObject.queryString.id : false;
+        if (employeeID) {
+            employeeID = Number(employeeID);
+        }
         if (employeeID > 0) {
             helpers.validateToken(dataObject.queryString.key, function (isValid) {
                 if (isValid) {
@@ -598,6 +601,7 @@ handlers.visitLog = function (dataObject, callback) {
                 }
             });
         } else {
+            console.log(employeeID);
             callback(true, 400, {'res': messages.insufficientData});
         }
     } else {
@@ -910,7 +914,7 @@ handlers.inventoryPhone = function (dataObject, callback) {
                 } else {
                     query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name, p.status " +
                         "FROM inventory i,vendor_details v ,phone_grade_details p " +
-                        "WHERE i.vendor_id = v.vendor_id AND model_name LIKE '" + modelName + "' AND i.product_grade=p.id";
+                        "WHERE i.vendor_id = v.vendor_id AND model_name LIKE '" + modelName + "' AND i.product_grade=p.id AND i.service_stock=2";
                     console.log(query);
                 }
                 database.query(query, function (err, phoneData) {
@@ -2516,6 +2520,43 @@ handlers.firebaseToken = function (dataObject, callback) {
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage})
     }
+};
+/**
+ * Method to get the permitted version for a package name.
+ * @param dataObject: The Data Object.
+ * @param callback: The Method callback.
+ */
+handlers.permittedVersions = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, function (isValid) {
+        if (isValid) {
+            if (dataObject.method === 'post') {
+                const packageName = typeof (dataObject.postData.package) === 'string' &&
+                dataObject.postData.package.length > 0 ? dataObject.postData.package : false;
+                const version = dataObject.postData.version > 0 ? dataObject.postData.version : false;
+                if (packageName && version) {
+                    const query = "SELECT * FROM permitted_versions WHERE package_name LIKE '" + packageName + "'";
+                    database.query(query, function (err, versionData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            if (version === versionData[0].version) {
+                                callback(false, 200, {'res': true});
+                            } else {
+                                callback(false, 200, {'res': false});
+                            }
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 400, {'res': messages.invalidRequestMessage});
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
 };
 /**
  * Exporting the Handlers.
