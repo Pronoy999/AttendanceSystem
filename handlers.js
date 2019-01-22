@@ -2559,6 +2559,37 @@ handlers.permittedVersions = function (dataObject, callback) {
     });
 };
 /**
+ * Method to generate the Serial Number.
+ * @param dataObject: The Data object.
+ * @param callback: The method callback.
+ */
+handlers.qr = function (dataObject, callback) {
+    const num = dataObject.queryString.num;
+    let query = "SELECT max(id) as id FROM phone_details_qr";
+    database.query(query, function (err, maxData) {
+        if (err) {
+            console.error(err.stack);
+            callback(err, 500, {'res': messages.errorMessage});
+        } else {
+            let start = maxData[0].id;
+            query = "INSERT INTO phone_details_qr VALUES (" + Number(start + 1) + ",'','4')";
+            for (let i = start + 2; i <= num; i++) {
+                query += ",";
+                query += "(" + i + ",'','4')";
+            }
+            query += ";";
+            database.query(query, function (err, insertData) {
+                if (err) {
+                    console.error(err.stack);
+                    callback(err, 500, {'res': messages.errorMessage});
+                } else {
+                    callback(false, 200, {'res': start + 1});
+                }
+            })
+        }
+    })
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;
