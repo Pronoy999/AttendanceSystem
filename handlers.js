@@ -2110,6 +2110,7 @@ handlers.orderStatus = function (dataObject, callback) {
                                 "SET o.order_status = s.id, o.imei_number= '" + imei + "'" +
                                 " WHERE s.status= '" + status +
                                 "' AND o.hx_order_id= " + hxorderid;
+                            updatePhoneAndInventory(imei);
                         } else {
                             query = "UPDATE order_details o, order_status_details s " +
                                 "SET o.order_status = s.id WHERE s.status= '" + status +
@@ -2168,6 +2169,7 @@ handlers.orderStatus = function (dataObject, callback) {
                         const query = "UPDATE order_details o, order_status_details s" +
                             " SET o.awb_number='" + value + "', " +
                             "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid + " AND s.status='Shipped'";
+                        updateQRTable(hxorderid);
                         database.query(query, function (err, updateData) {
                             if (err) {
                                 callback(err, 500, {'res': messages.errorMessage});
@@ -2187,6 +2189,52 @@ handlers.orderStatus = function (dataObject, callback) {
         });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+
+    /**
+     * Method to update order_status in the QR Table.
+     * @param hxOrderId: The HX Order ID.
+     */
+    function updateQRTable(hxOrderId) {
+        let query = "SELECT imei_number FROM order_details WHERE hx_order_id = " + hxOrderId;
+        database.query(query, function (err, imeiData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                const imei = imeiData[0].imei_number;
+                query = "UPDATE phone_details_qr SET order_status = 5 WHERE imei LIKE '" + imei + "'";
+                database.query(query, function (err, updateData) {
+                    if (err) {
+                        console.error(err.stack);
+                    } else {
+                        console.log("imei in QR updated.");
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Method to update the Phone and Inventory status for the IMEI.
+     * @param imei: The IMEI number of the device.
+     */
+    function updatePhoneAndInventory(imei) {
+        let query = "UPDATE inventory SET service_stock = 1 WHERE product_imei_1 LIKE '" + imei + "'";
+        database.query(query, function (err, inventoryUpdateData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Inventory Updated.");
+            }
+        });
+        query = "UPDATE phone_details SET status = 1 WHERE imei LIKE '" + imei + "'";
+        database.query(query, function (err, phoneUpdateData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Phone_details updated.");
+            }
+        });
     }
 };
 /**
@@ -2575,10 +2623,10 @@ handlers.qr = function (dataObject, callback) {
                         callback(err, 500, {'res': messages.errorMessage});
                     } else {
                         let start = maxData[0].id;
-                        query = "INSERT INTO phone_details_qr VALUES (" + Number(start + 1) + ",'','4')";
+                        query = "INSERT INTO phone_details_qr VALUES (" + Number(start + 1) + ",'','7','14')";
                         for (let i = start + 2; i <= num; i++) {
                             query += ",";
-                            query += "(" + i + ",'','4')";
+                            query += "(" + i + ",'','7','14')";
                         }
                         query += ";";
                         database.query(query, function (err, insertData) {
