@@ -3,8 +3,8 @@ const snsLib = require('./snsLib');
 const helpers = require('./helpers');
 const messages = require('./Constants');
 const moment = require('moment');
-const tz = require('moment-timezone');/*
-const java = require('./initJava');
+const tz = require('moment-timezone');
+/*const java = require('./initJava');
 const aws = require('./aws');
 const fs = require('fs');
 const fp_json_file_name = './fp_data.json';
@@ -2169,12 +2169,27 @@ handlers.orderStatus = function (dataObject, callback) {
                         const query = "UPDATE order_details o, order_status_details s" +
                             " SET o.awb_number='" + value + "', " +
                             "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid + " AND s.status='Shipped'";
-                        updateQRTable(hxorderid);
+                        updateQRTable(hxorderid, 5);
                         database.query(query, function (err, updateData) {
                             if (err) {
                                 callback(err, 500, {'res': messages.errorMessage});
                             } else {
                                 callback(false, 200, {'res': true});
+                            }
+                        });
+                    } else {
+                        callback(true, 400, {'res': messages.insufficientData});
+                    }
+                } else if (type === 'Delivered') {
+                    if (hxorderid) {
+                        const query = "UPDATE order_details SET o.order_status = 6 WHERE hx_order_id = " + hxorderid;
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                console.error(err.stack);
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                callback(false, 200, {'res': true});
+                                updateQRTable(hxorderid, 6);
                             }
                         });
                     } else {
@@ -2194,15 +2209,16 @@ handlers.orderStatus = function (dataObject, callback) {
     /**
      * Method to update order_status in the QR Table.
      * @param hxOrderId: The HX Order ID.
+     * @param updateStatus: The new Order Status.
      */
-    function updateQRTable(hxOrderId) {
+    function updateQRTable(hxOrderId, updateStatus) {
         let query = "SELECT imei_number FROM order_details WHERE hx_order_id = " + hxOrderId;
         database.query(query, function (err, imeiData) {
             if (err) {
                 console.error(err.stack);
             } else {
                 const imei = imeiData[0].imei_number;
-                query = "UPDATE phone_details_qr SET order_status = 5 WHERE imei LIKE '" + imei + "'";
+                query = "UPDATE phone_details_qr SET order_status = " + updateStatus + " WHERE imei LIKE '" + imei + "'";
                 database.query(query, function (err, updateData) {
                     if (err) {
                         console.error(err.stack);
@@ -2640,7 +2656,57 @@ handlers.qr = function (dataObject, callback) {
                     }
                 });
             } else if (dataObject.method === 'put') {
-                //TODO: Update the IMEI number.
+                helpers.validateToken(dataObject.queryString.key, function (isValid) {
+                    if (isValid) {
+                        let query = "";
+                        const type = typeof (dataObject.postData.type) === 'string' &&
+                        dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
+                        const id = dataObject.postData.id.length > 0 ? dataObject.postData.id : false;
+                        if (type && type === 'New') {
+                            query = "UPDATE phone_details_qr SET phone_status = 4 WHERE id = " + id;
+                            database.query(query, function (err, updateData) {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': true});
+                                }
+                            });
+                        } else {
+                            callback(true, 400, {'res': messages.insufficientData});
+                        }
+                    } else {
+                        callback(true, 403, {'res': messages.tokenExpiredMessage});
+                    }
+                })
+            } else if (dataObject.method === 'post') {
+                helpers.validateToken(dataObject.queryString.key, function (isValid) {
+                    if (isValid) {
+                        let query = "";
+                        const type = typeof (dataObject.postData.type) === 'string' &&
+                        dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
+                        const id = dataObject.postData.id.length > 0 ? dataObject.postData.id : false;
+                        if (type && type === 'Shipping') {
+                            query = "SELECT * FROM phone_details_qr WHERE id = " + id + " AND order_status = 5";
+                            database.query(query, function (err, queryData) {
+                                if (err) {
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                    console.error(err.stack);
+                                } else {
+                                    if (queryData.length > 0) {
+                                        callback(false, 200, {'res': true});
+                                    } else {
+                                        callback(false, 200, {'res': false});
+                                    }
+                                }
+                            });
+                        } else {
+                            callback(true, 400, {'res': messages.insufficientData});
+                        }
+                    } else {
+                        callback(true, 403, {'res': messages.tokenExpiredMessage});
+                    }
+                });
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
             }
