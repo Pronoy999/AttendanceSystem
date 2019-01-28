@@ -4,7 +4,7 @@ const helpers = require('./helpers');
 const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
-/*const java = require('./initJava');
+const java = require('./initJava');
 const aws = require('./aws');
 const fs = require('fs');
 const fp_json_file_name = './fp_data.json';
@@ -12,7 +12,7 @@ const fp_json = require(fp_json_file_name);
 const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
 const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
 const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
-const S3 = new aws.S3();*/
+const S3 = new aws.S3();
 const handlers = {};
 /**
  * Method for Invalid Path.
@@ -281,6 +281,7 @@ handlers.phone = function (dataObject, callback) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
                             callback(false, 200, {'res': true});
+                            updateQRTable(imei);
                         }
                     });
                 } else {
@@ -295,6 +296,21 @@ handlers.phone = function (dataObject, callback) {
             callback(false, 403, {'res': messages.tokenExpiredMessage});
         }
     });
+
+    /**
+     * Method to update the QR Table.
+     * @param imei: The imei of the device.
+     */
+    function updateQRTable(imei) {
+        const query = "UPDATE phone_details_qr SET phone_status = 5 WHERE imei LIKE '" + imei + "'";
+        database.query(query, function (err, updateData) {
+            if (err) {
+                console.error(err, stack);
+            } else {
+                console.log("QR Updated.");
+            }
+        })
+    }
 };
 /**
  * Method to insert Report for devices.
@@ -2631,7 +2647,7 @@ handlers.qr = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (isValid) {
             if (dataObject.method === 'get') {
-                const num = dataObject.queryString.num;
+                const num = Number(dataObject.queryString.num);
                 let query = "SELECT max(id) as id FROM phone_details_qr";
                 database.query(query, function (err, maxData) {
                     if (err) {
@@ -2640,11 +2656,14 @@ handlers.qr = function (dataObject, callback) {
                     } else {
                         let start = maxData[0].id;
                         query = "INSERT INTO phone_details_qr VALUES (" + Number(start + 1) + ",'','7','14')";
-                        for (let i = start + 2; i <= num; i++) {
+                        console.log(start);
+                        console.log(num);
+                        for (let i = start + 2; i <= (start + num); i++) {
                             query += ",";
                             query += "(" + i + ",'','7','14')";
                         }
                         query += ";";
+                        console.log(query);
                         database.query(query, function (err, insertData) {
                             if (err) {
                                 console.error(err.stack);
@@ -2656,57 +2675,69 @@ handlers.qr = function (dataObject, callback) {
                     }
                 });
             } else if (dataObject.method === 'put') {
-                helpers.validateToken(dataObject.queryString.key, function (isValid) {
-                    if (isValid) {
-                        let query = "";
-                        const type = typeof (dataObject.postData.type) === 'string' &&
-                        dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
-                        const id = dataObject.postData.id.length > 0 ? dataObject.postData.id : false;
-                        if (type && type === 'New') {
-                            query = "UPDATE phone_details_qr SET phone_status = 4 WHERE id = " + id;
-                            database.query(query, function (err, updateData) {
-                                if (err) {
-                                    console.error(err.stack);
-                                    callback(err, 500, {'res': messages.errorMessage});
-                                } else {
-                                    callback(false, 200, {'res': true});
-                                }
-                            });
+                let query = "";
+                const type = typeof (dataObject.postData.type) === 'string' &&
+                dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
+                const id = dataObject.postData.id > 0 ? dataObject.postData.id : false;
+                const imei = typeof (dataObject.postData.imei) === 'string' &&
+                dataObject.postData.imei.length > 0 ? dataObject.postData.imei.trim() : false;
+                if (type && type === 'New') {
+                    query = "SELECT * FROM phone_details_qr WHERE id = " + id;
+                    database.query(query, function (err, selectData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                            callback(true, 400, {'res': messages.insufficientData});
-                        }
-                    } else {
-                        callback(true, 403, {'res': messages.tokenExpiredMessage});
-                    }
-                })
-            } else if (dataObject.method === 'post') {
-                helpers.validateToken(dataObject.queryString.key, function (isValid) {
-                    if (isValid) {
-                        let query = "";
-                        const type = typeof (dataObject.postData.type) === 'string' &&
-                        dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
-                        const id = dataObject.postData.id.length > 0 ? dataObject.postData.id : false;
-                        if (type && type === 'Shipping') {
-                            query = "SELECT * FROM phone_details_qr WHERE id = " + id + " AND order_status = 5";
-                            database.query(query, function (err, queryData) {
-                                if (err) {
-                                    callback(err, 500, {'res': messages.errorMessage});
-                                    console.error(err.stack);
-                                } else {
-                                    if (queryData.length > 0) {
-                                        callback(false, 200, {'res': true});
+                            if (Number(selectData[0].phone_status) === 7) {
+                                query = "UPDATE phone_details_qr SET phone_status = 4 WHERE id = " + id;
+                                database.query(query, function (err, updateData) {
+                                    if (err) {
+                                        console.error(err.stack);
+                                        callback(err, 500, {'res': messages.errorMessage});
                                     } else {
-                                        callback(false, 200, {'res': false});
+                                        callback(false, 200, {'res': true});
                                     }
-                                }
-                            });
-                        } else {
-                            callback(true, 400, {'res': messages.insufficientData});
+                                });
+                            } else {
+                                callback(false, 202, {'res': false});
+                            }
                         }
-                    } else {
-                        callback(true, 403, {'res': messages.tokenExpiredMessage});
-                    }
-                });
+                    });
+                } else if (type && type === 'imei') {
+                    query = "UPDATE phone_details_qr SET imei = " + imei + " WHERE id = " + id;
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else if (dataObject.method === 'post') {
+                let query = "";
+                const type = typeof (dataObject.postData.type) === 'string' &&
+                dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
+                const id = dataObject.postData.id.length > 0 ? dataObject.postData.id : false;
+                if (type && type === 'Shipping') {
+                    query = "SELECT * FROM phone_details_qr WHERE id = " + id + " AND order_status = 5";
+                    database.query(query, function (err, queryData) {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                            console.error(err.stack);
+                        } else {
+                            if (queryData.length > 0) {
+                                callback(false, 200, {'res': true});
+                            } else {
+                                callback(false, 200, {'res': false});
+                            }
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
             }
