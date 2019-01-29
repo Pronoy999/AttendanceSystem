@@ -305,7 +305,7 @@ handlers.phone = function (dataObject, callback) {
         const query = "UPDATE phone_details_qr SET phone_status = 5 WHERE imei LIKE '" + imei + "'";
         database.query(query, function (err, updateData) {
             if (err) {
-                console.error(err, stack);
+                console.error(err.stack);
             } else {
                 console.log("QR Updated.");
             }
@@ -2676,11 +2676,12 @@ handlers.qr = function (dataObject, callback) {
                 });
             } else if (dataObject.method === 'put') {
                 let query = "";
+                console.log(dataObject.postData);
                 const type = typeof (dataObject.postData.type) === 'string' &&
                 dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
                 const id = dataObject.postData.id > 0 ? dataObject.postData.id : false;
                 const imei = typeof (dataObject.postData.imei) === 'string' &&
-                dataObject.postData.imei.length > 0 ? dataObject.postData.imei.trim() : false;
+                dataObject.postData.imei.length > 10 ? dataObject.postData.imei.trim() : false;
                 if (type && type === 'New') {
                     query = "SELECT * FROM phone_details_qr WHERE id = " + id;
                     database.query(query, function (err, selectData) {
@@ -2704,13 +2705,18 @@ handlers.qr = function (dataObject, callback) {
                         }
                     });
                 } else if (type && type === 'imei') {
-                    query = "UPDATE phone_details_qr SET imei = " + imei + " WHERE id = " + id;
+                    query = "UPDATE phone_details_qr SET imei = " + imei + " WHERE id = " + id + " AND phone_status = 4";
+                    console.log(query);
                     database.query(query, function (err, updateData) {
                         if (err) {
                             console.error(err.stack);
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                            callback(false, 200, {'res': true});
+                            if (updateData.affectedRows > 0) {
+                                callback(false, 200, {'res': true});
+                            } else {
+                                callback(false, 202, {'res': false});
+                            }
                         }
                     });
                 } else {
