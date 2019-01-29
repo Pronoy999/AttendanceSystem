@@ -9,7 +9,7 @@ var sns = new aws.SNS();
 /**
  * Method to send an OTP.
  * @param phone: The Phone Number.
- * @param callback: The Method callback.
+ * @param callback: The Method callback. The error and the OTP.
  */
 sms.sendOTP = function (phone, callback) {
     const helpers = require('./helpers');

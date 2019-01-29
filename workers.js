@@ -32,7 +32,7 @@ workers._loopCheck = function () {
                 var message = "Hi, order number: " + eachOrder.channel_order_id +
                     " from " + eachOrder.channel_name + " is Ready to Invoice for more than 12 Hours.";
                 let mobileNumber = "";
-                if (hoursDifference < 13) {
+                if (hoursDifference <= 13) {
                     mobileNumber = "+918097611136";
 
                 } else {

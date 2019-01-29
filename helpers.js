@@ -83,7 +83,8 @@ helpers.insertNewPhone = function (data, callback) {
         status + "','" + is_customer + "','" + formattedDate + "','" + location + "'";
     database.insert("phone_details_duplicate", values, function (err, data) {
         if (err) {
-            console.log(err);
+            console.error(err.stack);
+            callback(err);
         } else {
             database.insert("phone_details", values, function (err, data) {
                 callback(err, data);
@@ -141,6 +142,7 @@ helpers.insertNewReport = function (data, callback) {
     const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
     const email = data.email;
     const isUpdated = data.is_updated;
+    const orderIdReturn = typeof (data.return_order_id) === 'string' ? data.return_order_id : "NA";
     const values = "'" + imei + "','" + ram + "','" + battery + "','" + wifi + "','" + bluetooth + "','" + nfc + "','" +
         flash + "','" + acclerometer + "','" + gyroscope + "','" + external_storage + "','" + touch + "','" +
         speaker + "','" + volume_up + "','" + volume_down + "','" + proximity + "','" + rear_camera + "','" +
@@ -149,7 +151,7 @@ helpers.insertNewReport = function (data, callback) {
         screen_brightness + "','" + fingerprint + "','" + actualBattery + "','" + batteryWear + "','" +
         matchIMEI + "','" + scratches + "','" + dents + "','" + appleId + "','" + temperedGlass + "','" +
         pasting + "','" + marks + "','" + softSleeve + "','" + plasticWrap + "','" + overall_status + "','" + report_uuid + "','" +
-        formattedDate + "','" + email + "'," + isUpdated;
+        formattedDate + "','" + email + "'," + isUpdated + ",'" + orderIdReturn + "'";
     database.insert("report_details", values, function (err, data) {
         callback(err, data);
     });
@@ -246,7 +248,7 @@ helpers.getRandomKey = function (len) {
     return key;
 };
 /**
- * Method to generate an random IMEI.
+ * Method to generate a random IMEI.
  * @param len: The length of the IMEI to be generated.
  * @returns {string}: The Random IMEI.
  */
@@ -258,7 +260,7 @@ helpers.getRandomImei = function (len) {
         imei += possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters.length));
     }
     return imei;
-}
+};
 /**
  * Method to add the Phone to the Inventory and update the status of phone_details.
  * @param data: The Post Data.
@@ -278,7 +280,7 @@ helpers.addInventoryPhone = function (data, callback) {
     const price = data.product_price.trim();
     const grade = data.product_grade;
     const vendorId = data.vendor_id;
-    const email = data.operations_email.trim();
+    const email = data.operations_email;
     const service_stock = data.service_stock;
     const isApproved = data.is_approved;
     const storage = data.storage;
@@ -289,7 +291,7 @@ helpers.addInventoryPhone = function (data, callback) {
     let manual = data.manual;
     let connector = data.connector;
     const remarks = data.remarks.trim();
-    let isManual = data.is_manual;
+    let isManual = checkValid(data.is_manual);
     isManual = typeof (isManual) === 'string' ? isManual : "no";
     charger = checkValid(charger);
     head_phone = checkValid(head_phone);
@@ -297,7 +299,6 @@ helpers.addInventoryPhone = function (data, callback) {
     back_cover = checkValid(back_cover);
     manual = checkValid(manual);
     connector = checkValid(connector);
-    const modelArray = model_name.split(' ');
 
     const sku_query = "select * from sku_master where brand LIKE '%" + brand + "%' and lower(model) LIKE lower('%" + model_name
         + "%') and storage = " + storage + " and color LIKE '%" + color + "%' or grade LIKE '%" + grade + "%'";
@@ -312,24 +313,33 @@ helpers.addInventoryPhone = function (data, callback) {
                 console.log("NO SKU FOUND");
                 sku = "";
             }
-            const values = "'','" + model_name + "','" + sku + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
-                price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "','" +
-                isApproved + "','" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
+            const values = "'" + model_name + "','" + sku + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
+                price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "',2," +
+                isApproved + ",'" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
                 manual + "','" + connector + "','" + remarks + "','" + isManual + "'";
             database.insert("inventory", values, function (err, insertData) {
-                const where = "imei LIKE '" + imei_1 + "'";
                 if (!err) {
-                    database.update("phone_details", "status", service_stock, where, function (err, updateData) {
+                    callback(false);
+                    updatePhoneDetails(imei_1, service_stock);
+                    updateQRTable(imei_1, service_stock);
+                } else if (err) {
+                    //If the phone is already present in inventory then the status will be updated.
+                    const query = "UPDATE inventory SET service_stock = " + service_stock +
+                        ", remarks = '" + remarks + "' WHERE product_imei_1 LIKE '" + imei_1 + "'";
+                    database.query(query, function (err, updateData) {
                         if (err) {
-                            console.log(err);
+                            console.error(err.stack);
                             callback(err);
                         } else {
-                            callback(false, updateData);
+                            if (updateData.affectedRows > 0) {
+                                updatePhoneDetails(imei_1, service_stock);
+                                updateQRTable(imei_1, service_stock);
+                                callback(false);
+                            } else {
+                                callback(err);
+                            }
                         }
                     });
-                } else {
-                    console.log(err);
-                    callback(err, {});
                 }
             });
         } else {
@@ -346,6 +356,45 @@ helpers.addInventoryPhone = function (data, callback) {
      */
     function checkValid(value) {
         return typeof (value) === 'string' ? value : 'no';
+    }
+
+    /**
+     * Method to update the Phone Details.
+     * @param imei: The Imei of the device.
+     * @param serviceStock: The new status of the device.
+     */
+    function updatePhoneDetails(imei, serviceStock) {
+        const where = "imei LIKE '" + imei + "'";
+        database.update("phone_details", "status",
+            serviceStock, where, function (err, updateData) {
+                if (err) {
+                    console.error(err.stack);
+                } else {
+                    console.log("Updated Phone_details.");
+                }
+            });
+    }
+
+    /**
+     * Method to update the QR table Query.
+     * @param imei: The imei of the device.
+     * @param serviceStock: the new service Stock status.
+     */
+    function updateQRTable(imei, serviceStock) {
+        let query = "SELECT * FROM phone_details_qr WHERE imei LIKE '" + imei + "'";
+        database.query(query, function (err, qrData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                const id = qrData[qrData.length - 1].id;
+                query = "UPDATE phone_details_qr SET phone_status = " + serviceStock +
+                    " WHERE id = " + id + " AND imei LIKE '" + imei + "'";
+                database.query(query, function (err, updateData) {
+                    console.log(err);
+                    console.log("Rows affected in QR: " + updateData.affectedRows);
+                });
+            }
+        });
     }
 };
 /**
@@ -484,6 +533,7 @@ helpers.insertOrder = function (postData, callback) {
             callback(false);
         }
     });*/
+
 };
 /**
  * Method to send the firebase notification.
@@ -494,14 +544,13 @@ helpers.insertOrder = function (postData, callback) {
  */
 helpers.sendFirebaseNotification = function (token, msg, content, extra, callback) {
     const serviceAccount = require('./firebaseService.json');
-    //token="eTxRb-dPHAc:APA91bGxiakY02DMiTUCP2UDgrGnEyrNPFZZ93bBGsnVALN_WiKMDwvK-51GNwfgv9uIjtcyraCfsUVPHW7k2KnHB9UonIt6aVSGSfwuFBG-tVSqTA8NmmHFCwfZQ5kRXBJhgzMqJjMo";
     try {
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
             databaseURL: "https://hyperxchange-api.firebaseio.com"
         });
     } catch (e) {
-        console.log(e);
+        console.log("Firebase app already initialized.");
     }
     const message = {
         data: {

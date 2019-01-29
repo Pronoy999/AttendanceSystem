@@ -5,11 +5,11 @@ const mysql = require('mysql');
 const pool = mysql.createPool({
     host: 'hx-db.cy5gosef4el7.ap-south-1.rds.amazonaws.com',
     user: 'db_admin',
-    database: 'staging_diagnostic_app',
+    database: 'diagnostic_app',
     password: 'hxadmin123',
     port: '3306'
 });
-var database = {};
+let database = {};
 /**
  * Method to insert into the database.
  * @param tableName: The tableName.
@@ -33,12 +33,12 @@ database.insert = function (tableName, values, callback) {
                 }
             });
         }
-        pool.on('release', function (con) {
+        /*pool.on('release', function (con) {
             //Connection released.
         });
         pool.on('acquire', function (con) {
             //Connection acquired.
-        });
+        });*/
     });
 };
 /**
@@ -64,12 +64,12 @@ database.query = function (queryStatement, callback) {
                 }
             });
         }
-        pool.on('release', function (con) {
+        /*pool.on('release', function (con) {
             //Released.
         });
         pool.on('acquire', function (con) {
             //Acquired.
-        });
+        });*/
     });
 };
 /**
@@ -98,12 +98,15 @@ database.update = function (tableName, updateCol, updateVal, where, callback) {
                 }
             });
         }
-        pool.on('release', function (con) {
+        /*pool.on('release', function (con) {
             //Connection released.
         });
         pool.on('acquire', function (con) {
             //Connection Acquired.
-        });
+        });*/
     });
 };
+/**
+ * Exporting the database module.
+ */
 module.exports = database;
