@@ -1985,8 +1985,7 @@ handlers.orderReturned = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                const query = "SELECT * FROM order_details o,order_status_details d WHERE d.status LIKE 'Returned' AND " +
-                    "d.id=o.order_status";
+                const query = "SELECT distinct (return_order_id) FROM report_details WHERE length(return_order_id) > 9";
                 database.query(query, function (err, returnedData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -2639,7 +2638,9 @@ handlers.permittedVersions = function (dataObject, callback) {
     });
 };
 /**
- * Method to generate the Serial Number.
+ *  GET Method to generate the Serial Number.
+ *  POST Method to get the QR codes for order status shipped.
+ *  PUT Method to update the status of the QR code based on condition.
  * @param dataObject: The Data object.
  * @param callback: The method callback.
  */
@@ -2716,6 +2717,32 @@ handlers.qr = function (dataObject, callback) {
                                 callback(false, 200, {'res': true});
                             } else {
                                 callback(false, 202, {'res': false});
+                            }
+                        }
+                    });
+                } else if (type && type === 'service') {
+                    query = "SELECT * FROM phone_details_qr WHERE id = " + id;
+                    database.query(query, function (err, selectData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            if (Number(selectData[0].phone_status === 3)) {
+                                callback(false, 200, {'res': true, 'msg': 'Authorized.'});
+                            } else if (Number(selectData[0].phone_status === 7)) {
+                                query = "UPDATE phone_details_qr SET phone_status = 4 WHERE id = " + id;
+                                database.query(query, function (err, updateData) {
+                                    if (err) {
+                                        console.error(err.stack);
+                                        callback(err, 500, {'res': messages.errorMessage});
+                                    } else {
+                                        if (updateData.affectedRows > 0) {
+                                            callback(false, 200, {'res': true, 'msg': 'Queued'});
+                                        } else {
+                                            callback(false, 200, {'res': false});
+                                        }
+                                    }
+                                });
                             }
                         }
                     });
