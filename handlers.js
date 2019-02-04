@@ -2648,33 +2648,67 @@ handlers.qr = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (isValid) {
             if (dataObject.method === 'get') {
-                const num = Number(dataObject.queryString.num);
-                let query = "SELECT max(id) as id FROM phone_details_qr";
-                database.query(query, function (err, maxData) {
-                    if (err) {
-                        console.error(err.stack);
-                        callback(err, 500, {'res': messages.errorMessage});
-                    } else {
-                        let start = maxData[0].id;
-                        query = "INSERT INTO phone_details_qr VALUES (" + Number(start + 1) + ",'','7','14')";
-                        console.log(start);
-                        console.log(num);
-                        for (let i = start + 2; i <= (start + num); i++) {
-                            query += ",";
-                            query += "(" + i + ",'','7','14')";
-                        }
-                        query += ";";
-                        console.log(query);
-                        database.query(query, function (err, insertData) {
-                            if (err) {
-                                console.error(err.stack);
-                                callback(err, 500, {'res': messages.errorMessage});
-                            } else {
-                                callback(false, 200, {'res': start + 1});
+                let num, id, query;
+                try {
+                    num = Number(dataObject.queryString.num);
+                } catch (e) {
+                    num = false;
+                }
+                if (num) {
+                    query = "SELECT max(id) as id FROM phone_details_qr";
+                    database.query(query, function (err, maxData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            let start = maxData[0].id;
+                            query = "INSERT INTO phone_details_qr VALUES (" + Number(start + 1) + ",'','7','14')";
+                            console.log(start);
+                            console.log(num);
+                            for (let i = start + 2; i <= (start + num); i++) {
+                                query += ",";
+                                query += "(" + i + ",'','7','14')";
                             }
-                        })
-                    }
-                });
+                            query += ";";
+                            console.log(query);
+                            database.query(query, function (err, insertData) {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': start + 1});
+                                }
+                            })
+                        }
+                    });
+                } else {
+                    id = Number(dataObject.queryString.id);
+                    query = "SELECT * FROM phone_details_qr WHERE id = " + id;
+                    console.log(query);
+                    database.query(query, function (err, qrData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            if (qrData[0].phone_status === 7) {
+                                callback(false, 200, {'res': false, 'msg': messages.notAssigned});
+                            } else if (qrData[0].phone_status === 4 && qrData[0].imei.length < 0) {
+                                callback(false, 200, {'res': false, 'msg': messages.imeiNotLinked});
+                            } else if (qrData[0].imei.length > 0) {
+                                query = "SELECT * FROM phone_details WHERE imei LIKE '" + qrData[0].imei + "'";
+                                console.log(query);
+                                database.query(query, function (err, selectData) {
+                                    if (err) {
+                                        console.error(err.stack);
+                                        callback(err, 500, {'res': messages.errorMessage});
+                                    } else {
+                                        callback(false, 200, {'res': true, 'msg': selectData});
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
             } else if (dataObject.method === 'put') {
                 let query = "";
                 console.log(dataObject.postData);
