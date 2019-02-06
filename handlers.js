@@ -2355,7 +2355,7 @@ handlers.details = function (dataObject, callback) {
                         } else {
                             callback(false, 200, {'res': serviceCenterData});
                         }
-                    })
+                    });
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
@@ -2638,7 +2638,7 @@ handlers.permittedVersions = function (dataObject, callback) {
     });
 };
 /**
- *  GET Method to generate the Serial Number.
+ *  GET Method to generate the Serial Number and also to get the details of the current phone.
  *  POST Method to get the QR codes for order status shipped.
  *  PUT Method to update the status of the QR code based on condition.
  * @param dataObject: The Data object.
@@ -2717,6 +2717,9 @@ handlers.qr = function (dataObject, callback) {
                 const id = dataObject.postData.id > 0 ? dataObject.postData.id : false;
                 const imei = typeof (dataObject.postData.imei) === 'string' &&
                 dataObject.postData.imei.length > 10 ? dataObject.postData.imei.trim() : false;
+                const serviceCenter = typeof (dataObject.serviceCenter) === 'string' &&
+                Number(dataObject.serviceCenter) > 0 ? dataObject.serviceCenter : false;
+
                 if (type && type === 'New') {
                     query = "SELECT * FROM phone_details_qr WHERE id = " + id;
                     database.query(query, function (err, selectData) {
@@ -2762,21 +2765,18 @@ handlers.qr = function (dataObject, callback) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
                             if (Number(selectData[0].phone_status === 3)) {
-                                callback(false, 200, {'res': true, 'msg': 'Authorized.'});
-                            } else if (Number(selectData[0].phone_status === 7)) {
-                                query = "UPDATE phone_details_qr SET phone_status = 4 WHERE id = " + id;
-                                database.query(query, function (err, updateData) {
+                                query = "INSERT INTO service_center VALUES " +
+                                    "('" + selectData[0].imei + "'," + serviceCenter + ")";
+                                database.query(query, function (err, insertData) {
                                     if (err) {
                                         console.error(err.stack);
                                         callback(err, 500, {'res': messages.errorMessage});
                                     } else {
-                                        if (updateData.affectedRows > 0) {
-                                            callback(false, 200, {'res': true, 'msg': 'Queued'});
-                                        } else {
-                                            callback(false, 200, {'res': false});
-                                        }
+                                        callback(false, 200, {'res': true});
                                     }
                                 });
+                            } else {
+                                callback(true, 202, {'res': false, 'msg': 'Not Authorized'});
                             }
                         }
                     });
