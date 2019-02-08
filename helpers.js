@@ -572,6 +572,42 @@ helpers.sendFirebaseNotification = function (token, msg, content, extra, callbac
         });
 };
 /**
+ * Method to add the service repair cost.
+ * @param dataObject: The DataObject.
+ */
+helpers.addServiceCost = function (dataObject) {
+    console.log(dataObject);
+    const imei = dataObject.postData.imei;
+    const body = dataObject.postData.Body;
+    const screen = dataObject.postData.Screen;
+    const battery = dataObject.postData.Battery;
+    const pasting = dataObject.postData.Pasting;
+    const fingerprint = dataObject.postData.Fingerprint;
+    const cleaning = dataObject.postData.Cleaning;
+    const camera = dataObject.postData.Camera;
+    const speaker = dataObject.postData.Speaker;
+    const buttons = dataObject.postData.Buttons;
+    const microphone = dataObject.postData.Microphone;
+    const cost = dataObject.postData.cost;
+    let query = "SELECT max(id) as id, service_center FROM service_center WHERE imei LIKE '" + imei + "'";
+    database.query(query, function (err, selectData) {
+        if (err) {
+            console.error(err.stack);
+        } else {
+            const serviceCenter = selectData[0].service_center;
+            query = "INSERT INTO service_center_cost VALUES ('" + imei + "'," + serviceCenter + "," + body + "," + screen + "," + battery + "," +
+                pasting + "," + fingerprint + "," + cleaning + "," + camera + "," + speaker + "," + buttons + "," + microphone + "," + cost + ")";
+            database.query(query, function (err, insertData) {
+                if (err) {
+                    console.error(err.stack);
+                } else {
+                    console.log("Inserted into the service Cost.");
+                }
+            });
+        }
+    });
+};
+/**
  * Exporting the module.
  */
 module.exports = helpers;

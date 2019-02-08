@@ -265,29 +265,41 @@ handlers.phone = function (dataObject, callback) {
                     }
                 });
             } else if (method === 'put') {
-                const imei = typeof (dataObject.postData.imei) === 'string' &&
-                dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
-                const status = typeof (dataObject.postData.status) === 'string' &&
-                dataObject.postData.status.length > 1 ? dataObject.postData.status : false;
+                try {
+                    console.log(dataObject.postData);
+                    const imei = typeof (dataObject.postData.imei) === 'string' &&
+                    dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                    const status = typeof (dataObject.postData.status) === 'string' &&
+                    dataObject.postData.status.length > 1 ? dataObject.postData.status : false;
+                    const isServiceReturn = typeof (dataObject.postData.service_return) === 'boolean' ?
+                        dataObject.postData.service_return : false;
 
-                if (imei && status) {
-                    const query = "UPDATE phone_details p, service_stock_sold_details s" +
-                        " SET p.status=s.id " +
-                        "WHERE p.imei LIKE '" + imei + "' AND s.sold_stock_service LIKE '" + status + "'";
-                    console.log(query);
-                    database.query(query, function (err, updateData) {
-                        if (err) {
-                            console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
-                        } else {
-                            callback(false, 200, {'res': true});
-                            updateQRTable(imei);
-                        }
-                    });
-                } else {
-                    console.log("IMEI: ", imei);
-                    console.log('STATUS: ', status);
-                    callback(true, 400, {'res': messages.insufficientData});
+
+                    if (imei && status) {
+                        const query = "UPDATE phone_details p, service_stock_sold_details s" +
+                            " SET p.status=s.id " +
+                            "WHERE p.imei LIKE '" + imei + "' AND s.sold_stock_service LIKE '" + status + "'";
+                        console.log(query);
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                console.error(err.stack);
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                callback(false, 200, {'res': true});
+                                //updateQRTable(imei);
+                                if (isServiceReturn) {
+                                    helpers.addServiceCost(dataObject);
+                                }
+                            }
+                        });
+
+                    } else {
+                        console.log("IMEI: ", imei);
+                        console.log('STATUS: ', status);
+                        callback(true, 400, {'res': messages.insufficientData});
+                    }
+                } catch (e) {
+                    console.error(e.stack);
                 }
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
@@ -775,7 +787,8 @@ handlers.inventoryData = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                const query = "SELECT (model_name),count(model_name) as count FROM inventory WHERE service_stock=2 group by model_name ";
+                const query = "SELECT (model_name),count(model_name) as count " +
+                    "FROM inventory WHERE service_stock=2 group by model_name";
                 database.query(query, function (err, data) {
                     if (!err) {
                         for (let i = 0; i < data.length; i++) {
@@ -1985,7 +1998,7 @@ handlers.orderReturned = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                const query = "SELECT distinct (return_order_id) FROM report_details WHERE length(return_order_id) > 9";
+                const query = "SELECT * FROM order_details WHERE channel_order_id in (SELECT distinct return_order_id FROM report_details WHERE length(return_order_id) > 9)";
                 database.query(query, function (err, returnedData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -2717,9 +2730,8 @@ handlers.qr = function (dataObject, callback) {
                 const id = dataObject.postData.id > 0 ? dataObject.postData.id : false;
                 const imei = typeof (dataObject.postData.imei) === 'string' &&
                 dataObject.postData.imei.length > 10 ? dataObject.postData.imei.trim() : false;
-                const serviceCenter = typeof (dataObject.serviceCenter) === 'string' &&
-                Number(dataObject.serviceCenter) > 0 ? dataObject.serviceCenter : false;
-
+                const serviceCenter = Number(dataObject.postData.service_center) > 0 ? dataObject.postData.service_center : false;
+                console.log(serviceCenter);
                 if (type && type === 'New') {
                     query = "SELECT * FROM phone_details_qr WHERE id = " + id;
                     database.query(query, function (err, selectData) {
@@ -2766,7 +2778,7 @@ handlers.qr = function (dataObject, callback) {
                         } else {
                             if (Number(selectData[0].phone_status === 3)) {
                                 query = "INSERT INTO service_center VALUES " +
-                                    "('" + selectData[0].imei + "'," + serviceCenter + ")";
+                                    "('','" + selectData[0].imei + "'," + serviceCenter + ")";
                                 database.query(query, function (err, insertData) {
                                     if (err) {
                                         console.error(err.stack);
