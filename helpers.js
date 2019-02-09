@@ -589,14 +589,17 @@ helpers.addServiceCost = function (dataObject) {
     const buttons = dataObject.postData.Buttons;
     const microphone = dataObject.postData.Microphone;
     const cost = dataObject.postData.cost;
-    let query = "SELECT max(id) as id, service_center FROM service_center WHERE imei LIKE '" + imei + "'";
+    let query = "SELECT service_center FROM service_center WHERE id in (SELECT max(id) as id FROM service_center WHERE imei LIKE '" + imei + "')";
+    console.log(query);
     database.query(query, function (err, selectData) {
         if (err) {
             console.error(err.stack);
         } else {
             const serviceCenter = selectData[0].service_center;
+            console.log(serviceCenter);
             query = "INSERT INTO service_center_cost VALUES ('" + imei + "'," + serviceCenter + "," + body + "," + screen + "," + battery + "," +
                 pasting + "," + fingerprint + "," + cleaning + "," + camera + "," + speaker + "," + buttons + "," + microphone + "," + cost + ")";
+            console.log(query);
             database.query(query, function (err, insertData) {
                 if (err) {
                     console.error(err.stack);
