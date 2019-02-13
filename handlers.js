@@ -1144,7 +1144,7 @@ handlers.getVendor = function (dataObject, callback) {
                 }
             });
         } else if (id && type === 'device') {
-            const query = "SELECT i.*,s.sold_stock_service " +
+            const query = "SELECT i.*,s.sold_stock_service as status " +
                 "FROM staging_diagnostic_app.service_stock_sold_details s , staging_diagnostic_app.inventory i " +
                 "WHERE i.vendor_id  = " + id + " AND s.id = i.service_stock";
             database.query(query, function (err, deviceData) {
