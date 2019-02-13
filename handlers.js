@@ -287,6 +287,7 @@ handlers.phone = function (dataObject, callback) {
                             } else {
                                 callback(false, 200, {'res': true});
                                 //updateQRTable(imei);
+                                deleteInventory(imei);
                                 if (isServiceReturn) {
                                     helpers.addServiceCost(dataObject);
                                 }
@@ -322,6 +323,21 @@ handlers.phone = function (dataObject, callback) {
                 console.log("QR Updated.");
             }
         })
+    }
+
+    /**
+     * Method to delete from the inventory.
+     * @param imei: The IMEI of the device.
+     */
+    function deleteInventory(imei) {
+        const query = "DELETE FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+        database.query(query, function (err, deleteData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Deleted from Inventory.");
+            }
+        });
     }
 };
 /**
@@ -1083,12 +1099,65 @@ handlers.getVendor = function (dataObject, callback) {
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    const firstName = typeof (dataObject.postData.first_name) === 'string' ? dataObject.postData.first_name : false;
+                    const lastName = typeof (dataObject.postData.last_name) === 'string' ? dataObject.postData.last_name : false;
+                    const phone = typeof (dataObject.postData.vendor_phone_number) === 'string' ? dataObject.postData.vendor_phone_number : false;
+                    const address = typeof (dataObject.postData.vendor_address) === 'string' ? dataObject.postData.vendor_address : false;
+                    const panNumber = typeof (dataObject.postData.vendor_pan_number) === 'string' ? dataObject.postData.vendor_pan_number : false;
+                    const email = typeof (dataObject.postData.vendor_email) === 'string' ? dataObject.postData.vendor_email : false;
+                    const gstNumber = typeof (dataObject.postData.gst_number) === 'string' ? dataObject.postData.gst_number : false;
+                    const bankName = typeof (dataObject.postData.bank_name) === 'string' ? dataObject.postData.bank_name : false;
+                    const branchName = typeof (dataObject.postData.branch_name) === 'string' ? dataObject.postData.branch_name : false;
+                    const ifscCode = typeof (dataObject.postData.ifsc_code) === 'string' ? dataObject.postData.ifsc_code : false;
+                    const accountNumber = typeof (dataObject.postData.account_number) === 'string' ? dataObject.postData.account_number : false;
+                    const accountName = typeof (dataObject.postData.account_holder_name) === 'string' ? dataObject.postData.account_holder_name : false;
+                    const values = "'','" + firstName + "','" + lastName + "','" + address +
+                        "','" + panNumber + "','" + phone + "','" + email + "','" + gstNumber + "','" +
+                        bankName + "','" + branchName + "','" + ifscCode + "','" + accountNumber + "','" + accountName + "'";
+                    database.insert("vendor_details", values, function (err, insertData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': false, 'msg': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
                 }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
+    } else if (dataObject.method === 'get') {
+        console.log("VENDOR GET ", dataObject.queryString);
+        const id = dataObject.queryString.vendor_id > 0 ? dataObject.queryString.vendor_id : false;
+        const type = typeof (dataObject.queryString.type) === 'string' ? dataObject.queryString.type : false;
+        if (id && type === 'spare') {
+            const query = "SELECT c.spare_part_id, d.part_name,c.cost, s.stock " +
+                "FROM spare_part_cost c, spare_part_details d, spare_part_stock s" +
+                " WHERE c.vendor_id =" + id + " AND d.id =c.spare_part_id AND s.spare_part_id = c.spare_part_id";
+            database.query(query, function (err, spareDate) {
+                if (err) {
+                    console.error(err.stack);
+                    callback(err, 500, {'res': messages.errorMessage});
+                } else {
+                    callback(false, 200, {'res': spareDate});
+                }
+            });
+        } else if (id && type === 'device') {
+            const query = "SELECT i.*,s.sold_stock_service " +
+                "FROM staging_diagnostic_app.service_stock_sold_details s , staging_diagnostic_app.inventory i " +
+                "WHERE i.vendor_id  = " + id + " AND s.id = i.service_stock";
+            database.query(query, function (err, deviceData) {
+                if (err) {
+                    console.error(err.stack);
+                    callback(err, 400, {'res': messages.errorMessage});
+                } else {
+                    callback(false, 200, {'res': deviceData});
+                }
+            });
+        } else {
+            callback(true, 400, {'res': messages.insufficientData});
+        }
     } else {
         callback(true, 403, {'res': messages.invalidRequestMessage});
     }
