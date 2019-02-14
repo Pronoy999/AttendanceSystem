@@ -797,7 +797,9 @@ handlers.token = function (dataObject, callback) {
  */
 handlers.inventoryData = function (dataObject, callback) {
     let response = {};
+    let inventory, phone, report;
     let singleObject = {};
+    let isReponded = false;
     const phone_details = [];
     const key = dataObject.queryString.key;
     if (dataObject.method === 'get') {
@@ -829,22 +831,62 @@ handlers.inventoryData = function (dataObject, callback) {
     } else if (dataObject.method === 'post') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                let imei = "";
+                let imei = "", flag = "";
                 try {
                     imei = typeof (dataObject.postData.imei) === 'string'
                     && dataObject.postData.imei.length > 0 ? dataObject.postData.imei : false;
+                    flag = typeof (dataObject.postData.flag) === 'string' &&
+                    dataObject.postData.flag.length > 1 ? dataObject.postData.flag : false;
                 } catch (e) {
                     console.log(e);
                 }
-                const query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
-                database.query(query, function (err, selectData) {
-                    if (err) {
-                        console.log(err);
-                        callback(err, 500, {'res': messages.errorMessage});
-                    } else {
-                        callback(false, 200, {'res': selectData});
-                    }
-                });
+                if (!flag) {
+                    const query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+                    database.query(query, function (err, selectData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': selectData});
+                        }
+                    });
+                } else if (flag === 'all') {
+                    let query = "SELECT * FROM phone_details WHERE imei LIKE '" + imei + "'";
+                    let isPhone, isReport, isInventory;
+                    database.query(query, function (err, phoneData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            isPhone = true;
+                            phone = phoneData;
+                            sendResponse();
+                        }
+                    });
+                    query = "SELECT * FROM report_details WHERE imei LIKE '" + imei + "'";
+                    database.query(query, function (err, reportData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            isReport = true;
+                            report = reportData;
+                            sendResponse();
+                        }
+                    });
+                    query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+                    database.query(query, function (err, inventoryData) {
+                        if (err) {
+                            console.error(err.stack);
+                        } else {
+                            isInventory = true;
+                            inventory = inventoryData;
+                            sendResponse();
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
@@ -883,6 +925,21 @@ handlers.inventoryData = function (dataObject, callback) {
         });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+
+    /**
+     * Method to send the response once executed.
+     */
+    function sendResponse() {
+        if (!isReponded) {
+            isReponded = true;
+            response = {
+                'phone': phone,
+                'report': report,
+                'inventory': inventory
+            };
+            callback(false, 200, {'res': response});
+        }
     }
 };
 /**
@@ -992,6 +1049,8 @@ handlers.inventoryPhone = function (dataObject, callback) {
                         }
                     });
                 }
+            } else if (dataObject.method === 'get') {
+                const query = "SELECT "
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
             }
@@ -1181,9 +1240,9 @@ handlers.inventoryState = function (dataObject, callback) {
                     state = false;
                 }
                 if (state) {
-                    const query = "SELECT count(model_name) as count,i.model_name FROM inventory i, " +
-                        "service_stock_sold_details s WHERE " +
-                        "s.sold_stock_service='" + state + "' AND s.id=i.service_stock group by i.model_name;";
+                    const query = "SELECT i.*, s.sold_stock_service, g.status" +
+                        " FROM diagnostic_app.inventory i, diagnostic_app.service_stock_sold_details s, diagnostic_app.phone_grade_details g" +
+                        " WHERE s.sold_stock_service LIKE '" + state + "' AND s.id = i.service_stock AND i.product_grade= g.id;";
                     database.query(query, function (err, serviceData) {
                         if (err) {
                             callback(err, 500, {'res': messages.errorMessage});
