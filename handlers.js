@@ -4,7 +4,7 @@ const helpers = require('./helpers');
 const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
-const java = require('./initJava');
+/*const java = require('./initJava');
 const aws = require('./aws');
 const fs = require('fs');
 const fp_json_file_name = './fp_data.json';
@@ -12,7 +12,7 @@ const fp_json = require(fp_json_file_name);
 const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
 const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
 const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
-const S3 = new aws.S3();
+const S3 = new aws.S3();*/
 const handlers = {};
 /**
  * Method for Invalid Path.
@@ -799,6 +799,7 @@ handlers.inventoryData = function (dataObject, callback) {
     let response = {};
     let inventory, phone, report;
     let singleObject = {};
+    let isPhone, isReport, isInventory;
     let isReponded = false;
     const phone_details = [];
     const key = dataObject.queryString.key;
@@ -852,7 +853,6 @@ handlers.inventoryData = function (dataObject, callback) {
                     });
                 } else if (flag === 'all') {
                     let query = "SELECT * FROM phone_details WHERE imei LIKE '" + imei + "'";
-                    let isPhone, isReport, isInventory;
                     database.query(query, function (err, phoneData) {
                         if (err) {
                             console.error(err.stack);
@@ -931,7 +931,7 @@ handlers.inventoryData = function (dataObject, callback) {
      * Method to send the response once executed.
      */
     function sendResponse() {
-        if (!isReponded) {
+        if (!isReponded && isPhone && isReport && isInventory) {
             isReponded = true;
             response = {
                 'phone': phone,
@@ -2111,6 +2111,59 @@ handlers.phonePrice = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         })
+    } else if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                const model = typeof (dataObject.postData.model) === 'string' &&
+                dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
+                const storage = Number(dataObject.postData.storage) > 0 ? Number(dataObject.postData.storage) : false;
+                const price = Number(dataObject.postData.price) > 0 ? Number(dataObject.postData.price) : false;
+                const brand = typeof (dataObject.postData.brand) === 'string' &&
+                dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
+                let query = "SELECT id FROM buy_back_phone WHERE model LIKE '" + model + "'";
+                database.query(query, function (err, modelData) {
+                    if (err) {
+                        console.error(err.stack);
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        if (modelData.length > 0) {
+                            query = "UPDATE buy_back_phone_price SET price = " + price + " " +
+                                "WHERE phoneId = " + modelData[0].id + " AND storage = " + storage;
+                            database.query(query, function (err, updateData) {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': true});
+                                }
+                            });
+                        } else {
+                            //console.log(modelData);
+                            query = "INSERT INTO buy_back_phone VALUES ('','" + brand + "','" + model + "')";
+                            database.query(query, function (err, insertData) {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    const id = insertData.insertId;
+                                    query = "INSERT INTO buy_back_phone_price VALUES (" + id + ",0," + storage + ",''," + price + ")";
+                                    database.query(query, function (err, priceInsertData) {
+                                        if (err) {
+                                            console.error(err.stack);
+                                            callback(err, 500, {'res': messages.errorMessage});
+                                        } else {
+                                            callback(false, 200, {'res': true});
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
