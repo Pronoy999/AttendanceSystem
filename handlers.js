@@ -233,7 +233,7 @@ handlers.phone = function (dataObject, callback) {
                 database.query(query, function (err, data) {
                     if (err) {
                         response = {
-                            'res': 'Error'
+                            'res': messages.errorMessage
                         };
                         callback(err, 500, response);
                     } else {
@@ -797,9 +797,9 @@ handlers.token = function (dataObject, callback) {
  */
 handlers.inventoryData = function (dataObject, callback) {
     let response = {};
-    let inventory, phone, report;
+    let inventory, phone, report, service;
     let singleObject = {};
-    let isPhone, isReport, isInventory;
+    let isPhone, isReport, isInventory, isService;
     let isReponded = false;
     const phone_details = [];
     const key = dataObject.queryString.key;
@@ -852,6 +852,7 @@ handlers.inventoryData = function (dataObject, callback) {
                         }
                     });
                 } else if (flag === 'all') {
+                    //console.log("ALL FLAG.");
                     let query = "SELECT * FROM phone_details WHERE imei LIKE '" + imei + "'";
                     database.query(query, function (err, phoneData) {
                         if (err) {
@@ -884,6 +885,19 @@ handlers.inventoryData = function (dataObject, callback) {
                             sendResponse();
                         }
                     });
+                    query = "SELECT * FROM service_center_cost WHERE imei LIKE '" + imei + "'";
+                    database.query(query, function (err, serviceData) {
+                        if (err) {
+                            isService = false;
+                            console.error(err.stack);
+                            isReponded = true;
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            isService = true;
+                            service = serviceData;
+                            sendResponse();
+                        }
+                    })
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
@@ -931,12 +945,13 @@ handlers.inventoryData = function (dataObject, callback) {
      * Method to send the response once executed.
      */
     function sendResponse() {
-        if (!isReponded && isPhone && isReport && isInventory) {
+        if (!isReponded && isPhone && isReport && isInventory && isService) {
             isReponded = true;
             response = {
                 'phone': phone,
                 'report': report,
-                'inventory': inventory
+                'inventory': inventory,
+                'service': service
             };
             callback(false, 200, {'res': response});
         }
@@ -2179,7 +2194,8 @@ handlers.orderReturned = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                const query = "SELECT * FROM order_details WHERE channel_order_id in (SELECT distinct return_order_id FROM report_details WHERE length(return_order_id) > 9)";
+                const query = "SELECT * FROM order_details WHERE channel_order_id in " +
+                    "(SELECT distinct return_order_id FROM report_details WHERE length(return_order_id) > 9)";
                 database.query(query, function (err, returnedData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
