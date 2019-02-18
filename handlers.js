@@ -797,9 +797,9 @@ handlers.token = function (dataObject, callback) {
  */
 handlers.inventoryData = function (dataObject, callback) {
     let response = {};
-    let inventory, phone, report, service;
+    let inventory, phone, report, service, order;
     let singleObject = {};
-    let isPhone, isReport, isInventory, isService;
+    let isPhone, isReport, isInventory, isService, isOrder;
     let isReponded = false;
     const phone_details = [];
     const key = dataObject.queryString.key;
@@ -897,7 +897,18 @@ handlers.inventoryData = function (dataObject, callback) {
                             service = serviceData;
                             sendResponse();
                         }
-                    })
+                    });
+                    query = "SELECT * FROM order_details WHERE imei_number LIKE '" + imei + "'";
+                    database.query(query, (err, orderData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            isOrder = true;
+                            order = orderData;
+                            sendResponse();
+                        }
+                    });
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
@@ -945,13 +956,14 @@ handlers.inventoryData = function (dataObject, callback) {
      * Method to send the response once executed.
      */
     function sendResponse() {
-        if (!isReponded && isPhone && isReport && isInventory && isService) {
+        if (!isReponded && isPhone && isReport && isInventory && isService && isOrder) {
             isReponded = true;
             response = {
-                'phone': phone,
-                'report': report,
-                'inventory': inventory,
-                'service': service
+                phone,
+                report,
+                inventory,
+                service,
+                order
             };
             callback(false, 200, {'res': response});
         }
