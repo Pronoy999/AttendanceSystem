@@ -2297,6 +2297,7 @@ handlers.orderDetails = function (dataObject, callback) {
 };
 /**
  * This is the method to update the order status based on the condition.
+ * GET to get the order status details.
  * @param dataObject: The Request Object.
  * @param callback: the method callback.
  */
@@ -2437,6 +2438,20 @@ handlers.orderStatus = function (dataObject, callback) {
                 }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else if (dataObject.method === 'get') {
+        helpers.validateToken(dataObject.queryString.key, isValid => {
+            if (isValid) {
+                const query = "SELECY * FROM order_status_details";
+                database.query(query, (err, statusData) => {
+                    if (err) {
+                        console.error(err.stack);
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': statusData});
+                    }
+                });
             }
         });
     } else {
