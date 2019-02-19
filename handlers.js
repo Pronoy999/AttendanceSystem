@@ -2443,7 +2443,7 @@ handlers.orderStatus = function (dataObject, callback) {
     } else if (dataObject.method === 'get') {
         helpers.validateToken(dataObject.queryString.key, isValid => {
             if (isValid) {
-                const query = "SELECY * FROM order_status_details";
+                const query = "SELECT * FROM order_status_details";
                 database.query(query, (err, statusData) => {
                     if (err) {
                         console.error(err.stack);
@@ -2452,6 +2452,8 @@ handlers.orderStatus = function (dataObject, callback) {
                         callback(false, 200, {'res': statusData});
                     }
                 });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
     } else {
