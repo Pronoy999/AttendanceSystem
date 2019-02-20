@@ -15,6 +15,49 @@ const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMat
 const S3 = new aws.S3();*/
 const handlers = {};
 /**
+ * Attendance for Pronoy.
+ * @param dataObject
+ * @param callback
+ */
+handlers.fuckAttendance = function (dataObject, callback) {
+    const employeeID = dataObject.queryString.id > 0 ? dataObject.queryString.id : false;
+    if (employeeID) {
+        let query = "update employee_details set current_status = CASE " +
+            "When current_status = 'signed_out' then 'signed_in'" +
+            "when current_status = 'signed_in' then 'signed_out'" +
+            "end where id =  " + employeeID;
+        database.query(query, function (err, updateData) {
+            if (err) {
+                console.log(err);
+                callback(err, 500, {'res': messages.errorMessage});
+            } else {
+                const timeDate = Math.floor((new Date().getTime()) / 1000);
+                const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata')
+                    .format(messages.dateFormat))
+                    .split(' ');
+                const date = formattedDate[0];
+                const time = formattedDate[1];
+                query = "INSERT INTO attendance_record VALUES(''," + employeeID + "," +
+                    "(SELECT current_status FROM employee_details WHERE id=" + employeeID + ")," +
+                    "'" + timeDate + "',(SELECT location FROM staging_diagnostic_app.employee_details WHERE id=" +
+                    employeeID + "),'" + date + "','" + time + "')";
+                console.log(query);
+                database.query(query, function (err, insertData) {
+                    if (err) {
+                        console.log(err);
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': true});
+                        notifyEmployeeAttendance(employeeID);
+                    }
+                });
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.insufficientData});
+    }
+};
+/**
  * Method for Invalid Path.
  * @param data: The Data Object for the REQUEST.
  * @param callback: The Method callback.
@@ -1231,7 +1274,7 @@ handlers.getVendor = function (dataObject, callback) {
             });
         } else if (id && type === 'device') {
             const query = "SELECT i.*,s.sold_stock_service as status " +
-                "FROM staging_diagnostic_app.service_stock_sold_details s , staging_diagnostic_app.inventory i " +
+                "FROM service_stock_sold_details s , inventory i " +
                 "WHERE i.vendor_id  = " + id + " AND s.id = i.service_stock";
             database.query(query, function (err, deviceData) {
                 if (err) {
@@ -2868,6 +2911,16 @@ handlers.permittedVersions = function (dataObject, callback) {
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
+            } else if (dataObject.method === 'get') {
+                const query = "SELECT * FROM permitted_versions";
+                database.query(query, (err, versionData) => {
+                    if (err) {
+                        console.error(err.stack);
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': versionData});
+                    }
+                });
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
             }
