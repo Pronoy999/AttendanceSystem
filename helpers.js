@@ -155,6 +155,24 @@ helpers.insertNewReport = function (data, callback) {
     database.insert("report_details", values, function (err, data) {
         callback(err, data);
     });
+    if (orderIdReturn.length > 9) {
+        updateOrderStatus(orderIdReturn);
+    }
+
+    /**
+     * Method to update the Order Status to Returned.
+     * @param orderID: The Order status.
+     */
+    function updateOrderStatus(orderID) {
+        const query = "UPDATE order_details SET order_status = 12 WHERE channel_order_id LIKE '" + orderID + "'";
+        database.query(query, function (err, updateData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Order Status updated.");
+            }
+        })
+    }
 };
 /**
  * Method to get the Payment Method.

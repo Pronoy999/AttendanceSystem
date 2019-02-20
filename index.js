@@ -52,7 +52,7 @@ const router = {
  * @param req: The REQUEST.
  * @param res: The RESPONSE.
  */
-var unifiedServer = function (req, res) {
+const unifiedServer = function (req, res) {
     const parsedUrl = url.parse(req.url, true);
     const pathName = parsedUrl.pathname;
     const trimmedPath = pathName.replace(/^\/+|\/+$/g, '');
@@ -103,7 +103,7 @@ var unifiedServer = function (req, res) {
         chosenHandler(data, function (err, statusCode, responseData) {
             responseData = typeof (responseData) === 'object' ? responseData : {};
             statusCode = typeof (statusCode) === 'number' ? statusCode : 400;
-            var responseObject = JSON.stringify(responseData);
+            const responseObject = JSON.stringify(responseData);
             try {
                 res.setHeader('Content-Type', 'application/json');
                 res.writeHead(statusCode, message.headers);
@@ -118,7 +118,7 @@ var unifiedServer = function (req, res) {
 /**
  * Method to create the Server.
  */
-var httpServer = http.createServer(function (req, res) {
+const httpServer = http.createServer(function (req, res) {
     unifiedServer(req, res);
 });
 //workers.checkOrderStatus();
