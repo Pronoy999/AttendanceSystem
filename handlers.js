@@ -2449,7 +2449,8 @@ handlers.orderStatus = function (dataObject, callback) {
                     if (hxorderid && value) {
                         const query = "UPDATE order_details o, order_status_details s" +
                             " SET o.awb_number='" + value + "', " +
-                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid + " AND s.status='Shipped'";
+                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid +
+                            " AND s.status='Shipped' AND o.order_status=4";
                         updateQRTable(hxorderid, 5);
                         database.query(query, function (err, updateData) {
                             if (err) {
