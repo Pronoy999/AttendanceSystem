@@ -1310,9 +1310,9 @@ handlers.inventoryState = function (dataObject, callback) {
                     state = false;
                 }
                 if (state) {
-                    const query = "SELECT i.*, s.sold_stock_service, g.status" +
-                        " FROM diagnostic_app.inventory i, diagnostic_app.service_stock_sold_details s, diagnostic_app.phone_grade_details g" +
-                        " WHERE s.sold_stock_service LIKE '" + state + "' AND s.id = i.service_stock AND i.product_grade= g.id;";
+                    const query = "SELECT i.*, count(i.model_name) as count " +
+                        "FROM inventory i, service_stock_sold_details s " +
+                        "WHERE s.sold_stock_service LIKE '" + state + "' AND s.id = i.service_stock group by (i.model_name)";
                     database.query(query, function (err, serviceData) {
                         if (err) {
                             callback(err, 500, {'res': messages.errorMessage});
