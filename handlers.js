@@ -3106,6 +3106,76 @@ handlers.qr = function (dataObject, callback) {
     });
 };
 /**
+ * Method to handle the meeting requests.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.meeting = function (dataObject, callback) {
+    let matchedRoomID = "";
+    helpers.validateToken(dataObject.queryString.key, (isValid) => {
+        if (isValid) {
+            const capacity = Number(dataObject.postData.capacity) > 0 ? Number(dataObject.postData.capacity) : false;
+            const startDate = typeof (dataObject.postData.start_date) === 'string' ? dataObject.postData.start_date : false;
+            const endDate = typeof (dataObject.postData.end_date) === 'string' ? dataObject.postData.end_date : false;
+            let query = "SELECT * FROM meeting_room WHERE capacity >= " + capacity;
+            database.query(query, (err, roomData) => {
+                if (err) {
+                    console.error(err.stack);
+                    callback(err, 500, {'res': messages.errorMessage});
+                } else {
+                    query = "SELECT * FROM meeting_request WHERE " + getWhere(roomData) + " AND start_time LIKE '" + startDate + "' AND end_time LIKE '" + endDate + "'";
+                    database.query(query, (err, requestData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            console.log(checkExists(requestData, roomData));
+                            console.log(matchedRoomID);
+                            //TODO:Assign Meeting room.
+                        }
+                    });
+                }
+            });
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+
+    /**
+     * Method to generate the WHERE with the Room.
+     * @param roomData: The Rooms matching the criteria.
+     * @returns {string}:
+     */
+    function getWhere(roomData) {
+        let where = "";
+        for (let i = 0; i < roomData.length; i++) {
+            where += " roomID = " + roomData[i].id + " OR";
+        }
+        where = where.substr(0, where.length - 2);
+        return where;
+    }
+
+    /**
+     * Method to check whether the room exists or not.
+     * @param requestData: The Requested rooms.
+     * @param roomData: The Meeting Rooms matching Criteria.
+     * @returns {boolean}: If Exists Return true else false.
+     */
+    function checkExists(requestData, roomData) {
+        let counter = 0;
+        for (let i = 0; i < roomData.length; i++) {
+            for (let j = 0; j < requestData.length; j++) {
+                if (roomData[i].id === requestData[j].roomID) {
+                    counter++;
+                    matchedRoomID += roomData[i].id + " , ";
+                }
+            }
+        }
+        matchedRoomID = matchedRoomID.substr(0, matchedRoomID.length - 2);
+        return counter === roomData.length;
+    }
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;

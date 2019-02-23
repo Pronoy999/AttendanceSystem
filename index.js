@@ -45,7 +45,8 @@ const router = {
     'bio-auth': handlers.bioAuth,
     'firebase-token': handlers.firebaseToken,
     'version': handlers.permittedVersions,
-    'qr': handlers.qr
+    'qr': handlers.qr,
+    'meeting': handlers.meeting
 };
 /**
  * Method which controls the Server.
