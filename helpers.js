@@ -76,11 +76,12 @@ helpers.insertNewPhone = function (data, callback) {
     const timeDate = Math.floor((new Date().getTime()) / 1000);
     const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
     const location = data.location;
+    const price = data.price_offered > 0 ? data.price_offered : 0;
     console.log(location);
     const values = "'" + manufacturer + "','" + model + "','" + serial_number + "','" +
         imei + "','" + bssid + "','" + region + "','" + uuid + "','" + storage + "','" +
         actual_battery_capacity + "','" + battery_wear_capacity + "','" + color + "','" +
-        status + "','" + is_customer + "','" + formattedDate + "','" + location + "'";
+        status + "','" + is_customer + "','" + formattedDate + "','" + location + "'," + price;
     database.insert("phone_details_duplicate", values, function (err, data) {
         if (err) {
             console.error(err.stack);
@@ -257,7 +258,7 @@ helpers.getStatusValue = function (status, callback) {
  * @returns {string}
  */
 helpers.getRandomKey = function (len) {
-    const possibleCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const possibleCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     len = typeof (len) === 'number' && len > 0 ? len : 16;
     let key = '';
     for (let i = 1; i <= len; i++) {

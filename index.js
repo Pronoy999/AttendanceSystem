@@ -46,7 +46,8 @@ const router = {
     'firebase-token': handlers.firebaseToken,
     'version': handlers.permittedVersions,
     'qr': handlers.qr,
-    'meeting': handlers.meeting
+    'meeting': handlers.meeting,
+    'prokotags': handlers.prokotags
 };
 /**
  * Method which controls the Server.

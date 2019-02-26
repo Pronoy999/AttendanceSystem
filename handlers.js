@@ -157,7 +157,7 @@ handlers.otp = function (dataObject, callback) {
                                             callback(err, 500, response);
                                         } else {
                                             response = {
-                                                'res': ' New OTP Send.'
+                                                'res': 'New OTP Send.'
                                             };
                                             callback(false, 200, response);
                                         }
@@ -3107,73 +3107,197 @@ handlers.qr = function (dataObject, callback) {
 };
 /**
  * Method to handle the meeting requests.
+ * POST to get the avaiable Slots.
+ * PUT to make the requests.
+ * It stores the temp slots allocated to a temp table.
+ * After the Request is Completed then it deletes the temp data.
+ * GET to cancel the Request.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
 handlers.meeting = function (dataObject, callback) {
-    let matchedRoomID = "";
     helpers.validateToken(dataObject.queryString.key, (isValid) => {
         if (isValid) {
-            const capacity = Number(dataObject.postData.capacity) > 0 ? Number(dataObject.postData.capacity) : false;
-            const startDate = typeof (dataObject.postData.start_date) === 'string' ? dataObject.postData.start_date : false;
-            const endDate = typeof (dataObject.postData.end_date) === 'string' ? dataObject.postData.end_date : false;
-            let query = "SELECT * FROM meeting_room WHERE capacity >= " + capacity;
-            database.query(query, (err, roomData) => {
-                if (err) {
-                    console.error(err.stack);
-                    callback(err, 500, {'res': messages.errorMessage});
-                } else {
-                    query = "SELECT * FROM meeting_request WHERE " + getWhere(roomData) + " AND start_time LIKE '" + startDate + "' AND end_time LIKE '" + endDate + "'";
-                    database.query(query, (err, requestData) => {
+            if (dataObject.method === 'get') {
+                const requestID = typeof (dataObject.queryString.request_id) === 'string' ?
+                    dataObject.queryString.request_id : false;
+                const empID = dataObject.queryString.employee_id > 0 ? dataObject.queryString.employee_id : false;
+                if (requestID) {
+                    deleteTempLock(requestID);
+                    callback(false, 200, {'res': true});
+                } else if (empID) {
+                    const query = "SELECT m.*,r.room_name FROM meeting_request_details m, meeting_room_details r WHERE r.id=m.roomID AND m.employee_id=" + empID;
+                    database.query(query, (err, meetingData) => {
                         if (err) {
                             console.error(err.stack);
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                            console.log(checkExists(requestData, roomData));
-                            console.log(matchedRoomID);
-                            //TODO:Assign Meeting room.
+                            callback(false, 200, {'res': meetingData});
                         }
                     });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
                 }
-            });
+            } else if (dataObject.method === 'post') {
+                const capacity = Number(dataObject.postData.capacity) > 0 ?
+                    Number(dataObject.postData.capacity) : false;
+                const startDate = typeof (dataObject.postData.start_date) === 'string' ?
+                    dataObject.postData.start_date : false;
+                let query = "SELECT * FROM meeting_request_details " +
+                    "WHERE roomID IN ( SELECT id FROM meeting_room_details " +
+                    "WHERE capacity >=" + capacity + ") AND meeting_date LIKE '" + startDate + "'";
+                console.log(query);
+                database.query(query, (err, roomData) => {
+                    query = "SELECT  * FROM meeting_slot_details ";
+                    if (roomData.length > 0) {
+                        let where = "(";
+                        for (let i = 0; i < roomData.length; i++) {
+                            where += roomData[i].slot_id + ",";
+                        }
+                        where = where.substr(0, where.length - 1) + ")";
+                        console.log(where);
+                        query += " WHERE id NOT IN " + where +
+                            " AND id NOT IN(SELECT slot_id FROM meeting_temp_lock " +
+                            "WHERE meeting_date LIKE '" + startDate + "')";
+                    } else {
+                        query += "WHERE id NOT IN(SELECT slot_id" +
+                            " FROM meeting_temp_lock WHERE meeting_date LIKE '" + startDate + "')"
+                    }
+                    console.log(query);
+                    database.query(query, (err, slotData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 400, {'res': messages.errorMessage});
+                        } else {
+                            const requestID = helpers.getRandomKey(16);
+                            callback(false, 201, {'res': slotData, 'request_id': requestID});
+                            //Sending response to the user and inserting to temp lock.
+                            for (let i = 0; i < slotData.length; i++) {
+                                insertTempLock(startDate, slotData[i].id, requestID);
+                            }
+                        }
+                    });
+                });
+            } else if (dataObject.method === 'put') {
+                const requestID = typeof (dataObject.postData.request_id) === 'string' ?
+                    dataObject.postData.request_id : false;
+                const slotID = typeof (dataObject.postData.slot_id) === 'object' &&
+                dataObject.postData.slot_id instanceof Array ? dataObject.postData.slot_id : false;
+                const empID = dataObject.postData.employee_id > 0 ? dataObject.postData.employee_id : false;
+                const capacity = Number(dataObject.postData.capacity) > 0 ?
+                    Number(dataObject.postData.capacity) : false;
+                const startDate = typeof (dataObject.postData.start_date) === 'string' ?
+                    dataObject.postData.start_date : false;
+                if (requestID && slotID && empID && startDate) {
+                    let slot = "";
+                    for (let i = 0; i < slotID.length; i++) {
+                        slot += slotID[i] + ",";
+                    }
+                    slot = slot.substr(0, slot.length - 1);
+                    let query = "SELECT * FROM meeting_request_details " +
+                        "WHERE roomID IN (SELECT id FROM meeting_room_details WHERE capacity>=" + capacity + ") " +
+                        "AND slot_id NOT IN(" + slot + ") AND meeting_date LIKE '" + startDate + "'";
+                    console.log(query);
+                    database.query(query, (err, roomData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            if (roomData.length > 0) {
+                                createRequest(roomData[0].roomID);
+                            } else {
+                                query = "SELECT * FROM meeting_room_details WHERE capacity >=" + capacity;
+                                database.query(query, (err, roomData) => {
+                                    if (err) {
+                                        console.error(err.stack);
+                                        callback(err, 500, {'res': messages.errorMessage});
+                                    } else {
+                                        createRequest(roomData[0].id);
+                                    }
+                                });
+                            }
+
+                            /**
+                             * Method to insert the New Request.
+                             * @param roomID: The ROOM ID.
+                             */
+                            function createRequest(roomID) {
+                                let values = "";
+                                for (let i = 0; i < slotID.length; i++) {
+                                    values += "('" + requestID + "'," + roomID + "," + empID + "," + slotID[i] + ",'" + startDate + "'),";
+                                }
+                                values = values.substr(0, values.length - 1);
+                                query = "INSERT INTO meeting_request_details VALUES " + values;
+                                console.log(query);
+                                database.query(query, (err, insertData) => {
+                                    if (err) {
+                                        console.error(err.stack);
+                                        callback(err, 500, {'res': messages.errorMessage});
+                                    } else {
+                                        callback(false, 200, {'res': true});
+                                        deleteTempLock(requestID);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 400, {'res': messages.invalidRequestMessage});
+            }
         } else {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
         }
     });
 
     /**
-     * Method to generate the WHERE with the Room.
-     * @param roomData: The Rooms matching the criteria.
-     * @returns {string}:
+     * Method to insert the TEMP Lock table.
+     * @param date: the date.
+     * @param slotId: The Slot which are temporarily blocked.
+     * @param requestId: the request ID.
      */
-    function getWhere(roomData) {
-        let where = "";
-        for (let i = 0; i < roomData.length; i++) {
-            where += " roomID = " + roomData[i].id + " OR";
-        }
-        where = where.substr(0, where.length - 2);
-        return where;
+    function insertTempLock(date, slotId, requestId) {
+        const query = "INSERT INTO meeting_temp_lock VALUES ('" + requestId + "','" + date + "'," + slotId + ")";
+        console.log(query);
+        database.query(query, function (err, insertData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Inserted into temp.")
+            }
+        });
     }
 
     /**
-     * Method to check whether the room exists or not.
-     * @param requestData: The Requested rooms.
-     * @param roomData: The Meeting Rooms matching Criteria.
-     * @returns {boolean}: If Exists Return true else false.
+     * Method to Delete the TEMP Lock.
+     * @param requestID: the Request ID for the temp lock.
      */
-    function checkExists(requestData, roomData) {
-        let counter = 0;
-        for (let i = 0; i < roomData.length; i++) {
-            for (let j = 0; j < requestData.length; j++) {
-                if (roomData[i].id === requestData[j].roomID) {
-                    counter++;
-                    matchedRoomID += roomData[i].id + " , ";
-                }
+    function deleteTempLock(requestID) {
+        const query = "DELETE FROM meeting_temp_lock WHERE request_id LIKE '" + requestID + "'";
+        database.query(query, (err, deleteData) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("DELETED Temp Lock.");
             }
-        }
-        matchedRoomID = matchedRoomID.substr(0, matchedRoomID.length - 2);
-        return counter === roomData.length;
+        });
     }
+};
+/**
+ * Method to get the S3 URL for the neuro tags images.
+ * @param dataObject: The request Object.
+ * @param callback
+ */
+handlers.prokotags = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, (isValid) => {
+        if (isValid) {
+            callback(false, 200, {'res': "https://s3.ap-south-1.amazonaws.com/neuro-tag/"});
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
 };
 /**
  * Exporting the Handlers.
