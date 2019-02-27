@@ -165,14 +165,22 @@ helpers.insertNewReport = function (data, callback) {
      * @param orderID: The Order status.
      */
     function updateOrderStatus(orderID) {
-        const query = "UPDATE order_details SET order_status = 12 WHERE channel_order_id LIKE '" + orderID + "'";
+        let query = "UPDATE order_details SET order_status = 12 WHERE channel_order_id LIKE '" + orderID + "'";
         database.query(query, function (err, updateData) {
             if (err) {
                 console.error(err.stack);
             } else {
                 console.log("Order Status updated.");
             }
-        })
+        });
+        query = "INSERT INTO order_history (SELECT * FROM order_details WHERE channel_order_id LIKE '" + orderID + "'";
+        database.query(query, function (err, insertData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Order History Inserted.");
+            }
+        });
     }
 };
 /**

@@ -3181,14 +3181,15 @@ handlers.meeting = function (dataObject, callback) {
             } else if (dataObject.method === 'put') {
                 const requestID = typeof (dataObject.postData.request_id) === 'string' ?
                     dataObject.postData.request_id : false;
-                const slotID = typeof (dataObject.postData.slot_id) === 'object' &&
-                dataObject.postData.slot_id instanceof Array ? dataObject.postData.slot_id : false;
+                let slotID = typeof (dataObject.postData.slot_id) === 'string' ? dataObject.postData.slot_id : false;
                 const empID = dataObject.postData.employee_id > 0 ? dataObject.postData.employee_id : false;
                 const capacity = Number(dataObject.postData.capacity) > 0 ?
                     Number(dataObject.postData.capacity) : false;
                 const startDate = typeof (dataObject.postData.start_date) === 'string' ?
                     dataObject.postData.start_date : false;
+                console.log(requestID, slotID, empID, startDate);
                 if (requestID && slotID && empID && startDate) {
+                    slotID = slotID.split(",");
                     let slot = "";
                     for (let i = 0; i < slotID.length; i++) {
                         slot += slotID[i] + ",";
@@ -3226,16 +3227,29 @@ handlers.meeting = function (dataObject, callback) {
                                 for (let i = 0; i < slotID.length; i++) {
                                     values += "('" + requestID + "'," + roomID + "," + empID + "," + slotID[i] + ",'" + startDate + "'),";
                                 }
-                                values = values.substr(0, values.length - 1);
-                                query = "INSERT INTO meeting_request_details VALUES " + values;
-                                console.log(query);
-                                database.query(query, (err, insertData) => {
+                                query = "SELECT * FROM meeting_room_details WHERE id = " + roomID;
+                                database.query(query, (err, roomNameData) => {
                                     if (err) {
                                         console.error(err.stack);
+                                        deleteTempLock(requestID);
                                         callback(err, 500, {'res': messages.errorMessage});
                                     } else {
-                                        callback(false, 200, {'res': true});
-                                        deleteTempLock(requestID);
+                                        values = values.substr(0, values.length - 1);
+                                        query = "INSERT INTO meeting_request_details VALUES " + values;
+                                        console.log(query);
+                                        database.query(query, (err, insertData) => {
+                                            if (err) {
+                                                console.error(err.stack);
+                                                deleteTempLock(requestID);
+                                                callback(err, 500, {'res': messages.errorMessage});
+                                            } else {
+                                                callback(false, 200, {
+                                                    'res': true,
+                                                    'room_name': roomNameData[0].room_name
+                                                });
+                                                deleteTempLock(requestID);
+                                            }
+                                        });
                                     }
                                 });
                             }
