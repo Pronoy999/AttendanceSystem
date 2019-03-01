@@ -71,7 +71,7 @@ const unifiedServer = function (req, res) {
         req.on('data', d => {
             data.push(d)
         }).on('end', () => {
-            var buffer = Buffer.concat(data);
+            const buffer = Buffer.concat(data);
             const handlerData = {
                 path: trimmedPath,
                 method,
