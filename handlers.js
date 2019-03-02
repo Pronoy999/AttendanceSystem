@@ -3125,9 +3125,23 @@ handlers.meeting = function (dataObject, callback) {
                 if (requestID) {
                     deleteTemp(requestID);
                     callback(false, 200, {'res': true});
-                } else if (empID) {
-                    const query = "SELECT m.*,r.room_name FROM meeting_request_details m, " +
-                        "meeting_room_details r WHERE r.id=m.roomID AND m.employee_id=" + empID;
+                } else if (empID < 100) {
+                    const query = "SELECT m.*, r.room_name, s.slot_start_time,s.slot_end_time " +
+                        "FROM meeting_request_details m,meeting_slot_details s ,meeting_room_details r " +
+                        "WHERE m.employee_id=" + empID + " AND s.id=m.slot_id AND r.id=m.roomID";
+                    database.query(query, (err, meetingData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': meetingData});
+                        }
+                    });
+                } else if (empID === 100) {
+                    const timeDate = Math.floor((new Date().getTime()) / 1000);
+                    const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ')[0];
+                    const query = "SELECT m.*,e.first_name FROM meeting_request_details m, employee_details e " +
+                        "WHERE meeting_date LIKE '" + formattedDate + "' AND e.id=m.employee_id";
                     database.query(query, (err, meetingData) => {
                         if (err) {
                             console.error(err.stack);
@@ -3140,8 +3154,9 @@ handlers.meeting = function (dataObject, callback) {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
             } else if (dataObject.method === 'post') {
-                const room = typeof (dataObject.postData.room_id) === 'string' ? dataObject.postData.room_id : false;
+                const room = typeof (dataObject.postData.room_name) === 'string' ? dataObject.postData.room_name : false;
                 const meetingDate = typeof (dataObject.postData.start_date) === 'string' ? dataObject.postData.start_date : false;
+                console.log(room, meetingDate);
                 if (room && meetingDate) {
                     const query = "SELECT * FROM meeting_slot_details " +
                         "WHERE id NOT IN (SELECT slot_id FROM " + room +
@@ -3164,7 +3179,7 @@ handlers.meeting = function (dataObject, callback) {
                 }
             } else if (dataObject.method === 'put') {
                 const slot = typeof (dataObject.postData.slot_id) === 'string' ? dataObject.postData.slot_id : false;
-                const room = typeof (dataObject.postData.room_id) === 'string' ? dataObject.postData.room_id : false;
+                const room = typeof (dataObject.postData.room_name) === 'string' ? dataObject.postData.room_name : false;
                 const meetingDate = typeof (dataObject.postData.start_date) === 'string' ? dataObject.postData.start_date : false;
                 const requestID = typeof (dataObject.postData.request_id) === 'string' ? dataObject.postData.request_id : false;
                 const empId = Number(dataObject.postData.employee_id) > 0 ? dataObject.postData.employee_id : false;
