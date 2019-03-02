@@ -47,7 +47,8 @@ const router = {
     'version': handlers.permittedVersions,
     'qr': handlers.qr,
     'meeting': handlers.meeting,
-    'prokotags': handlers.prokotags
+    'prokotags': handlers.prokotags,
+    'device-name': handlers.devNames
 };
 /**
  * Method which controls the Server.

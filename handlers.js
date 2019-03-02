@@ -3296,6 +3296,57 @@ handlers.prokotags = function (dataObject, callback) {
     });
 };
 /**
+ * Method to get the device name.
+ * @param dataObject: the request object.
+ * @param callback: the method callback.
+ */
+handlers.devNames = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, (isValid) => {
+        if (isValid) {
+            if (dataObject.method === 'post') {
+                const type = typeof (dataObject.postData.type) === 'string' ? dataObject.postData.type : false;
+                const code = typeof (dataObject.postData.code) === 'string' ? dataObject.postData.code : false;
+                const model = typeof (dataObject.postData.model) === 'string' ? dataObject.postData.model : false;
+                if (type) {
+                    let promise;
+                    switch (type) {
+                        case "iPhone": {
+                            if (code && model) {
+                                promise = helpers.getiOSDeviceName(model, code);
+                            } else {
+                                callback(true, 400, {'res': messages.insufficientData});
+                            }
+                            break;
+                        }
+                        case "android": {
+                            if (code) {
+                                promise = helpers.getAndroidDeviceName(code);
+                            } else {
+                                callback(true, 400, {'res': messages.insufficientData});
+                            }
+                        }
+                            break;
+                        default:
+                            callback(true, 400, {'res': messages.invalidRequestMessage});
+                    }
+                    promise.then(response => {
+                        callback(false, 200, {'res': response});
+                    }).catch(err => {
+                        console.error(err);
+                        callback(true, 500, {'res': err});
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 400, {'res': messages.invalidRequestMessage});
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;
