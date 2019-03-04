@@ -1355,6 +1355,29 @@ handlers.inventoryState = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         })
+    } else if (dataObject.method === 'post') {
+        helpers.validateToken(dataObject.queryString.key, (isValid) => {
+            if (isValid) {
+                const imei = typeof (dataObject.postData.imei_number) === 'string' ? dataObject.postData.imei_number : false;
+                const batteryPercentage = Number(dataObject.postData.battery) > 0 ? dataObject.postData.battery : false;
+                if (imei && batteryPercentage) {
+                    const query = "UPDATE inventory SET is_video_taken=1, battery_percentage = " + batteryPercentage +
+                        " WHERE product_imei_1 LIKE '" + imei + "'";
+                    database.query(query, (err, updateData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
@@ -2391,6 +2414,8 @@ handlers.orderStatus = function (dataObject, callback) {
                                 "SET o.order_status = s.id, o.imei_number= '" + imei + "'" +
                                 " WHERE s.status= '" + status +
                                 "' AND o.hx_order_id= " + hxorderid;
+                            console.log(query);
+                            updateOrderVideoStatus(imei, hxorderid);
                             updatePhoneAndInventory(imei);
                         } else {
                             query = "UPDATE order_details o, order_status_details s " +
@@ -2500,6 +2525,25 @@ handlers.orderStatus = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
+    } else if (dataObject.method === 'post') {
+        helpers.validateToken(dataObject.queryString.key, (isValid) => {
+            if (isValid) {
+                const imei = typeof (dataObject.postData.imei) === 'string' ? dataObject.postData.imei : false;
+                if (imei) {
+                    const query = "UPDATE inventory SET is_video_taken=1 WHERE product_imei_1 LIKE '" + imei + "'";
+                    database.query(query, (err, updateData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
@@ -2547,6 +2591,42 @@ handlers.orderStatus = function (dataObject, callback) {
                 console.error(err.stack);
             } else {
                 console.log("Phone_details updated.");
+            }
+        });
+        query = "UPDATE phone_details_qr SET phone_status=1 WHERE imei LIKE '" + imei + "'";
+        database.query(query, (err, updateData) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("QR Updated.");
+            }
+        })
+    }
+
+    /**
+     * Update the Order status.
+     * @param imei: The Imei of the device.
+     * @param hxOrderID: The HX Order update.
+     */
+    function updateOrderVideoStatus(imei, hxOrderID) {
+        let query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+        database.query(query, (err, inventoryData) => {
+            if (err) {
+                console.error(err.stack);
+                console.log("Could not update the Video status for Order.");
+            } else {
+                if (inventoryData[0].is_video_taken === 1) {
+                    query = "UPDATE order_details SET is_video_taken =1," +
+                        " battery_before_ship= " + inventoryData[0].battery_percentage +
+                        " WHERE hx_order_id = " + hxOrderID;
+                    database.query(query, (err, updateData) => {
+                        if (err) {
+                            console.error(err.stack);
+                        } else {
+                            console.log("Order status Updated.");
+                        }
+                    });
+                }
             }
         });
     }
@@ -2922,6 +3002,8 @@ handlers.permittedVersions = function (dataObject, callback) {
                         callback(false, 200, {'res': versionData});
                     }
                 });
+            } else if (dataObject.method === 'put') {
+                callback(false, 200, {'res': "https://www.hyperxchange.com/about-hx-store"});
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
             }

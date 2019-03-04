@@ -344,7 +344,7 @@ helpers.addInventoryPhone = function (data, callback) {
             const values = "'" + model_name + "','" + sku + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
                 price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "',2," +
                 isApproved + ",'" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
-                manual + "','" + connector + "','" + remarks + "','" + isManual + "'";
+                manual + "','" + connector + "','" + remarks + "',0,0'" + isManual + "'";
             database.insert("inventory", values, function (err, insertData) {
                 if (!err) {
                     callback(false);
