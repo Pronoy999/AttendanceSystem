@@ -4,6 +4,7 @@ const helpers = require('./helpers');
 const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
+const fs = require('fs');
 /*const java = require('./initJava');
 const aws = require('./aws');
 const fs = require('fs');
@@ -15,7 +16,7 @@ const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMat
 const S3 = new aws.S3();*/
 const handlers = {};
 /**
- * Attendance for Pronoy.
+ * Attendance for Pronoy,munish sir,kaisanba
  * @param dataObject
  * @param callback
  */
@@ -3433,13 +3434,36 @@ handlers.devNames = function (dataObject, callback) {
                         callback(false, 200, {'res': response});
                     }).catch(err => {
                         console.error(err);
-                        callback(true, 500, {'res': err});
+                        callback(err, 500, {'res': err});
                     });
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+};
+/**
+ * method to read error log from apache2
+ * @param dataObject
+ * @param callback
+ */
+handlers.errorLog = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, (isValid) => {
+        if (!isValid) {
+            if (dataObject.method === 'get') {
+                fs.readFile('/var/log/apache2/error.log', 'utf8',
+                    (err, data) => {
+                    if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': data});
+                    }
+                });
             }
         } else {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
