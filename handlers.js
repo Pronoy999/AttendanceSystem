@@ -3095,7 +3095,7 @@ handlers.qr = function (dataObject, callback) {
                 dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
                 const id = dataObject.postData.id > 0 ? dataObject.postData.id : false;
                 const imei = typeof (dataObject.postData.imei) === 'string' &&
-                dataObject.postData.imei.length > 10 ? dataObject.postData.imei.trim() : false;
+                dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
                 const serviceCenter = Number(dataObject.postData.service_center) > 0 ? dataObject.postData.service_center : false;
                 console.log(serviceCenter);
                 if (type && type === 'New') {
@@ -3454,16 +3454,16 @@ handlers.devNames = function (dataObject, callback) {
  */
 handlers.errorLog = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, (isValid) => {
-        if (!isValid) {
+        if (isValid) {
             if (dataObject.method === 'get') {
                 fs.readFile('/var/log/apache2/error.log', 'utf8',
                     (err, data) => {
-                    if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
-                    } else {
-                        callback(false, 200, {'res': data});
-                    }
-                });
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': data});
+                        }
+                    });
             }
         } else {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
