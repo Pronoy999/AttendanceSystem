@@ -7,6 +7,7 @@
     "java": "^0.11.0",
     "moment": "latest",
     "moment-timezone": "latest",
-    "mysql": "latest"
+    "mysql": "latest",
+    "sqlite3": "^4.0.6"
   }
 }

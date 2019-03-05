@@ -2,8 +2,8 @@ const aws = require('aws-sdk');
 var sms = {};
 aws.config.update({
     region: 'ap-southeast-1',
-    accessKeyId: 'AKIAJIZWJEI3NUHXOC3Q',
-    secretAccessKey: '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'
+    accessKeyId: 'AKIAJZLKRHVB7IYQIFWA',
+    secretAccessKey: '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'
 });
 var sns = new aws.SNS();
 /**

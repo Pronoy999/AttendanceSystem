@@ -4,7 +4,7 @@ const helpers = require('./helpers');
 const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
-const java = require('./initJava');
+/*const java = require('./initJava');
 const aws = require('./aws');
 const fs = require('fs');
 const fp_json_file_name = './fp_data.json';
@@ -12,8 +12,51 @@ const fp_json = require(fp_json_file_name);
 const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
 const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
 const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
-const S3 = new aws.S3();
+const S3 = new aws.S3();*/
 const handlers = {};
+/**
+ * Attendance for Pronoy.
+ * @param dataObject
+ * @param callback
+ */
+handlers.fuckAttendance = function (dataObject, callback) {
+    const employeeID = dataObject.queryString.id > 0 ? dataObject.queryString.id : false;
+    if (employeeID) {
+        let query = "update employee_details set current_status = CASE " +
+            "When current_status = 'signed_out' then 'signed_in'" +
+            "when current_status = 'signed_in' then 'signed_out'" +
+            "end where id =  " + employeeID;
+        database.query(query, function (err, updateData) {
+            if (err) {
+                console.log(err);
+                callback(err, 500, {'res': messages.errorMessage});
+            } else {
+                const timeDate = Math.floor((new Date().getTime()) / 1000);
+                const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata')
+                    .format(messages.dateFormat))
+                    .split(' ');
+                const date = formattedDate[0];
+                const time = formattedDate[1];
+                query = "INSERT INTO attendance_record VALUES(''," + employeeID + "," +
+                    "(SELECT current_status FROM employee_details WHERE id=" + employeeID + ")," +
+                    "'" + timeDate + "',(SELECT location FROM staging_diagnostic_app.employee_details WHERE id=" +
+                    employeeID + "),'" + date + "','" + time + "')";
+                console.log(query);
+                database.query(query, function (err, insertData) {
+                    if (err) {
+                        console.log(err);
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': true});
+                        notifyEmployeeAttendance(employeeID);
+                    }
+                });
+            }
+        });
+    } else {
+        callback(true, 400, {'res': messages.insufficientData});
+    }
+};
 /**
  * Method for Invalid Path.
  * @param data: The Data Object for the REQUEST.
@@ -114,7 +157,7 @@ handlers.otp = function (dataObject, callback) {
                                             callback(err, 500, response);
                                         } else {
                                             response = {
-                                                'res': ' New OTP Send.'
+                                                'res': 'New OTP Send.'
                                             };
                                             callback(false, 200, response);
                                         }
@@ -233,7 +276,7 @@ handlers.phone = function (dataObject, callback) {
                 database.query(query, function (err, data) {
                     if (err) {
                         response = {
-                            'res': 'Error'
+                            'res': messages.errorMessage
                         };
                         callback(err, 500, response);
                     } else {
@@ -265,29 +308,42 @@ handlers.phone = function (dataObject, callback) {
                     }
                 });
             } else if (method === 'put') {
-                const imei = typeof (dataObject.postData.imei) === 'string' &&
-                dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
-                const status = typeof (dataObject.postData.status) === 'string' &&
-                dataObject.postData.status.length > 1 ? dataObject.postData.status : false;
+                try {
+                    console.log(dataObject.postData);
+                    const imei = typeof (dataObject.postData.imei) === 'string' &&
+                    dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                    const status = typeof (dataObject.postData.status) === 'string' &&
+                    dataObject.postData.status.length > 1 ? dataObject.postData.status : false;
+                    const isServiceReturn = typeof (dataObject.postData.service_return) === 'boolean' ?
+                        dataObject.postData.service_return : false;
 
-                if (imei && status) {
-                    const query = "UPDATE phone_details p, service_stock_sold_details s" +
-                        " SET p.status=s.id " +
-                        "WHERE p.imei LIKE '" + imei + "' AND s.sold_stock_service LIKE '" + status + "'";
-                    console.log(query);
-                    database.query(query, function (err, updateData) {
-                        if (err) {
-                            console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
-                        } else {
-                            callback(false, 200, {'res': true});
-                            updateQRTable(imei);
-                        }
-                    });
-                } else {
-                    console.log("IMEI: ", imei);
-                    console.log('STATUS: ', status);
-                    callback(true, 400, {'res': messages.insufficientData});
+
+                    if (imei && status) {
+                        const query = "UPDATE phone_details p, service_stock_sold_details s" +
+                            " SET p.status=s.id " +
+                            "WHERE p.imei LIKE '" + imei + "' AND s.sold_stock_service LIKE '" + status + "'";
+                        console.log(query);
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                console.error(err.stack);
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                callback(false, 200, {'res': true});
+                                //updateQRTable(imei);
+                                deleteInventory(imei);
+                                if (isServiceReturn) {
+                                    helpers.addServiceCost(dataObject);
+                                }
+                            }
+                        });
+
+                    } else {
+                        console.log("IMEI: ", imei);
+                        console.log('STATUS: ', status);
+                        callback(true, 400, {'res': messages.insufficientData});
+                    }
+                } catch (e) {
+                    console.error(e.stack);
                 }
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
@@ -310,6 +366,21 @@ handlers.phone = function (dataObject, callback) {
                 console.log("QR Updated.");
             }
         })
+    }
+
+    /**
+     * Method to delete from the inventory.
+     * @param imei: The IMEI of the device.
+     */
+    function deleteInventory(imei) {
+        const query = "DELETE FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+        database.query(query, function (err, deleteData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Deleted from Inventory.");
+            }
+        });
     }
 };
 /**
@@ -769,13 +840,17 @@ handlers.token = function (dataObject, callback) {
  */
 handlers.inventoryData = function (dataObject, callback) {
     let response = {};
+    let inventory, phone, report, service, order;
     let singleObject = {};
+    let isPhone, isReport, isInventory, isService, isOrder;
+    let isReponded = false;
     const phone_details = [];
     const key = dataObject.queryString.key;
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                const query = "SELECT (model_name),count(model_name) as count FROM inventory WHERE service_stock=2 group by model_name ";
+                const query = "SELECT (model_name),count(model_name) as count " +
+                    "FROM inventory WHERE service_stock=2 group by model_name";
                 database.query(query, function (err, data) {
                     if (!err) {
                         for (let i = 0; i < data.length; i++) {
@@ -800,22 +875,86 @@ handlers.inventoryData = function (dataObject, callback) {
     } else if (dataObject.method === 'post') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                let imei = "";
+                let imei = "", flag = "";
                 try {
                     imei = typeof (dataObject.postData.imei) === 'string'
                     && dataObject.postData.imei.length > 0 ? dataObject.postData.imei : false;
+                    flag = typeof (dataObject.postData.flag) === 'string' &&
+                    dataObject.postData.flag.length > 1 ? dataObject.postData.flag : false;
                 } catch (e) {
                     console.log(e);
                 }
-                const query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
-                database.query(query, function (err, selectData) {
-                    if (err) {
-                        console.log(err);
-                        callback(err, 500, {'res': messages.errorMessage});
-                    } else {
-                        callback(false, 200, {'res': selectData});
-                    }
-                });
+                if (!flag) {
+                    const query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+                    database.query(query, function (err, selectData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': selectData});
+                        }
+                    });
+                } else if (flag === 'all') {
+                    //console.log("ALL FLAG.");
+                    let query = "SELECT * FROM phone_details WHERE imei LIKE '" + imei + "'";
+                    database.query(query, function (err, phoneData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            isPhone = true;
+                            phone = phoneData;
+                            sendResponse();
+                        }
+                    });
+                    query = "SELECT * FROM report_details WHERE imei LIKE '" + imei + "'";
+                    database.query(query, function (err, reportData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            isReport = true;
+                            report = reportData;
+                            sendResponse();
+                        }
+                    });
+                    query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+                    database.query(query, function (err, inventoryData) {
+                        if (err) {
+                            console.error(err.stack);
+                        } else {
+                            isInventory = true;
+                            inventory = inventoryData;
+                            sendResponse();
+                        }
+                    });
+                    query = "SELECT * FROM service_center_cost WHERE imei LIKE '" + imei + "'";
+                    database.query(query, function (err, serviceData) {
+                        if (err) {
+                            isService = false;
+                            console.error(err.stack);
+                            isReponded = true;
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            isService = true;
+                            service = serviceData;
+                            sendResponse();
+                        }
+                    });
+                    query = "SELECT * FROM order_details WHERE imei_number LIKE '" + imei + "'";
+                    database.query(query, (err, orderData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            isOrder = true;
+                            order = orderData;
+                            sendResponse();
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
@@ -854,6 +993,23 @@ handlers.inventoryData = function (dataObject, callback) {
         });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
+    }
+
+    /**
+     * Method to send the response once executed.
+     */
+    function sendResponse() {
+        if (!isReponded && isPhone && isReport && isInventory && isService && isOrder) {
+            isReponded = true;
+            response = {
+                phone,
+                report,
+                inventory,
+                service,
+                order
+            };
+            callback(false, 200, {'res': response});
+        }
     }
 };
 /**
@@ -963,6 +1119,8 @@ handlers.inventoryPhone = function (dataObject, callback) {
                         }
                     });
                 }
+            } else if (dataObject.method === 'get') {
+                const query = "SELECT "
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
             }
@@ -1070,12 +1228,65 @@ handlers.getVendor = function (dataObject, callback) {
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    const firstName = typeof (dataObject.postData.first_name) === 'string' ? dataObject.postData.first_name : false;
+                    const lastName = typeof (dataObject.postData.last_name) === 'string' ? dataObject.postData.last_name : false;
+                    const phone = typeof (dataObject.postData.vendor_phone_number) === 'string' ? dataObject.postData.vendor_phone_number : false;
+                    const address = typeof (dataObject.postData.vendor_address) === 'string' ? dataObject.postData.vendor_address : false;
+                    const panNumber = typeof (dataObject.postData.vendor_pan_number) === 'string' ? dataObject.postData.vendor_pan_number : false;
+                    const email = typeof (dataObject.postData.vendor_email) === 'string' ? dataObject.postData.vendor_email : false;
+                    const gstNumber = typeof (dataObject.postData.gst_number) === 'string' ? dataObject.postData.gst_number : false;
+                    const bankName = typeof (dataObject.postData.bank_name) === 'string' ? dataObject.postData.bank_name : false;
+                    const branchName = typeof (dataObject.postData.branch_name) === 'string' ? dataObject.postData.branch_name : false;
+                    const ifscCode = typeof (dataObject.postData.ifsc_code) === 'string' ? dataObject.postData.ifsc_code : false;
+                    const accountNumber = typeof (dataObject.postData.account_number) === 'string' ? dataObject.postData.account_number : false;
+                    const accountName = typeof (dataObject.postData.account_holder_name) === 'string' ? dataObject.postData.account_holder_name : false;
+                    const values = "'','" + firstName + "','" + lastName + "','" + address +
+                        "','" + panNumber + "','" + phone + "','" + email + "','" + gstNumber + "','" +
+                        bankName + "','" + branchName + "','" + ifscCode + "','" + accountNumber + "','" + accountName + "'";
+                    database.insert("vendor_details", values, function (err, insertData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': false, 'msg': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
                 }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         });
+    } else if (dataObject.method === 'get') {
+        console.log("VENDOR GET ", dataObject.queryString);
+        const id = dataObject.queryString.vendor_id > 0 ? dataObject.queryString.vendor_id : false;
+        const type = typeof (dataObject.queryString.type) === 'string' ? dataObject.queryString.type : false;
+        if (id && type === 'spare') {
+            const query = "SELECT c.spare_part_id, d.part_name,c.cost, s.stock " +
+                "FROM spare_part_cost c, spare_part_details d, spare_part_stock s" +
+                " WHERE c.vendor_id =" + id + " AND d.id =c.spare_part_id AND s.spare_part_id = c.spare_part_id";
+            database.query(query, function (err, spareDate) {
+                if (err) {
+                    console.error(err.stack);
+                    callback(err, 500, {'res': messages.errorMessage});
+                } else {
+                    callback(false, 200, {'res': spareDate});
+                }
+            });
+        } else if (id && type === 'device') {
+            const query = "SELECT i.*,s.sold_stock_service as status " +
+                "FROM service_stock_sold_details s , inventory i " +
+                "WHERE i.vendor_id  = " + id + " AND s.id = i.service_stock";
+            database.query(query, function (err, deviceData) {
+                if (err) {
+                    console.error(err.stack);
+                    callback(err, 400, {'res': messages.errorMessage});
+                } else {
+                    callback(false, 200, {'res': deviceData});
+                }
+            });
+        } else {
+            callback(true, 400, {'res': messages.insufficientData});
+        }
     } else {
         callback(true, 403, {'res': messages.invalidRequestMessage});
     }
@@ -1099,9 +1310,9 @@ handlers.inventoryState = function (dataObject, callback) {
                     state = false;
                 }
                 if (state) {
-                    const query = "SELECT count(model_name) as count,i.model_name FROM inventory i, " +
-                        "service_stock_sold_details s WHERE " +
-                        "s.sold_stock_service='" + state + "' AND s.id=i.service_stock group by i.model_name;";
+                    const query = "SELECT i.*, count(i.model_name) as count " +
+                        "FROM inventory i, service_stock_sold_details s " +
+                        "WHERE s.sold_stock_service LIKE '" + state + "' AND s.id = i.service_stock group by (i.model_name)";
                     database.query(query, function (err, serviceData) {
                         if (err) {
                             callback(err, 500, {'res': messages.errorMessage});
@@ -1144,6 +1355,29 @@ handlers.inventoryState = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         })
+    } else if (dataObject.method === 'post') {
+        helpers.validateToken(dataObject.queryString.key, (isValid) => {
+            if (isValid) {
+                const imei = typeof (dataObject.postData.imei_number) === 'string' ? dataObject.postData.imei_number : false;
+                const batteryPercentage = Number(dataObject.postData.battery) > 0 ? dataObject.postData.battery : false;
+                if (imei && batteryPercentage) {
+                    const query = "UPDATE inventory SET is_video_taken=1, battery_percentage = " + batteryPercentage +
+                        " WHERE product_imei_1 LIKE '" + imei + "'";
+                    database.query(query, (err, updateData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
@@ -1970,6 +2204,59 @@ handlers.phonePrice = function (dataObject, callback) {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
             }
         })
+    } else if (dataObject.method === 'put') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                const model = typeof (dataObject.postData.model) === 'string' &&
+                dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
+                const storage = Number(dataObject.postData.storage) > 0 ? Number(dataObject.postData.storage) : false;
+                const price = Number(dataObject.postData.price) > 0 ? Number(dataObject.postData.price) : false;
+                const brand = typeof (dataObject.postData.brand) === 'string' &&
+                dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
+                let query = "SELECT id FROM buy_back_phone WHERE model LIKE '" + model + "'";
+                database.query(query, function (err, modelData) {
+                    if (err) {
+                        console.error(err.stack);
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        if (modelData.length > 0) {
+                            query = "UPDATE buy_back_phone_price SET price = " + price + " " +
+                                "WHERE phoneId = " + modelData[0].id + " AND storage = " + storage;
+                            database.query(query, function (err, updateData) {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': true});
+                                }
+                            });
+                        } else {
+                            //console.log(modelData);
+                            query = "INSERT INTO buy_back_phone VALUES ('','" + brand + "','" + model + "')";
+                            database.query(query, function (err, insertData) {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    const id = insertData.insertId;
+                                    query = "INSERT INTO buy_back_phone_price VALUES (" + id + ",0," + storage + ",''," + price + ")";
+                                    database.query(query, function (err, priceInsertData) {
+                                        if (err) {
+                                            console.error(err.stack);
+                                            callback(err, 500, {'res': messages.errorMessage});
+                                        } else {
+                                            callback(false, 200, {'res': true});
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
     } else {
         callback(true, 400, {'res': messages.invalidRequestMessage});
     }
@@ -1985,8 +2272,8 @@ handlers.orderReturned = function (dataObject, callback) {
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
-                const query = "SELECT * FROM order_details o,order_status_details d WHERE d.status LIKE 'Returned' AND " +
-                    "d.id=o.order_status";
+                const query = "SELECT * FROM order_details WHERE channel_order_id in " +
+                    "(SELECT distinct return_order_id FROM report_details WHERE length(return_order_id) > 9)";
                 database.query(query, function (err, returnedData) {
                     if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -2076,6 +2363,7 @@ handlers.orderDetails = function (dataObject, callback) {
 };
 /**
  * This is the method to update the order status based on the condition.
+ * GET to get the order status details.
  * @param dataObject: The Request Object.
  * @param callback: the method callback.
  */
@@ -2126,6 +2414,8 @@ handlers.orderStatus = function (dataObject, callback) {
                                 "SET o.order_status = s.id, o.imei_number= '" + imei + "'" +
                                 " WHERE s.status= '" + status +
                                 "' AND o.hx_order_id= " + hxorderid;
+                            console.log(query);
+                            updateOrderVideoStatus(imei, hxorderid);
                             updatePhoneAndInventory(imei);
                         } else {
                             query = "UPDATE order_details o, order_status_details s " +
@@ -2184,7 +2474,8 @@ handlers.orderStatus = function (dataObject, callback) {
                     if (hxorderid && value) {
                         const query = "UPDATE order_details o, order_status_details s" +
                             " SET o.awb_number='" + value + "', " +
-                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid + " AND s.status='Shipped'";
+                            "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid +
+                            " AND s.status='Shipped' AND o.order_status=4";
                         updateQRTable(hxorderid, 5);
                         database.query(query, function (err, updateData) {
                             if (err) {
@@ -2213,6 +2504,41 @@ handlers.orderStatus = function (dataObject, callback) {
                     }
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else if (dataObject.method === 'get') {
+        helpers.validateToken(dataObject.queryString.key, isValid => {
+            if (isValid) {
+                const query = "SELECT * FROM order_status_details";
+                database.query(query, (err, statusData) => {
+                    if (err) {
+                        console.error(err.stack);
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': statusData});
+                    }
+                });
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else if (dataObject.method === 'post') {
+        helpers.validateToken(dataObject.queryString.key, (isValid) => {
+            if (isValid) {
+                const imei = typeof (dataObject.postData.imei) === 'string' ? dataObject.postData.imei : false;
+                if (imei) {
+                    const query = "UPDATE inventory SET is_video_taken=1 WHERE product_imei_1 LIKE '" + imei + "'";
+                    database.query(query, (err, updateData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
                 }
             } else {
                 callback(true, 403, {'res': messages.tokenExpiredMessage});
@@ -2265,6 +2591,42 @@ handlers.orderStatus = function (dataObject, callback) {
                 console.error(err.stack);
             } else {
                 console.log("Phone_details updated.");
+            }
+        });
+        query = "UPDATE phone_details_qr SET phone_status=1 WHERE imei LIKE '" + imei + "'";
+        database.query(query, (err, updateData) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("QR Updated.");
+            }
+        })
+    }
+
+    /**
+     * Update the Order status.
+     * @param imei: The Imei of the device.
+     * @param hxOrderID: The HX Order update.
+     */
+    function updateOrderVideoStatus(imei, hxOrderID) {
+        let query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + imei + "'";
+        database.query(query, (err, inventoryData) => {
+            if (err) {
+                console.error(err.stack);
+                console.log("Could not update the Video status for Order.");
+            } else {
+                if (inventoryData[0].is_video_taken === 1) {
+                    query = "UPDATE order_details SET is_video_taken =1," +
+                        " battery_before_ship= " + inventoryData[0].battery_percentage +
+                        " WHERE hx_order_id = " + hxOrderID;
+                    database.query(query, (err, updateData) => {
+                        if (err) {
+                            console.error(err.stack);
+                        } else {
+                            console.log("Order status Updated.");
+                        }
+                    });
+                }
             }
         });
     }
@@ -2356,7 +2718,7 @@ handlers.details = function (dataObject, callback) {
                         } else {
                             callback(false, 200, {'res': serviceCenterData});
                         }
-                    })
+                    });
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
@@ -2630,6 +2992,18 @@ handlers.permittedVersions = function (dataObject, callback) {
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
+            } else if (dataObject.method === 'get') {
+                const query = "SELECT * FROM permitted_versions";
+                database.query(query, (err, versionData) => {
+                    if (err) {
+                        console.error(err.stack);
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        callback(false, 200, {'res': versionData});
+                    }
+                });
+            } else if (dataObject.method === 'put') {
+                callback(false, 200, {'res': "https://www.hyperxchange.com/about-hx-store"});
             } else {
                 callback(true, 400, {'res': messages.invalidRequestMessage});
             }
@@ -2639,7 +3013,9 @@ handlers.permittedVersions = function (dataObject, callback) {
     });
 };
 /**
- * Method to generate the Serial Number.
+ *  GET Method to generate the Serial Number and also to get the details of the current phone.
+ *  POST Method to get the QR codes for order status shipped.
+ *  PUT Method to update the status of the QR code based on condition.
  * @param dataObject: The Data object.
  * @param callback: The method callback.
  */
@@ -2647,33 +3023,67 @@ handlers.qr = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, function (isValid) {
         if (isValid) {
             if (dataObject.method === 'get') {
-                const num = Number(dataObject.queryString.num);
-                let query = "SELECT max(id) as id FROM phone_details_qr";
-                database.query(query, function (err, maxData) {
-                    if (err) {
-                        console.error(err.stack);
-                        callback(err, 500, {'res': messages.errorMessage});
-                    } else {
-                        let start = maxData[0].id;
-                        query = "INSERT INTO phone_details_qr VALUES (" + Number(start + 1) + ",'','7','14')";
-                        console.log(start);
-                        console.log(num);
-                        for (let i = start + 2; i <= (start + num); i++) {
-                            query += ",";
-                            query += "(" + i + ",'','7','14')";
-                        }
-                        query += ";";
-                        console.log(query);
-                        database.query(query, function (err, insertData) {
-                            if (err) {
-                                console.error(err.stack);
-                                callback(err, 500, {'res': messages.errorMessage});
-                            } else {
-                                callback(false, 200, {'res': start + 1});
+                let num, id, query;
+                try {
+                    num = Number(dataObject.queryString.num);
+                } catch (e) {
+                    num = false;
+                }
+                if (num) {
+                    query = "SELECT max(id) as id FROM phone_details_qr";
+                    database.query(query, function (err, maxData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            let start = maxData[0].id;
+                            query = "INSERT INTO phone_details_qr VALUES (" + Number(start + 1) + ",'','7','14')";
+                            console.log(start);
+                            console.log(num);
+                            for (let i = start + 2; i <= (start + num); i++) {
+                                query += ",";
+                                query += "(" + i + ",'','7','14')";
                             }
-                        })
-                    }
-                });
+                            query += ";";
+                            console.log(query);
+                            database.query(query, function (err, insertData) {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': start + 1});
+                                }
+                            })
+                        }
+                    });
+                } else {
+                    id = Number(dataObject.queryString.id);
+                    query = "SELECT * FROM phone_details_qr WHERE id = " + id;
+                    console.log(query);
+                    database.query(query, function (err, qrData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            if (qrData[0].phone_status === 7) {
+                                callback(false, 200, {'res': false, 'msg': messages.notAssigned});
+                            } else if (qrData[0].phone_status === 4 && qrData[0].imei.length < 0) {
+                                callback(false, 200, {'res': false, 'msg': messages.imeiNotLinked});
+                            } else if (qrData[0].imei.length > 0) {
+                                query = "SELECT * FROM phone_details WHERE imei LIKE '" + qrData[0].imei + "'";
+                                console.log(query);
+                                database.query(query, function (err, selectData) {
+                                    if (err) {
+                                        console.error(err.stack);
+                                        callback(err, 500, {'res': messages.errorMessage});
+                                    } else {
+                                        callback(false, 200, {'res': true, 'msg': selectData});
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
             } else if (dataObject.method === 'put') {
                 let query = "";
                 console.log(dataObject.postData);
@@ -2682,6 +3092,8 @@ handlers.qr = function (dataObject, callback) {
                 const id = dataObject.postData.id > 0 ? dataObject.postData.id : false;
                 const imei = typeof (dataObject.postData.imei) === 'string' &&
                 dataObject.postData.imei.length > 10 ? dataObject.postData.imei.trim() : false;
+                const serviceCenter = Number(dataObject.postData.service_center) > 0 ? dataObject.postData.service_center : false;
+                console.log(serviceCenter);
                 if (type && type === 'New') {
                     query = "SELECT * FROM phone_details_qr WHERE id = " + id;
                     database.query(query, function (err, selectData) {
@@ -2719,6 +3131,29 @@ handlers.qr = function (dataObject, callback) {
                             }
                         }
                     });
+                } else if (type && type === 'service') {
+                    query = "SELECT * FROM phone_details_qr WHERE id = " + id;
+                    database.query(query, function (err, selectData) {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            if (Number(selectData[0].phone_status === 3)) {
+                                query = "INSERT INTO service_center VALUES " +
+                                    "('','" + selectData[0].imei + "'," + serviceCenter + ")";
+                                database.query(query, function (err, insertData) {
+                                    if (err) {
+                                        console.error(err.stack);
+                                        callback(err, 500, {'res': messages.errorMessage});
+                                    } else {
+                                        callback(false, 200, {'res': true});
+                                    }
+                                });
+                            } else {
+                                callback(true, 202, {'res': false, 'msg': 'Not Authorized'});
+                            }
+                        }
+                    });
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
@@ -2740,6 +3175,262 @@ handlers.qr = function (dataObject, callback) {
                                 callback(false, 200, {'res': false});
                             }
                         }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 400, {'res': messages.invalidRequestMessage});
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+};
+/**
+ * Method to handle the meeting requests.
+ * POST to get the avaiable Slots.
+ * PUT to make the requests.
+ * It stores the temp slots allocated to a temp table.
+ * After the Request is Completed then it deletes the temp data.
+ * GET to cancel the Request.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.meeting = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, (isValid) => {
+        if (isValid) {
+            if (dataObject.method === 'get') {
+                const requestID = typeof (dataObject.queryString.request_id) === 'string' ?
+                    dataObject.queryString.request_id : false;
+                const empID = dataObject.queryString.employee_id > 0 ? dataObject.queryString.employee_id : false;
+                if (requestID) {
+                    deleteTemp(requestID);
+                    callback(false, 200, {'res': true});
+                } else if (empID < 100) {
+                    const query = "SELECT m.*, r.room_name, s.slot_start_time,s.slot_end_time " +
+                        "FROM meeting_request_details m,meeting_slot_details s ,meeting_room_details r " +
+                        "WHERE m.employee_id=" + empID + " AND s.id=m.slot_id AND r.id=m.roomID";
+                    database.query(query, (err, meetingData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': meetingData});
+                        }
+                    });
+                } else if (empID === 100) {
+                    const timeDate = Math.floor((new Date().getTime()) / 1000);
+                    const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ')[0];
+                    const query = "SELECT m.*,e.first_name FROM meeting_request_details m, employee_details e " +
+                        "WHERE meeting_date LIKE '" + formattedDate + "' AND e.id=m.employee_id";
+                    database.query(query, (err, meetingData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': meetingData});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else if (dataObject.method === 'post') {
+                const room = typeof (dataObject.postData.room_name) === 'string' ? dataObject.postData.room_name : false;
+                const meetingDate = typeof (dataObject.postData.start_date) === 'string' ? dataObject.postData.start_date : false;
+                console.log(room, meetingDate);
+                if (room && meetingDate) {
+                    const query = "SELECT * FROM meeting_slot_details " +
+                        "WHERE id NOT IN (SELECT slot_id FROM " + room +
+                        " WHERE meeting_date LIKE '" + meetingDate + "') " +
+                        "AND id NOT IN (SELECT slot_id FROM meeting_temp_lock " +
+                        "WHERE roomID = (SELECT id FROM meeting_room_details " +
+                        "WHERE table_name LIKE '" + room + "'))";
+                    database.query(query, (err, slotData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            const requestID = helpers.getRandomKey(16);
+                            callback(false, 200, {'res': slotData, 'request_id': requestID});
+                            insertTempLock(meetingDate, slotData, requestID, room);
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else if (dataObject.method === 'put') {
+                const slot = typeof (dataObject.postData.slot_id) === 'string' ? dataObject.postData.slot_id : false;
+                const room = typeof (dataObject.postData.room_name) === 'string' ? dataObject.postData.room_name : false;
+                const meetingDate = typeof (dataObject.postData.start_date) === 'string' ? dataObject.postData.start_date : false;
+                const requestID = typeof (dataObject.postData.request_id) === 'string' ? dataObject.postData.request_id : false;
+                const empId = Number(dataObject.postData.employee_id) > 0 ? dataObject.postData.employee_id : false;
+                if (slot && room && meetingDate && requestID && empId) {
+                    let slotIDs = slot.split(",");
+                    let values = "";
+                    for (let i = 0; i < slotIDs.length; i++) {
+                        values += "(" + slotIDs[i] + ",'" + meetingDate + "'),";
+                    }
+                    values = values.substr(0, values.length - 1);
+                    let query = "INSERT INTO " + room + " VALUES " + values;
+                    console.log(query);
+                    database.query(query, (err, insertData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 201, {'res': true});
+                            insertRequest(room, empId, requestID, slotIDs, meetingDate);
+                            deleteTemp(requestID);
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+
+    /**
+     * Method to insert the booking request to the master request table.
+     * @param room: the Room ID.
+     * @param empID: the Employee Booking.
+     * @param requestID: The Request ID.
+     * @param slotIDs: The Slot ID.
+     * @param meetingDate: The Meeting date.
+     */
+    function insertRequest(room, empID, requestID, slotIDs, meetingDate) {
+        let value = "";
+        let roomID;
+        switch (room) {
+            case "meeting_room_1":
+                roomID = 1;
+                break;
+            case "meeting_room_2":
+                roomID = 2;
+                break;
+            case "meeting_room_3":
+                roomID = 3;
+                break;
+        }
+        for (let i = 0; i < slotIDs.length; i++) {
+            value += "('" + requestID + "'," + roomID + "," + empID + "," + slotIDs[i] + ",'" + meetingDate + "'),";
+        }
+        value = value.substr(0, value.length - 1);
+        const query = "INSERT INTO meeting_request_details VALUES " + value;
+        database.query(query, (err, insertData) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Meeting Booked. ");
+            }
+        });
+    }
+
+    /**
+     * Method to delete the temp lock table.
+     * @param requestID: The request Id.
+     */
+    function deleteTemp(requestID) {
+        const query = "DELETE FROM meeting_temp_lock WHERE request_id LIKE '" + requestID + "'";
+        database.query(query, (err, deleteData) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("DELETED.");
+            }
+        });
+    }
+
+    /**
+     * Method to insert the TEMP Lock table.
+     * @param date: the date.
+     * @param slotId: The Slot which are temporarily blocked.
+     * @param requestId: the request ID.
+     */
+    function insertTempLock(date, slotId, requestId, room) {
+        let values = "";
+        let roomID;
+        switch (room) {
+            case "meeting_room_1":
+                roomID = 1;
+                break;
+            case "meeting_room_2":
+                roomID = 2;
+                break;
+            case "meeting_room_3":
+                roomID = 3;
+                break;
+        }
+        for (let i = 0; i < slotId.length; i++) {
+            values += "('" + requestId + "','" + date + "'," + slotId[i].id + "," + roomID + "),";
+        }
+        values = values.substr(0, values.length - 1);
+        const query = "INSERT INTO meeting_temp_lock VALUES " + values;
+        database.query(query, function (err, insertData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Inserted into temp.")
+            }
+        });
+    }
+};
+/**
+ * Method to get the S3 URL for the neuro tags images.
+ * @param dataObject: The request Object.
+ * @param callback
+ */
+handlers.prokotags = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, (isValid) => {
+        if (isValid) {
+            callback(false, 200, {'res': "https://s3.ap-south-1.amazonaws.com/neuro-tag/"});
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+};
+/**
+ * Method to get the device name.
+ * @param dataObject: the request object.
+ * @param callback: the method callback.
+ */
+handlers.devNames = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, (isValid) => {
+        if (isValid) {
+            if (dataObject.method === 'post') {
+                const type = typeof (dataObject.postData.type) === 'string' ? dataObject.postData.type : false;
+                const code = typeof (dataObject.postData.code) === 'string' ? dataObject.postData.code : false;
+                const model = typeof (dataObject.postData.model) === 'string' ? dataObject.postData.model : false;
+                if (type) {
+                    let promise;
+                    switch (type) {
+                        case "iPhone": {
+                            if (code && model) {
+                                promise = helpers.getiOSDeviceName(model, code);
+                            } else {
+                                callback(true, 400, {'res': messages.insufficientData});
+                            }
+                            break;
+                        }
+                        case "android": {
+                            if (code) {
+                                promise = helpers.getAndroidDeviceName(code);
+                            } else {
+                                callback(true, 400, {'res': messages.insufficientData});
+                            }
+                        }
+                            break;
+                        default:
+                            callback(true, 400, {'res': messages.invalidRequestMessage});
+                    }
+                    promise.then(response => {
+                        callback(false, 200, {'res': response});
+                    }).catch(err => {
+                        console.error(err);
+                        callback(true, 500, {'res': err});
                     });
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});

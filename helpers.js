@@ -4,6 +4,7 @@ const moment = require('moment');
 const tz = require('moment-timezone');
 const messages = require('./Constants');
 const snsLib = require('./snsLib');
+const sqlite = require('sqlite3').verbose();
 const admin = require('firebase-admin');
 /**
  * Method to parse JSON to Objects.
@@ -76,11 +77,12 @@ helpers.insertNewPhone = function (data, callback) {
     const timeDate = Math.floor((new Date().getTime()) / 1000);
     const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
     const location = data.location;
+    const price = data.price_offered > 0 ? data.price_offered : 0;
     console.log(location);
     const values = "'" + manufacturer + "','" + model + "','" + serial_number + "','" +
         imei + "','" + bssid + "','" + region + "','" + uuid + "','" + storage + "','" +
         actual_battery_capacity + "','" + battery_wear_capacity + "','" + color + "','" +
-        status + "','" + is_customer + "','" + formattedDate + "','" + location + "'";
+        status + "','" + is_customer + "','" + formattedDate + "','" + location + "'," + price;
     database.insert("phone_details_duplicate", values, function (err, data) {
         if (err) {
             console.error(err.stack);
@@ -155,6 +157,32 @@ helpers.insertNewReport = function (data, callback) {
     database.insert("report_details", values, function (err, data) {
         callback(err, data);
     });
+    if (orderIdReturn.length > 9) {
+        updateOrderStatus(orderIdReturn);
+    }
+
+    /**
+     * Method to update the Order Status to Returned.
+     * @param orderID: The Order status.
+     */
+    function updateOrderStatus(orderID) {
+        let query = "UPDATE order_details SET order_status = 12 WHERE channel_order_id LIKE '" + orderID + "'";
+        database.query(query, function (err, updateData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Order Status updated.");
+            }
+        });
+        query = "INSERT INTO order_history (SELECT * FROM order_details WHERE channel_order_id LIKE '" + orderID + "'";
+        database.query(query, function (err, insertData) {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Order History Inserted.");
+            }
+        });
+    }
 };
 /**
  * Method to get the Payment Method.
@@ -239,7 +267,7 @@ helpers.getStatusValue = function (status, callback) {
  * @returns {string}
  */
 helpers.getRandomKey = function (len) {
-    const possibleCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const possibleCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     len = typeof (len) === 'number' && len > 0 ? len : 16;
     let key = '';
     for (let i = 1; i <= len; i++) {
@@ -316,7 +344,7 @@ helpers.addInventoryPhone = function (data, callback) {
             const values = "'" + model_name + "','" + sku + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
                 price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "',2," +
                 isApproved + ",'" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
-                manual + "','" + connector + "','" + remarks + "','" + isManual + "'";
+                manual + "','" + connector + "','" + remarks + "',0,0'" + isManual + "'";
             database.insert("inventory", values, function (err, insertData) {
                 if (!err) {
                     callback(false);
@@ -570,6 +598,224 @@ helpers.sendFirebaseNotification = function (token, msg, content, extra, callbac
             console.log('Error sending message:', error);
             callback(error);
         });
+};
+/**
+ * Method to add the service repair cost.
+ * @param dataObject: The DataObject.
+ */
+helpers.addServiceCost = function (dataObject) {
+    console.log(dataObject);
+    const imei = dataObject.postData.imei;
+    const body = dataObject.postData.Body;
+    const screen = dataObject.postData.Screen;
+    const battery = dataObject.postData.Battery;
+    const pasting = dataObject.postData.Pasting;
+    const fingerprint = dataObject.postData.Fingerprint;
+    const cleaning = dataObject.postData.Cleaning;
+    const camera = dataObject.postData.Camera;
+    const speaker = dataObject.postData.Speaker;
+    const buttons = dataObject.postData.Buttons;
+    const microphone = dataObject.postData.Microphone;
+    const cost = dataObject.postData.cost;
+    let query = "SELECT service_center FROM service_center WHERE id in (SELECT max(id) as id FROM service_center WHERE imei LIKE '" + imei + "')";
+    console.log(query);
+    database.query(query, function (err, selectData) {
+        if (err) {
+            console.error(err.stack);
+        } else {
+            const serviceCenter = selectData[0].service_center;
+            console.log(serviceCenter);
+            query = "INSERT INTO service_center_cost VALUES ('" + imei + "'," + serviceCenter + "," + body + "," + screen + "," + battery + "," +
+                pasting + "," + fingerprint + "," + cleaning + "," + camera + "," + speaker + "," + buttons + "," + microphone + "," + cost + ")";
+            console.log(query);
+            database.query(query, function (err, insertData) {
+                if (err) {
+                    console.error(err.stack);
+                } else {
+                    console.log("Inserted into the service Cost.");
+                }
+            });
+        }
+    });
+};
+helpers.mapPTypeToName = (code) => {
+    switch (code.trim()) {
+        case "iPod5,1":
+            return "iPod Touch 5";
+        case "iPod7,1":
+            return "iPod Touch 6";
+        case "iPhone3,1":
+        case "iPhone3,2":
+        case "iPhone3,3":
+            return "iPhone 4";
+        case "iPhone4,1":
+            return "iPhone 4s";
+        case "iPhone5,1":
+        case "iPhone5,2":
+            return "iPhone 5";
+        case "iPhone5,3":
+        case "iPhone5,4":
+            return "iPhone 5c";
+        case "iPhone6,1":
+        case "iPhone6,2":
+            return "iPhone 5s";
+        case "iPhone7,2":
+            return "iPhone 6";
+        case "iPhone7,1":
+            return "iPhone 6 Plus";
+        case "iPhone8,1":
+            return "iPhone 6s";
+        case "iPhone8,2":
+            return "iPhone 6s Plus";
+        case "iPhone9,1":
+        case "iPhone9,3":
+            return "iPhone 7";
+        case "iPhone9,2":
+        case "iPhone9,4":
+            return "iPhone 7 Plus";
+        case "iPhone8,4":
+            return "iPhone SE";
+        case "iPhone10,1":
+        case "iPhone10,4":
+            return "iPhone 8";
+        case "iPhone10,2":
+        case "iPhone10,5":
+            return "iPhone 8 Plus";
+        case "iPhone10,3":
+        case "iPhone10,6":
+            return "iPhone X";
+        case "iPhone11,2":
+            return "iPhone XS";
+        case "iPhone11,4":
+        case "iPhone11,6":
+            return "iPhone XS Max";
+        case "iPhone11,8":
+            return "iPhone XR";
+        case "iPad2,1":
+        case "iPad2,2":
+        case "iPad2,3":
+        case "iPad2,4":
+            return "iPad 2";
+        case "iPad3,1":
+        case "iPad3,2":
+        case "iPad3,3":
+            return "iPad 3";
+        case "iPad3,4":
+        case "iPad3,5":
+        case "iPad3,6":
+            return "iPad 4";
+        case "iPad4,1":
+        case "iPad4,2":
+        case "iPad4,3":
+            return "iPad Air";
+        case "iPad5,3":
+        case "iPad5,4":
+            return "iPad Air 2";
+        case "iPad6,11":
+        case "iPad6,12":
+            return "iPad 5";
+        case "iPad7,5":
+        case "iPad7,6":
+            return "iPad 6";
+        case "iPad2,5":
+        case "iPad2,6":
+        case "iPad2,7":
+            return "iPad Mini";
+        case "iPad4,4":
+        case "iPad4,5":
+        case "iPad4,6":
+            return "iPad Mini 2";
+        case "iPad4,7":
+        case "iPad4,8":
+        case "iPad4,9":
+            return "iPad Mini 3";
+        case "iPad5,1":
+        case "iPad5,2":
+            return "iPad Mini 4";
+        case "iPad6,3":
+        case "iPad6,4":
+            return "iPad Pro (9.7-inch)";
+        case "iPad6,7":
+        case "iPad6,8":
+            return "iPad Pro (12.9-inch)";
+        case "iPad7,1":
+        case "iPad7,2":
+            return "iPad Pro (12.9-inch) (2nd generation)";
+        case "iPad7,3":
+        case "iPad7,4":
+            return "iPad Pro (10.5-inch)";
+        case "iPad8,1":
+        case "iPad8,2":
+        case "iPad8,3":
+        case "iPad8,4":
+            return "iPad Pro (11-inch)";
+        case "iPad8,5":
+        case "iPad8,6":
+        case "iPad8,7":
+        case "iPad8,8":
+            return "iPad Pro (12.9-inch) (3rd generation)";
+        default:
+            return sname;
+    }
+};
+/**
+ * Method to get the iOS Device Names.
+ * @param model: The Model Name.
+ * @param codename: the Code Name.
+ * @returns {Promise<any>}
+ */
+helpers.getiOSDeviceName = (model, codename) => {
+    return new Promise((resolve, reject) => {
+        if (!model) {
+            reject('model not specified')
+        }
+
+        const db_file = './ios-devices.db';
+
+        let db = new sqlite.Database(db_file, 'OPEN_READONLY');
+
+        db.serialize(() => {
+            db.all(`SELECT name,color,model from devices WHERE model like '${model}' LIMIT 1`, (err, data) => {
+                if (err || data.length < 1) {
+                    // reject(err)
+                    let name = mapPTypeToName(codename);
+                    if (name === codename) {
+                        reject(err)
+                    } else {
+                        resolve({name, color: '', codename, model: ''})
+                    }
+                } else {
+                    resolve({...data[0], codename})
+                }
+            })
+        })
+    })
+};
+/**
+ * Method to get the Android Device name.
+ * @param code: The Code name.
+ * @returns {Promise<any>}
+ */
+helpers.getAndroidDeviceName = (code) => {
+    return new Promise((resolve, reject) => {
+        if (!code) {
+            reject('codename not specified')
+        }
+
+        const db_file = './android-devices.db';
+
+        let db = new sqlite.Database(db_file, 'OPEN_READONLY');
+
+        db.serialize(() => {
+            db.all(`SELECT name,codename,model FROM (SELECT name,codename,model,MAX(LENGTH(name)) as length FROM devices WHERE codename like '${code}' LIMIT 1)`, (err, data) => {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve(data[0])
+                }
+            })
+        })
+    })
 };
 /**
  * Exporting the module.
