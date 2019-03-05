@@ -3094,8 +3094,7 @@ handlers.qr = function (dataObject, callback) {
                 const type = typeof (dataObject.postData.type) === 'string' &&
                 dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
                 const id = dataObject.postData.id > 0 ? dataObject.postData.id : false;
-                const imei = typeof (dataObject.postData.imei) === 'string' &&
-                dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                const imei = typeof (dataObject.postData.imei) === 'string' ? dataObject.postData.imei : false;
                 const serviceCenter = Number(dataObject.postData.service_center) > 0 ? dataObject.postData.service_center : false;
                 console.log(serviceCenter);
                 if (type && type === 'New') {
@@ -3121,20 +3120,42 @@ handlers.qr = function (dataObject, callback) {
                         }
                     });
                 } else if (type && type === 'imei') {
-                    query = "UPDATE phone_details_qr SET imei = " + imei + " WHERE id = " + id + " AND phone_status = 4";
-                    console.log(query);
-                    database.query(query, function (err, updateData) {
-                        if (err) {
-                            console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
-                        } else {
-                            if (updateData.affectedRows > 0) {
-                                callback(false, 200, {'res': true});
+                    if (imei.length < 15 || imei === false) {
+                        query = "SELECT * FROM phone_details_qr WHERE id = '" + imei + "'";
+                        console.log(query);
+                        database.query(query, (err, qrData) => {
+                            if (err) {
+                                console.error(err.stack);
+                                callback(err, 500, {'res': messages.errorMessage});
                             } else {
-                                callback(false, 202, {'res': false});
+                                console.log(qrData);
+                                query = "UPDATE phone_details_qr SET imei = '" + qrData[0].imei + "' WHERE id = " + id + " AND phone_status = 4";
+                                console.log(query);
+                                database.query(query, (err, updateData) => {
+                                    if (err) {
+                                        console.error(err, 500, {'res': messages.errorMessage});
+                                    } else {
+                                        callback(false, 200, {'res': true});
+                                    }
+                                })
                             }
-                        }
-                    });
+                        });
+                    } else {
+                        query = "UPDATE phone_details_qr SET imei = '" + imei + "' WHERE id = " + id + " AND phone_status = 4";
+                        console.log(query);
+                        database.query(query, function (err, updateData) {
+                            if (err) {
+                                console.error(err.stack);
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                if (updateData.affectedRows > 0) {
+                                    callback(false, 200, {'res': true});
+                                } else {
+                                    callback(false, 202, {'res': false});
+                                }
+                            }
+                        });
+                    }
                 } else if (type && type === 'service') {
                     query = "SELECT * FROM phone_details_qr WHERE id = " + id;
                     database.query(query, function (err, selectData) {
