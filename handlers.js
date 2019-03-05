@@ -2615,7 +2615,8 @@ handlers.orderStatus = function (dataObject, callback) {
                 console.error(err.stack);
                 console.log("Could not update the Video status for Order.");
             } else {
-                if (inventoryData[0].is_video_taken === 1) {
+                console.log(inventoryData);
+                if (inventoryData.length > 0 && inventoryData[0].is_video_taken === 1) {
                     query = "UPDATE order_details SET is_video_taken =1," +
                         " battery_before_ship= " + inventoryData[0].battery_percentage +
                         " WHERE hx_order_id = " + hxOrderID;
@@ -2626,6 +2627,8 @@ handlers.orderStatus = function (dataObject, callback) {
                             console.log("Order status Updated.");
                         }
                     });
+                } else {
+                    console.log("Not in Inventory ", imei);
                 }
             }
         });
