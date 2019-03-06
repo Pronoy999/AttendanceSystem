@@ -841,9 +841,9 @@ handlers.token = function (dataObject, callback) {
  */
 handlers.inventoryData = function (dataObject, callback) {
     let response = {};
-    let inventory, phone, report, service, order;
+    let inventory, phone, report, service, order, qr;
     let singleObject = {};
-    let isPhone, isReport, isInventory, isService, isOrder;
+    let isPhone, isReport, isInventory, isService, isOrder, isQr;
     let isReponded = false;
     const phone_details = [];
     const key = dataObject.queryString.key;
@@ -953,6 +953,17 @@ handlers.inventoryData = function (dataObject, callback) {
                             sendResponse();
                         }
                     });
+                    query = "SELECT * FROM phone_details_qr WHERE imei LIKE '" + imei + "'";
+                    database.query(query, (err, qrData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            isQr = true;
+                            qr = qrData;
+                            sendResponse();
+                        }
+                    })
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
@@ -1000,14 +1011,15 @@ handlers.inventoryData = function (dataObject, callback) {
      * Method to send the response once executed.
      */
     function sendResponse() {
-        if (!isReponded && isPhone && isReport && isInventory && isService && isOrder) {
+        if (!isReponded && isPhone && isReport && isInventory && isService && isOrder && isQr) {
             isReponded = true;
             response = {
                 phone,
                 report,
                 inventory,
                 service,
-                order
+                order,
+                qr
             };
             callback(false, 200, {'res': response});
         }
@@ -2986,7 +2998,7 @@ handlers.permittedVersions = function (dataObject, callback) {
                             console.error(err.stack);
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                            if (version === versionData[0].version) {
+                            if (version >= versionData[0].version) {
                                 callback(false, 200, {'res': true});
                             } else {
                                 callback(false, 200, {'res': false});
