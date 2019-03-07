@@ -5,6 +5,7 @@ const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
 const fs = require('fs');
+const {exec} = require('child_process');
 /*const java = require('./initJava');
 const aws = require('./aws');
 const fs = require('fs');
@@ -3488,16 +3489,24 @@ handlers.devNames = function (dataObject, callback) {
 handlers.errorLog = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, (isValid) => {
         if (isValid) {
-            if (dataObject.method === 'get') {
-                fs.readFile('/var/log/apache2/error.log', 'utf8',
-                    (err, data) => {
-                        if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
-                        } else {
-                            callback(false, 200, {'res': data});
-                        }
-                    });
-            }
+            exec("sudo chmod 777 /var/log/apache2/error.log", (err, stdOut, stdErr) => {
+                if (err) {
+                    console.error(err.stack);
+                } else {
+                    console.log(`stdout: ${stdOut}`);
+                    if (dataObject.method === 'get') {
+                        fs.readFile('/var/log/apache2/error.log', 'utf8',
+                            (err, data) => {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': data});
+                                }
+                            });
+                    }
+                }
+            });
         } else {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
         }
