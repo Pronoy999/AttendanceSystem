@@ -3087,7 +3087,7 @@ handlers.qr = function (dataObject, callback) {
                             } else if (qrData[0].phone_status === 4 && qrData[0].imei.length < 0) {
                                 callback(false, 200, {'res': false, 'msg': messages.imeiNotLinked});
                             } else if (qrData[0].imei.length > 0) {
-                                query = "SELECT * FROM phone_details WHERE imei LIKE '" + qrData[0].imei + "'";
+                                query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
                                 console.log(query);
                                 database.query(query, function (err, selectData) {
                                     if (err) {
@@ -3142,7 +3142,8 @@ handlers.qr = function (dataObject, callback) {
                                 callback(err, 500, {'res': messages.errorMessage});
                             } else {
                                 console.log(qrData);
-                                query = "UPDATE phone_details_qr SET imei = '" + qrData[0].imei + "' WHERE id = " + id + " AND phone_status = 4";
+                                query = "UPDATE phone_details_qr SET imei = '" + qrData[0].imei +
+                                    "' WHERE id = " + id + " AND phone_status = 4";
                                 console.log(query);
                                 database.query(query, (err, updateData) => {
                                     if (err) {
