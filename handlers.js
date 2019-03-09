@@ -3242,6 +3242,7 @@ handlers.meeting = function (dataObject, callback) {
                 const requestID = typeof (dataObject.queryString.request_id) === 'string' ?
                     dataObject.queryString.request_id : false;
                 const empID = dataObject.queryString.employee_id > 0 ? dataObject.queryString.employee_id : false;
+                console.log(empID);
                 if (requestID) {
                     deleteTemp(requestID);
                     callback(false, 200, {'res': true});
@@ -3257,7 +3258,7 @@ handlers.meeting = function (dataObject, callback) {
                             callback(false, 200, {'res': meetingData});
                         }
                     });
-                } else if (empID === 100) {
+                } else if (Number(empID) > Number(100)) {
                     const timeDate = Math.floor((new Date().getTime()) / 1000);
                     const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ')[0];
                     const query = "SELECT m.*,e.first_name FROM meeting_request_details m, employee_details e " +
