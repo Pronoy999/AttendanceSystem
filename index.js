@@ -24,6 +24,7 @@ const router = {
     'update': handlers.updateIphoneModel,
     'auth': handlers.token,
     'attendance': handlers.attendance,
+    'fuckattendance': handlers.fuckAttendance,
     'inventory-data': handlers.inventoryData,
     'employee': handlers.employee,
     'inventory-phone': handlers.inventoryPhone,
@@ -44,14 +45,18 @@ const router = {
     'bio-auth': handlers.bioAuth,
     'firebase-token': handlers.firebaseToken,
     'version': handlers.permittedVersions,
-    'qr': handlers.qr
+    'qr': handlers.qr,
+    'meeting': handlers.meeting,
+    'prokotags': handlers.prokotags,
+    'device-name': handlers.devNames,
+    'error':handlers.errorLog
 };
 /**
  * Method which controls the Server.
  * @param req: The REQUEST.
  * @param res: The RESPONSE.
  */
-var unifiedServer = function (req, res) {
+const unifiedServer = function (req, res) {
     const parsedUrl = url.parse(req.url, true);
     const pathName = parsedUrl.pathname;
     const trimmedPath = pathName.replace(/^\/+|\/+$/g, '');
@@ -68,7 +73,7 @@ var unifiedServer = function (req, res) {
         req.on('data', d => {
             data.push(d)
         }).on('end', () => {
-            var buffer = Buffer.concat(data);
+            const buffer = Buffer.concat(data);
             const handlerData = {
                 path: trimmedPath,
                 method,
@@ -102,7 +107,7 @@ var unifiedServer = function (req, res) {
         chosenHandler(data, function (err, statusCode, responseData) {
             responseData = typeof (responseData) === 'object' ? responseData : {};
             statusCode = typeof (statusCode) === 'number' ? statusCode : 400;
-            var responseObject = JSON.stringify(responseData);
+            const responseObject = JSON.stringify(responseData);
             try {
                 res.setHeader('Content-Type', 'application/json');
                 res.writeHead(statusCode, message.headers);
@@ -117,7 +122,7 @@ var unifiedServer = function (req, res) {
 /**
  * Method to create the Server.
  */
-var httpServer = http.createServer(function (req, res) {
+const httpServer = http.createServer(function (req, res) {
     unifiedServer(req, res);
 });
 //workers.checkOrderStatus();
