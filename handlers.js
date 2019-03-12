@@ -3075,6 +3075,7 @@ handlers.qr = function (dataObject, callback) {
                     });
                 } else {
                     id = Number(dataObject.queryString.id);
+                    const security = Number(dataObject.queryString.security) === 0 ? dataObject.queryString.security : false;
                     query = "SELECT * FROM phone_details_qr WHERE id = " + id;
                     console.log(query);
                     database.query(query, function (err, qrData) {
@@ -3082,24 +3083,42 @@ handlers.qr = function (dataObject, callback) {
                             console.error(err.stack);
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                            if (qrData[0].phone_status === 7) {
-                                callback(false, 200, {'res': false, 'msg': messages.notAssigned});
-                            } else if (qrData[0].phone_status === 4 && qrData[0].imei.length < 0) {
-                                callback(false, 200, {'res': false, 'msg': messages.imeiNotLinked});
-                            } else if (qrData[0].imei.length > 0) {
-                                query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
-                                console.log(query);
-                                database.query(query, function (err, selectData) {
+                            if (!security) {
+                                if (qrData[0].phone_status === 7) {
+                                    callback(false, 200, {'res': false, 'msg': messages.notAssigned});
+                                } else if (qrData[0].phone_status === 4 && qrData[0].imei.length < 0) {
+                                    callback(false, 200, {'res': false, 'msg': messages.imeiNotLinked});
+                                } else if (qrData[0].imei.length > 0) {
+                                    query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
+                                    console.log(query);
+                                    database.query(query, function (err, selectData) {
+                                        if (err) {
+                                            console.error(err.stack);
+                                            callback(err, 500, {'res': messages.errorMessage});
+                                        } else {
+                                            callback(false, 200, {'res': true, 'msg': selectData});
+                                        }
+                                    });
+                                }
+                            } else {
+                                query = "SELECT * FROM order_details WHERE imei_number LIKE '" + qrData[0].imei +
+                                    "' AND order_status = 4";
+                                database.query(query, (err, orderData) => {
                                     if (err) {
                                         console.error(err.stack);
                                         callback(err, 500, {'res': messages.errorMessage});
                                     } else {
-                                        callback(false, 200, {'res': true, 'msg': selectData});
+                                        if (orderData.length > 0) {
+                                            callback(false, 200, {'res': true, 'msg': orderData});
+                                        } else {
+                                            callback(false, 200, {'res': false, 'msg': orderData});
+                                        }
                                     }
                                 });
                             }
                         }
                     });
+
                 }
             } else if (dataObject.method === 'put') {
                 let query = "";
