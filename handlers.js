@@ -1373,8 +1373,11 @@ handlers.inventoryState = function (dataObject, callback) {
         helpers.validateToken(dataObject.queryString.key, (isValid) => {
             if (isValid) {
                 const imei = typeof (dataObject.postData.imei_number) === 'string' ? dataObject.postData.imei_number : false;
-                const batteryPercentage = Number(dataObject.postData.battery) > 0 ? dataObject.postData.battery : false;
-                if (imei && batteryPercentage) {
+                let batteryPercentage = Number(dataObject.postData.battery) > 0 ? dataObject.postData.battery : false;
+                if (imei) {
+                    if (!batteryPercentage) {
+                        batteryPercentage = 0;
+                    }
                     const query = "UPDATE inventory SET is_video_taken=1, battery_percentage = " + batteryPercentage +
                         " WHERE product_imei_1 LIKE '" + imei + "'";
                     database.query(query, (err, updateData) => {
