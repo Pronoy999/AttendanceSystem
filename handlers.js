@@ -3110,6 +3110,7 @@ handlers.qr = function (dataObject, callback) {
                                     } else {
                                         if (orderData.length > 0) {
                                             callback(false, 200, {'res': true, 'msg': orderData});
+                                            updateOrderStatus(orderData[0].hx_order_id);
                                         } else {
                                             callback(false, 200, {'res': false, 'msg': orderData});
                                         }
@@ -3244,6 +3245,21 @@ handlers.qr = function (dataObject, callback) {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
         }
     });
+
+    /**
+     * Method to update the Order status as Shipped once the security Scans it.
+     * @param hxOrderId: The Order ID to be updated.
+     */
+    function updateOrderStatus(hxOrderId) {
+        const query = "UPDATE order_details SET order_status=5 WHERE hx_order_id = " + hxOrderId;
+        database.query(query, (err, result) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Order Status Updated as Shipped By security.");
+            }
+        });
+    }
 };
 /**
  * Method to handle the meeting requests.
