@@ -623,7 +623,12 @@ helpers.addServiceCost = function (dataObject) {
         if (err) {
             console.error(err.stack);
         } else {
-            const serviceCenter = selectData[0].service_center;
+            let serviceCenter;
+            try {
+                serviceCenter = selectData[0].service_center;
+            } catch (e) {
+                serviceCenter = 7;
+            }
             console.log(serviceCenter);
             query = "INSERT INTO service_center_cost VALUES ('" + imei + "'," + serviceCenter + "," + body + "," + screen + "," + battery + "," +
                 pasting + "," + fingerprint + "," + cleaning + "," + camera + "," + speaker + "," + buttons + "," + microphone + "," + cost + ")";
