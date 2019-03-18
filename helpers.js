@@ -299,7 +299,7 @@ helpers.addInventoryPhone = function (data, callback) {
     const brand = data.brand;
     const model_name = data.model_name;
     const imei_1 = data.product_imei_1;
-    const imei_2 = data.product_imei_2;
+    const imei_2 = typeof (data.product_imei_2) === 'string' ? data.product_imei_2 : "NA";
     const color = data.product_color;
     const timeDate = Math.floor((new Date().getTime()) / 1000);
     const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
@@ -311,14 +311,14 @@ helpers.addInventoryPhone = function (data, callback) {
     const email = data.operations_email;
     const service_stock = data.service_stock;
     const isApproved = data.is_approved;
-    const storage = data.storage;
+    const storage = typeof (data.storage) === 'undefined' ? 0 : data.storage;
     let charger = data.charger;
     let head_phone = data.head_phone;
     let ejectorTool = data.ejector_tool;
     let back_cover = data.back_cover;
     let manual = data.manual;
     let connector = data.connector;
-    const remarks = data.remarks;
+    const remarks = typeof (data.remarks) === 'string' ? data.remarks : "NA";
     let isManual = checkValid(data.is_manual);
     isManual = typeof (isManual) === 'string' ? isManual : "no";
     charger = checkValid(charger);
