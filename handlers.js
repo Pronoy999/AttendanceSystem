@@ -3578,7 +3578,7 @@ handlers.fuckops = function (dataObject, callback) {
                         formattedDate + "','" + timeDate + "')";
                     database.query(query, (err, insertData) => {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 201, {'res': false});
                         } else {
                             callback(false, 200, {'res': true});
                         }
