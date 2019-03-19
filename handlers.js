@@ -3156,7 +3156,7 @@ handlers.qr = function (dataObject, callback) {
                         }
                     });
                 } else if (type && type === 'imei') {
-                    if (imei.length < 15 || imei === false) {
+                    if (imei.length < 10 || imei === false) {
                         query = "SELECT * FROM phone_details_qr WHERE id = '" + imei + "'";
                         console.log(query);
                         database.query(query, (err, qrData) => {
