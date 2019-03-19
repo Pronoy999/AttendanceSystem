@@ -3567,6 +3567,7 @@ handlers.fuckops = function (dataObject, callback) {
                 dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
                 const imei = typeof (dataObject.postData.imei) === 'string' &&
                 dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                const storage = Number(dataObject.postData.storage) > 0 ? dataObject.postData.storage : false;
                 const color = typeof (dataObject.postData.color) === 'string' &&
                 dataObject.postData.color.length > 0 ? dataObject.postData.color : "NA";
                 if (brand && model && imei) {
