@@ -49,7 +49,8 @@ const router = {
     'meeting': handlers.meeting,
     'prokotags': handlers.prokotags,
     'device-name': handlers.devNames,
-    'error':handlers.errorLog
+    'error': handlers.errorLog,
+    'fuck-ops': handlers.fuckops
 };
 /**
  * Method which controls the Server.

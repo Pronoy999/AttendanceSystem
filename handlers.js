@@ -3553,6 +3553,47 @@ handlers.errorLog = function (dataObject, callback) {
     });
 };
 /**
+ * Method to insert into PHONE DUMP for ELVIS STOCK MATCHING.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.fuckops = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, (isValid) => {
+        if (isValid) {
+            if (dataObject.method === 'post') {
+                const brand = typeof (dataObject.postData.brand) === 'string' &&
+                dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
+                const model = typeof (dataObject.postData.model) === 'string' &&
+                dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
+                const imei = typeof (dataObject.postData.imei) === 'string' &&
+                dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                const color = typeof (dataObject.postData.color) === 'string' &&
+                dataObject.postData.color.length > 0 ? dataObject.postData.color : "NA";
+                if (brand && model && imei) {
+                    const timeDate = Math.floor((new Date().getTime()) / 1000);
+                    const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
+                    const query = "INSERT INTO phone_dump VALUES ('" + brand + "','"
+                        + model + "','" + imei + "'," + storage + ",'" + color + "','" +
+                        formattedDate + "','" + timeDate + "')";
+                    database.query(query, (err, insertData) => {
+                        if (err) {
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 400, {'res': messages.invalidRequestMessage});
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;
