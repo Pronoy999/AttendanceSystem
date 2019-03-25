@@ -21,7 +21,7 @@ const handlers = {};
  * @param dataObject
  * @param callback
  */
-handlers.fuckAttendance = function (dataObject, callback) {
+/*handlers.fuckAttendance = function (dataObject, callback) {
     const employeeID = dataObject.queryString.id > 0 ? dataObject.queryString.id : false;
     if (employeeID) {
         let query = "update employee_details set current_status = CASE " +
@@ -58,7 +58,7 @@ handlers.fuckAttendance = function (dataObject, callback) {
     } else {
         callback(true, 400, {'res': messages.insufficientData});
     }
-};
+};*/
 /**
  * Method for Invalid Path.
  * @param data: The Data Object for the REQUEST.
@@ -124,6 +124,8 @@ handlers.otp = function (dataObject, callback) {
                                 callback(false, 200, response);
                             }
                             deleteOTP(otp);
+                        } else {
+                            callback(false, 400, {'res': false});
                         }
                     }
                 });
