@@ -46,6 +46,7 @@ const router = {
     'firebase-token': handlers.firebaseToken,
     'version': handlers.permittedVersions,
     'qr': handlers.qr,
+    'qr/deactivate': handlers.qrDeactivate,
     'meeting': handlers.meeting,
     'prokotags': handlers.prokotags,
     'device-name': handlers.devNames,

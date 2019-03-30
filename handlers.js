@@ -3267,6 +3267,35 @@ handlers.qr = function (dataObject, callback) {
     }
 };
 /**
+ * Method to deactivate the QR Code.
+ * @param dataObject: The Request Object.
+ * @param callback: the Method callback.
+ */
+handlers.qrDeactivate = function (dataObject, callback) {
+    if (dataObject.method === 'get') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                const id = Number(dataObject.queryString.id) > 0 ? dataObject.queryString.id : false;
+                if (id) {
+                    const query = "UPDATE phone_details_qr SET phone_status = 7, order_status=14 , imei = '' WHERE id = " + id;
+                    database.query(query, (err, updateData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    }
+};
+/**
  * Method to handle the meeting requests.
  * POST to get the avaiable Slots.
  * PUT to make the requests.
