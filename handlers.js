@@ -3328,7 +3328,7 @@ handlers.qrSecurity = function (dataObject, callback) {
                         callback(err, 500, {'res': messages.errorMessage});
                     } else {
                         query = "SELECT * FROM order_details " +
-                            "WHERE imei_number LIKE '" + qrData[0].imei + "' AND order_status <> 8";
+                            "WHERE imei_number LIKE '" + qrData[0].imei + "' AND order_status <> 8 AND order_status <> 12";
                         database.query(query, (err, orderData) => {
                             if (err) {
                                 console.error(err.stack);
@@ -3343,6 +3343,7 @@ handlers.qrSecurity = function (dataObject, callback) {
                                 }
                                 helpers.logOrder(orderData[0].channel_order_id,
                                     orderData[0].order_status, orderData[0].imei_number, auth);
+                                callback(false, 200, {'res': true});
                             }
                         });
                     }
