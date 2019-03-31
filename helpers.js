@@ -823,6 +823,38 @@ helpers.getAndroidDeviceName = (code) => {
     })
 };
 /**
+ * Method to insert the Order status Scan data to the System.
+ * @param channelOrderId: The Channel Order ID.
+ * @param orderStatus: The Order status.
+ * @param imeiNumber: the IMEI Number.
+ * @param isAuth: Whether the order is Authorized to go or not.
+ */
+helpers.logOrder = function (channelOrderId, orderStatus, imeiNumber, isAuth) {
+    const query = "INSERT INTO order_status_log VALUES ('" + channelOrderId + "'," +
+        orderStatus + "','" + imeiNumber + "','" + isAuth + "',NOW())";
+    database.query(query, (err, insertData) => {
+        if (err) {
+            console.error(err.stack);
+        } else {
+            console.log("Order status Updated.");
+        }
+    });
+};
+/**
+ * Method to notify when a breached order is sent.
+ * @param channelOrderID: The Order ID.
+ */
+helpers.notifyBreachOrder = function (channelOrderID) {
+    const msg = "Hi, Channel order ID : " + channelOrderID + " was sent even when it was not authorized to go.";
+    snsLib.sendMessage("+918013020201", msg, (err) => {
+        if (err) {
+            console.error(err.stack);
+        } else {
+            console.log("Order status TEXT Sent.");
+        }
+    })
+};
+/**
  * Exporting the module.
  */
 module.exports = helpers;

@@ -3101,7 +3101,21 @@ handlers.qr = function (dataObject, callback) {
                                             console.error(err.stack);
                                             callback(err, 500, {'res': messages.errorMessage});
                                         } else {
-                                            callback(false, 200, {'res': true, 'msg': selectData});
+                                            query = "SELECT * FROM order_details " +
+                                                "WHERE imei_number LIKE '" + qrData[0].imei + "' AND order_status <> 8 " +
+                                                "AND order_status <> 12 ";
+                                            database.query(query, (err, orderData) => {
+                                                if (err) {
+                                                    console.error(err.stack);
+                                                    callback(err, 500, {'res': messages.errorMessage});
+                                                } else {
+                                                    callback(false, 200, {
+                                                        'res': true,
+                                                        'msg': selectData,
+                                                        'order': orderData
+                                                    });
+                                                }
+                                            });
                                         }
                                     });
                                 }
@@ -3116,6 +3130,8 @@ handlers.qr = function (dataObject, callback) {
                                         if (orderData.length > 0) {
                                             callback(false, 200, {'res': true, 'msg': orderData});
                                             updateOrderStatus(orderData[0].hx_order_id);
+                                            helpers.logOrder(orderData[0].channel_order_id, orderData[0].order_status,
+                                                orderData[0].imei_number, "AUTH");
                                         } else {
                                             callback(false, 200, {'res': false, 'msg': orderData});
                                         }
@@ -3294,6 +3310,48 @@ handlers.qrDeactivate = function (dataObject, callback) {
             }
         });
     }
+};
+/**
+ * Method to notify and Log breach Orders.
+ * @param dataObject: The Request object.
+ * @param callback: The Method callback.
+ */
+handlers.qrSecurity = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, (isValid) => {
+        if (isValid) {
+            if (dataObject.method === 'post') {
+                const qrID = Number(dataObject.postData.qr) > 0 ? dataObject.postData.qr : false;
+                let query = "SELECT * FROM phone_details_qr WHERE id = " + qrID;
+                database.query(query, (err, qrData) => {
+                    if (err) {
+                        console.error(err.stack);
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        query = "SELECT * FROM order_details " +
+                            "WHERE imei_number LIKE '" + qrData[0].imei + "' AND order_status <> 8";
+                        database.query(query, (err, orderData) => {
+                            if (err) {
+                                console.error(err.stack);
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                let auth;
+                                if (orderData[0].order_status === 4) {
+                                    auth = "AUTH";
+                                } else {
+                                    auth = "NOT_AUTH";
+                                    helpers.notifyBreachOrder(orderData[0].channel_order_id);
+                                }
+                                helpers.logOrder(orderData[0].channel_order_id,
+                                    orderData[0].order_status, orderData[0].imei_number, auth);
+                            }
+                        });
+                    }
+                });
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
 };
 /**
  * Method to handle the meeting requests.
