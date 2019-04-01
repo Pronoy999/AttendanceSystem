@@ -846,9 +846,8 @@ helpers.logOrder = function (channelOrderId, orderStatus, imeiNumber, isAuth) {
  * @param channelOrderID: The Order ID.
  */
 helpers.notifyBreachOrder = function (channelOrderID) {
-    //+918013020201
     const msg = "Hi, Channel order ID : " + channelOrderID + " was sent even when it was not authorized to go.";
-    snsLib.sendMessage("+919874045815", msg, (err) => {
+    snsLib.sendMessage("+918013020201", msg, (err) => {
         if (err) {
             console.error(err.stack);
         } else {
