@@ -47,6 +47,7 @@ const router = {
     'version': handlers.permittedVersions,
     'qr': handlers.qr,
     'qr/deactivate': handlers.qrDeactivate,
+    'qr/security': handlers.qrSecurity,
     'meeting': handlers.meeting,
     'prokotags': handlers.prokotags,
     'device-name': handlers.devNames,

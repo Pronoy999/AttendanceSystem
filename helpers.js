@@ -831,7 +831,8 @@ helpers.getAndroidDeviceName = (code) => {
  */
 helpers.logOrder = function (channelOrderId, orderStatus, imeiNumber, isAuth) {
     const query = "INSERT INTO order_status_log VALUES ('" + channelOrderId + "'," +
-        orderStatus + "','" + imeiNumber + "','" + isAuth + "',NOW())";
+        10 + ",'355409070707199','" + isAuth + "',NOW())";
+    console.log(query);
     database.query(query, (err, insertData) => {
         if (err) {
             console.error(err.stack);
@@ -845,8 +846,9 @@ helpers.logOrder = function (channelOrderId, orderStatus, imeiNumber, isAuth) {
  * @param channelOrderID: The Order ID.
  */
 helpers.notifyBreachOrder = function (channelOrderID) {
+    //+918013020201
     const msg = "Hi, Channel order ID : " + channelOrderID + " was sent even when it was not authorized to go.";
-    snsLib.sendMessage("+918013020201", msg, (err) => {
+    snsLib.sendMessage("+919874045815", msg, (err) => {
         if (err) {
             console.error(err.stack);
         } else {

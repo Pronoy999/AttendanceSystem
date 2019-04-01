@@ -3343,6 +3343,7 @@ handlers.qrSecurity = function (dataObject, callback) {
                                 }
                                 helpers.logOrder(orderData[0].channel_order_id,
                                     orderData[0].order_status, orderData[0].imei_number, auth);
+                                updateOrderStatus(orderData[0].hx_order_id);
                                 callback(false, 200, {'res': true});
                             }
                         });
@@ -3353,6 +3354,21 @@ handlers.qrSecurity = function (dataObject, callback) {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
         }
     });
+
+    /**
+     * Method to update the Order status as Shipped once the security Scans it.
+     * @param hxOrderId: The Order ID to be updated.
+     */
+    function updateOrderStatus(hxOrderId) {
+        const query = "UPDATE order_details SET order_status=5 WHERE hx_order_id = " + hxOrderId;
+        database.query(query, (err, result) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Order Status Updated as Shipped By security.");
+            }
+        });
+    }
 };
 /**
  * Method to handle the meeting requests.
