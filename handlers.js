@@ -3333,13 +3333,21 @@ handlers.qrDeactivate = function (dataObject, callback) {
             if (isValid) {
                 const id = Number(dataObject.queryString.id) > 0 ? dataObject.queryString.id : false;
                 if (id) {
-                    const query = "UPDATE phone_details_qr SET phone_status = 7, order_status=14 , imei = '' WHERE id = " + id;
-                    database.query(query, (err, updateData) => {
+                    let query = "SELECT * FROM phone_details_qr WHERE id = " + id;
+                    database.query(query, (err, qrData) => {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                            callback(false, 200, {'res': true});
+                            query = "UPDATE phone_details_qr SET phone_status = 7, order_status=14 , imei = ''" +
+                                " WHERE imei = '" + qrData[0].imei + "'";
+                            database.query(query, (err, updateData) => {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': true});
+                                }
+                            });
                         }
                     });
                 } else {
