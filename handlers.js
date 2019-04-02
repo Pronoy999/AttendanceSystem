@@ -4,10 +4,10 @@ const helpers = require('./helpers');
 const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
+const fs = require('fs');
 const {exec} = require('child_process');
 const java = require('./initJava');
 const aws = require('./aws');
-const fs = require('fs');
 const fp_json_file_name = './fp_data.json';
 const fp_json = require(fp_json_file_name);
 const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
@@ -3240,7 +3240,16 @@ handlers.qr = function (dataObject, callback) {
                             console.error(err.stack);
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                            query = "UPDATE inventory SET service_stock =2 WHERE "
+                            query = "UPDATE inventory SET service_stock =2 WHERE product_imei_1 = '" + qrData[0].imei + "'";
+                            database.query(query, (err, updateData) => {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 400, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': true});
+                                    updateOrderAndPhoneDetails(qrData[0].imei);
+                                }
+                            });
                         }
                     });
                 } else {
@@ -3289,6 +3298,28 @@ handlers.qr = function (dataObject, callback) {
                 console.log("Order Status Updated as Shipped By security.");
             }
         });
+    }
+
+    /**
+     * Method to update the Phone details and order status.
+     * @param imei: The Imei number.
+     */
+    function updateOrderAndPhoneDetails(imei) {
+        let query = "UPDATE order_details SET order_status=8 WHERE imei_number ='" + imei + "' AND order_status =5";
+        database.query(query, (err, updateOrderData) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                query = "UPDATE phone_details SET status = 2 WHERE imei = '" + imei + "'";
+                database.query(query, (err, phoneUpdateData) => {
+                    if (err) {
+                        console.error(err.stack);
+                    } else {
+                        console.log('Updated Order and phone data.');
+                    }
+                });
+            }
+        })
     }
 };
 /**
