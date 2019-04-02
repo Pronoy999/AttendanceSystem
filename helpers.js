@@ -831,7 +831,7 @@ helpers.getAndroidDeviceName = (code) => {
  */
 helpers.logOrder = function (channelOrderId, orderStatus, imeiNumber, isAuth) {
     const query = "INSERT INTO order_status_log VALUES ('" + channelOrderId + "'," +
-        10 + ",'355409070707199','" + isAuth + "',NOW())";
+        1 + ",'355409070707199','" + isAuth + "',NOW())";
     console.log(query);
     database.query(query, (err, insertData) => {
         if (err) {

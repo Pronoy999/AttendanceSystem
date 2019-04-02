@@ -3319,7 +3319,21 @@ handlers.qr = function (dataObject, callback) {
                     }
                 });
             }
-        })
+        });
+        query = "SELECT * FROM order_details WHERE imei_number = '" + imei + "' AND order_status =5";
+        database.query(query, (err, orderData) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                query = "UPDATE order_status_log SET is_shipped = 0 WHERE channel_order_id = '" + orderData[0].channel_order_id + "'";
+                database.query(query, (err, updateOrder) => {
+                    if (err) {
+                        console.error(err.stack);
+                    }
+                    console.log('Updated');
+                });
+            }
+        });
     }
 };
 /**
