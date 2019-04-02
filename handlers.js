@@ -4,9 +4,8 @@ const helpers = require('./helpers');
 const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
-const fs = require('fs');
 const {exec} = require('child_process');
-/*const java = require('./initJava');
+const java = require('./initJava');
 const aws = require('./aws');
 const fs = require('fs');
 const fp_json_file_name = './fp_data.json';
@@ -14,7 +13,7 @@ const fp_json = require(fp_json_file_name);
 const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
 const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
 const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
-const S3 = new aws.S3();*/
+const S3 = new aws.S3();
 const handlers = {};
 /**
  * Attendance for Pronoy,munish sir,kaisanba
@@ -3232,6 +3231,16 @@ handlers.qr = function (dataObject, callback) {
                             } else {
                                 callback(true, 202, {'res': false, 'msg': 'Not Authorized'});
                             }
+                        }
+                    });
+                } else if (type && type === 'return') {
+                    query = "SELECT * FROM phone_details_qr WHERE id=" + id;
+                    database.query(query, (err, qrData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            query = "UPDATE inventory SET service_stock =2 WHERE "
                         }
                     });
                 } else {
