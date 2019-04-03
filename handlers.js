@@ -335,7 +335,7 @@ handlers.phone = function (dataObject, callback) {
                             } else {
                                 callback(false, 200, {'res': true});
                                 //updateQRTable(imei);
-                                deleteInventory(imei);
+                                //deleteInventory(imei);
                                 if (isServiceReturn) {
                                     helpers.addServiceCost(dataObject);
                                 }
