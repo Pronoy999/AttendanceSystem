@@ -5,6 +5,7 @@ const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
 const fs = require('fs');
+/*
 const {exec} = require('child_process');
 const java = require('./initJava');
 const aws = require('./aws');
@@ -14,6 +15,7 @@ const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
 const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
 const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
 const S3 = new aws.S3();
+*/
 const handlers = {};
 /**
  * Attendance for Pronoy,munish sir,kaisanba
@@ -2738,6 +2740,16 @@ handlers.details = function (dataObject, callback) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
                             callback(false, 200, {'res': serviceCenterData});
+                        }
+                    });
+                } else if (type === 'service') {
+                    query = "SELECT * FROM inventory WHERE service_stock=3 AND service_center <> 2";
+                    database.query(query, (err, serviceData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': serviceData});
                         }
                     });
                 } else {
