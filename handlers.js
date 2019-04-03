@@ -2743,7 +2743,7 @@ handlers.details = function (dataObject, callback) {
                         }
                     });
                 } else if (type === 'service') {
-                    query = "SELECT * FROM inventory WHERE service_stock=3 AND service_center <> 2";
+                    query = "SELECT * FROM inventory WHERE service_stock=3 ";
                     database.query(query, (err, serviceData) => {
                         if (err) {
                             console.error(err.stack);
