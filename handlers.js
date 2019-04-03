@@ -5,23 +5,24 @@ const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
 const fs = require('fs');
+/*
 const {exec} = require('child_process');
-/*const java = require('./initJava');
+const java = require('./initJava');
 const aws = require('./aws');
-const fs = require('fs');
 const fp_json_file_name = './fp_data.json';
 const fp_json = require(fp_json_file_name);
 const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
 const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
 const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
-const S3 = new aws.S3();*/
+const S3 = new aws.S3();
+*/
 const handlers = {};
 /**
  * Attendance for Pronoy,munish sir,kaisanba
  * @param dataObject
  * @param callback
  */
-handlers.fuckAttendance = function (dataObject, callback) {
+/*handlers.fuckAttendance = function (dataObject, callback) {
     const employeeID = dataObject.queryString.id > 0 ? dataObject.queryString.id : false;
     if (employeeID) {
         let query = "update employee_details set current_status = CASE " +
@@ -58,7 +59,7 @@ handlers.fuckAttendance = function (dataObject, callback) {
     } else {
         callback(true, 400, {'res': messages.insufficientData});
     }
-};
+};*/
 /**
  * Method for Invalid Path.
  * @param data: The Data Object for the REQUEST.
@@ -124,6 +125,8 @@ handlers.otp = function (dataObject, callback) {
                                 callback(false, 200, response);
                             }
                             deleteOTP(otp);
+                        } else {
+                            callback(false, 400, {'res': false});
                         }
                     }
                 });
@@ -332,7 +335,7 @@ handlers.phone = function (dataObject, callback) {
                             } else {
                                 callback(false, 200, {'res': true});
                                 //updateQRTable(imei);
-                                deleteInventory(imei);
+                                //deleteInventory(imei);
                                 if (isServiceReturn) {
                                     helpers.addServiceCost(dataObject);
                                 }
@@ -1373,8 +1376,11 @@ handlers.inventoryState = function (dataObject, callback) {
         helpers.validateToken(dataObject.queryString.key, (isValid) => {
             if (isValid) {
                 const imei = typeof (dataObject.postData.imei_number) === 'string' ? dataObject.postData.imei_number : false;
-                const batteryPercentage = Number(dataObject.postData.battery) > 0 ? dataObject.postData.battery : false;
-                if (imei && batteryPercentage) {
+                let batteryPercentage = Number(dataObject.postData.battery) > 0 ? dataObject.postData.battery : false;
+                if (imei) {
+                    if (!batteryPercentage) {
+                        batteryPercentage = 0;
+                    }
                     const query = "UPDATE inventory SET is_video_taken=1, battery_percentage = " + batteryPercentage +
                         " WHERE product_imei_1 LIKE '" + imei + "'";
                     database.query(query, (err, updateData) => {
@@ -2736,6 +2742,16 @@ handlers.details = function (dataObject, callback) {
                             callback(false, 200, {'res': serviceCenterData});
                         }
                     });
+                } else if (type === 'service') {
+                    query = "SELECT * FROM inventory WHERE service_stock=3 ";
+                    database.query(query, (err, serviceData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': serviceData});
+                        }
+                    });
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
@@ -3075,6 +3091,7 @@ handlers.qr = function (dataObject, callback) {
                     });
                 } else {
                     id = Number(dataObject.queryString.id);
+                    const security = Number(dataObject.queryString.security) === 0 ? dataObject.queryString.security : false;
                     query = "SELECT * FROM phone_details_qr WHERE id = " + id;
                     console.log(query);
                     database.query(query, function (err, qrData) {
@@ -3082,24 +3099,59 @@ handlers.qr = function (dataObject, callback) {
                             console.error(err.stack);
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                            if (qrData[0].phone_status === 7) {
-                                callback(false, 200, {'res': false, 'msg': messages.notAssigned});
-                            } else if (qrData[0].phone_status === 4 && qrData[0].imei.length < 0) {
-                                callback(false, 200, {'res': false, 'msg': messages.imeiNotLinked});
-                            } else if (qrData[0].imei.length > 0) {
-                                query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
-                                console.log(query);
-                                database.query(query, function (err, selectData) {
+                            if (!security) {
+                                if (qrData[0].phone_status === 7) {
+                                    callback(false, 200, {'res': false, 'msg': messages.notAssigned});
+                                } else if (qrData[0].phone_status === 4 && qrData[0].imei.length < 0) {
+                                    callback(false, 200, {'res': false, 'msg': messages.imeiNotLinked});
+                                } else if (qrData[0].imei.length > 0) {
+                                    query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
+                                    console.log(query);
+                                    database.query(query, function (err, selectData) {
+                                        if (err) {
+                                            console.error(err.stack);
+                                            callback(err, 500, {'res': messages.errorMessage});
+                                        } else {
+                                            query = "SELECT * FROM order_details " +
+                                                "WHERE imei_number LIKE '" + qrData[0].imei + "' AND order_status <> 8 " +
+                                                "AND order_status <> 12 ";
+                                            database.query(query, (err, orderData) => {
+                                                if (err) {
+                                                    console.error(err.stack);
+                                                    callback(err, 500, {'res': messages.errorMessage});
+                                                } else {
+                                                    callback(false, 200, {
+                                                        'res': true,
+                                                        'msg': selectData,
+                                                        'order': orderData
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                            } else {
+                                query = "SELECT * FROM order_details WHERE imei_number LIKE '" + qrData[0].imei +
+                                    "' AND order_status = 4";
+                                database.query(query, (err, orderData) => {
                                     if (err) {
                                         console.error(err.stack);
                                         callback(err, 500, {'res': messages.errorMessage});
                                     } else {
-                                        callback(false, 200, {'res': true, 'msg': selectData});
+                                        if (orderData.length > 0) {
+                                            callback(false, 200, {'res': true, 'msg': orderData});
+                                            updateOrderStatus(orderData[0].hx_order_id);
+                                            helpers.logOrder(orderData[0].channel_order_id, orderData[0].order_status,
+                                                orderData[0].imei_number, "AUTH");
+                                        } else {
+                                            callback(false, 200, {'res': false, 'msg': orderData});
+                                        }
                                     }
                                 });
                             }
                         }
                     });
+
                 }
             } else if (dataObject.method === 'put') {
                 let query = "";
@@ -3133,7 +3185,7 @@ handlers.qr = function (dataObject, callback) {
                         }
                     });
                 } else if (type && type === 'imei') {
-                    if (imei.length < 15 || imei === false) {
+                    if (imei.length < 10 || imei === false) {
                         query = "SELECT * FROM phone_details_qr WHERE id = '" + imei + "'";
                         console.log(query);
                         database.query(query, (err, qrData) => {
@@ -3193,6 +3245,25 @@ handlers.qr = function (dataObject, callback) {
                             }
                         }
                     });
+                } else if (type && type === 'return') {
+                    query = "SELECT * FROM phone_details_qr WHERE id=" + id;
+                    database.query(query, (err, qrData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            query = "UPDATE inventory SET service_stock =2 WHERE product_imei_1 = '" + qrData[0].imei + "'";
+                            database.query(query, (err, updateData) => {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 400, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': true});
+                                    updateOrderAndPhoneDetails(qrData[0].imei);
+                                }
+                            });
+                        }
+                    });
                 } else {
                     callback(true, 400, {'res': messages.insufficientData});
                 }
@@ -3225,6 +3296,153 @@ handlers.qr = function (dataObject, callback) {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
         }
     });
+
+    /**
+     * Method to update the Order status as Shipped once the security Scans it.
+     * @param hxOrderId: The Order ID to be updated.
+     */
+    function updateOrderStatus(hxOrderId) {
+        const query = "UPDATE order_details SET order_status=5 WHERE hx_order_id = " + hxOrderId;
+        database.query(query, (err, result) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Order Status Updated as Shipped By security.");
+            }
+        });
+    }
+
+    /**
+     * Method to update the Phone details and order status.
+     * @param imei: The Imei number.
+     */
+    function updateOrderAndPhoneDetails(imei) {
+        let query = "UPDATE order_details SET order_status=8 WHERE imei_number ='" + imei + "' AND order_status =5";
+        database.query(query, (err, updateOrderData) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                query = "UPDATE phone_details SET status = 2 WHERE imei = '" + imei + "'";
+                database.query(query, (err, phoneUpdateData) => {
+                    if (err) {
+                        console.error(err.stack);
+                    } else {
+                        console.log('Updated Order and phone data.');
+                    }
+                });
+            }
+        });
+        query = "SELECT * FROM order_details WHERE imei_number = '" + imei + "' AND order_status =5";
+        database.query(query, (err, orderData) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                query = "UPDATE order_status_log SET is_shipped = 0 WHERE channel_order_id = '" + orderData[0].channel_order_id + "'";
+                database.query(query, (err, updateOrder) => {
+                    if (err) {
+                        console.error(err.stack);
+                    }
+                    console.log('Updated');
+                });
+            }
+        });
+    }
+};
+/**
+ * Method to deactivate the QR Code.
+ * @param dataObject: The Request Object.
+ * @param callback: the Method callback.
+ */
+handlers.qrDeactivate = function (dataObject, callback) {
+    if (dataObject.method === 'get') {
+        helpers.validateToken(dataObject.queryString.key, function (isValid) {
+            if (isValid) {
+                const id = Number(dataObject.queryString.id) > 0 ? dataObject.queryString.id : false;
+                if (id) {
+                    let query = "SELECT * FROM phone_details_qr WHERE id = " + id;
+                    database.query(query, (err, qrData) => {
+                        if (err) {
+                            console.error(err.stack);
+                        } else {
+                            query = "UPDATE phone_details_qr SET phone_status = 7, order_status=14 , imei = ''" +
+                                " WHERE imei = '" + qrData[0].imei + "'";
+                            database.query(query, (err, updateData) => {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                } else {
+                                    callback(false, 200, {'res': true});
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    }
+};
+/**
+ * Method to notify and Log breach Orders.
+ * @param dataObject: The Request object.
+ * @param callback: The Method callback.
+ */
+handlers.qrSecurity = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, (isValid) => {
+        if (isValid) {
+            if (dataObject.method === 'post') {
+                const qrID = Number(dataObject.postData.qr) > 0 ? dataObject.postData.qr : false;
+                let query = "SELECT * FROM phone_details_qr WHERE id = " + qrID;
+                database.query(query, (err, qrData) => {
+                    if (err) {
+                        console.error(err.stack);
+                        callback(err, 500, {'res': messages.errorMessage});
+                    } else {
+                        query = "SELECT * FROM order_details " +
+                            "WHERE imei_number LIKE '" + qrData[0].imei + "' AND order_status <> 8 AND order_status <> 12";
+                        database.query(query, (err, orderData) => {
+                            if (err) {
+                                console.error(err.stack);
+                                callback(err, 500, {'res': messages.errorMessage});
+                            } else {
+                                let auth;
+                                if (orderData[0].order_status === 4) {
+                                    auth = "AUTH";
+                                } else {
+                                    auth = "NOT_AUTH";
+                                    helpers.notifyBreachOrder(orderData[0].channel_order_id);
+                                }
+                                helpers.logOrder(orderData[0].channel_order_id,
+                                    orderData[0].order_status, orderData[0].imei_number, auth);
+                                updateOrderStatus(orderData[0].hx_order_id);
+                                callback(false, 200, {'res': true});
+                            }
+                        });
+                    }
+                });
+            }
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+
+    /**
+     * Method to update the Order status as Shipped once the security Scans it.
+     * @param hxOrderId: The Order ID to be updated.
+     */
+    function updateOrderStatus(hxOrderId) {
+        const query = "UPDATE order_details SET order_status=5 WHERE hx_order_id = " + hxOrderId;
+        database.query(query, (err, result) => {
+            if (err) {
+                console.error(err.stack);
+            } else {
+                console.log("Order Status Updated as Shipped By security.");
+            }
+        });
+    }
 };
 /**
  * Method to handle the meeting requests.
@@ -3509,6 +3727,48 @@ handlers.errorLog = function (dataObject, callback) {
                     }
                 }
             });
+        } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+        }
+    });
+};
+/**
+ * Method to insert into PHONE DUMP for ELVIS STOCK MATCHING.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.fuckops = function (dataObject, callback) {
+    helpers.validateToken(dataObject.queryString.key, (isValid) => {
+        if (isValid) {
+            if (dataObject.method === 'post') {
+                const brand = typeof (dataObject.postData.brand) === 'string' &&
+                dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
+                const model = typeof (dataObject.postData.model) === 'string' &&
+                dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
+                const imei = typeof (dataObject.postData.imei) === 'string' &&
+                dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                const storage = Number(dataObject.postData.storage) > 0 ? dataObject.postData.storage : false;
+                const color = typeof (dataObject.postData.color) === 'string' &&
+                dataObject.postData.color.length > 0 ? dataObject.postData.color : "NA";
+                if (brand && model && imei) {
+                    const timeDate = Math.floor((new Date().getTime()) / 1000);
+                    const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
+                    const query = "INSERT INTO phone_dump VALUES ('" + brand + "','"
+                        + model + "','" + imei + "'," + storage + ",'" + color + "','" +
+                        formattedDate + "','" + timeDate + "')";
+                    database.query(query, (err, insertData) => {
+                        if (err) {
+                            callback(err, 200, {'res': false});
+                        } else {
+                            callback(false, 200, {'res': true});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 400, {'res': messages.invalidRequestMessage});
+            }
         } else {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
         }

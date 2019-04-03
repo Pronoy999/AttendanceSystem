@@ -296,29 +296,29 @@ helpers.getRandomImei = function (len) {
  */
 helpers.addInventoryPhone = function (data, callback) {
     console.log(data);
-    const brand = data.brand.trim();
-    const model_name = data.model_name.trim();
-    const imei_1 = data.product_imei_1.trim();
-    const imei_2 = data.product_imei_2.trim();
-    const color = data.product_color.trim();
+    const brand = data.brand;
+    const model_name = data.model_name;
+    const imei_1 = data.product_imei_1;
+    const imei_2 = typeof (data.product_imei_2) === 'string' ? data.product_imei_2 : "NA";
+    const color = data.product_color;
     const timeDate = Math.floor((new Date().getTime()) / 1000);
     const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
     const time = formattedDate[1];
     const date = formattedDate[0];
-    const price = data.product_price.trim();
+    const price = data.product_price;
     const grade = data.product_grade;
     const vendorId = data.vendor_id;
     const email = data.operations_email;
     const service_stock = data.service_stock;
     const isApproved = data.is_approved;
-    const storage = data.storage;
-    let charger = data.charger.trim();
-    let head_phone = data.head_phone.trim();
-    let ejectorTool = data.ejector_tool.trim();
-    let back_cover = data.back_cover.trim();
+    const storage = typeof (data.storage) === 'undefined' ? 0 : data.storage;
+    let charger = data.charger;
+    let head_phone = data.head_phone;
+    let ejectorTool = data.ejector_tool;
+    let back_cover = data.back_cover;
     let manual = data.manual;
     let connector = data.connector;
-    const remarks = data.remarks.trim();
+    const remarks = typeof (data.remarks) === 'string' ? data.remarks : "NA";
     let isManual = checkValid(data.is_manual);
     isManual = typeof (isManual) === 'string' ? isManual : "no";
     charger = checkValid(charger);
@@ -353,7 +353,8 @@ helpers.addInventoryPhone = function (data, callback) {
                 } else if (err) {
                     //If the phone is already present in inventory then the status will be updated.
                     const query = "UPDATE inventory SET service_stock = " + service_stock +
-                        ", remarks = '" + remarks + "' WHERE product_imei_1 LIKE '" + imei_1 + "'";
+                        ", remarks = '" + remarks + "', operations_email = '" + email + "', is_video_taken = 0 " +
+                        "WHERE product_imei_1 LIKE '" + imei_1 + "'";
                     database.query(query, function (err, updateData) {
                         if (err) {
                             console.error(err.stack);
@@ -623,7 +624,12 @@ helpers.addServiceCost = function (dataObject) {
         if (err) {
             console.error(err.stack);
         } else {
-            const serviceCenter = selectData[0].service_center;
+            let serviceCenter;
+            try {
+                serviceCenter = selectData[0].service_center;
+            } catch (e) {
+                serviceCenter = 7;
+            }
             console.log(serviceCenter);
             query = "INSERT INTO service_center_cost VALUES ('" + imei + "'," + serviceCenter + "," + body + "," + screen + "," + battery + "," +
                 pasting + "," + fingerprint + "," + cleaning + "," + camera + "," + speaker + "," + buttons + "," + microphone + "," + cost + ")";
@@ -815,6 +821,39 @@ helpers.getAndroidDeviceName = (code) => {
                 }
             })
         })
+    })
+};
+/**
+ * Method to insert the Order status Scan data to the System.
+ * @param channelOrderId: The Channel Order ID.
+ * @param orderStatus: The Order status.
+ * @param imeiNumber: the IMEI Number.
+ * @param isAuth: Whether the order is Authorized to go or not.
+ */
+helpers.logOrder = function (channelOrderId, orderStatus, imeiNumber, isAuth) {
+    const query = "INSERT INTO order_status_log VALUES ('" + channelOrderId + "'," +
+        1 + ",'355409070707199','" + isAuth + "',NOW())";
+    console.log(query);
+    database.query(query, (err, insertData) => {
+        if (err) {
+            console.error(err.stack);
+        } else {
+            console.log("Order status Updated.");
+        }
+    });
+};
+/**
+ * Method to notify when a breached order is sent.
+ * @param channelOrderID: The Order ID.
+ */
+helpers.notifyBreachOrder = function (channelOrderID) {
+    const msg = "Hi, Channel order ID : " + channelOrderID + " was sent even when it was not authorized to go.";
+    snsLib.sendMessage("+918013020201", msg, (err) => {
+        if (err) {
+            console.error(err.stack);
+        } else {
+            console.log("Order status TEXT Sent.");
+        }
     })
 };
 /**

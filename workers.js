@@ -13,9 +13,9 @@ workers.checkOrderStatus = function () {
 };
 workers._loopCheck = function () {
     console.log('in Workers');
-    var query = "SELECT * FROM order_details o, " +
+    const query = "SELECT * FROM order_details o, " +
         "order_status_details s " +
-        "WHERE s.status='Pending' AND o.order_status=s.id";
+        "WHERE s.status='Ready-to-Pack' AND o.order_status=s.id";
     database.query(query, function (err, pendingData) {
         //console.log(pendingData);
         if (err) {
@@ -30,7 +30,7 @@ workers._loopCheck = function () {
                 var difference = currentTime - epochTime;
                 var hoursDifference = Math.floor(difference / (1000 * 60 * 60));
                 var message = "Hi, order number: " + eachOrder.channel_order_id +
-                    " from " + eachOrder.channel_name + " is Ready to Invoice for more than 12 Hours.";
+                    " from " + eachOrder.channel_name + " is Ready to Pack for more than 12 Hours.";
                 let mobileNumber = "";
                 if (hoursDifference <= 13) {
                     mobileNumber = "+918097611136";
