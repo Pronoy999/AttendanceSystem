@@ -2743,7 +2743,10 @@ handlers.details = function (dataObject, callback) {
                         }
                     });
                 } else if (type === 'service') {
-                    query = "SELECT * FROM inventory WHERE service_stock=3 ";
+                    query = "SELECT i.*,s.service_center FROM diagnostic_app.inventory i," +
+                        " service_center_details s " +
+                        "WHERE s.id=i.service_center AND i.service_center <> 2 " +
+                        "AND i.service_stock=3";
                     database.query(query, (err, serviceData) => {
                         if (err) {
                             console.error(err.stack);
@@ -3659,13 +3662,13 @@ handlers.devNames = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, (isValid) => {
         if (isValid) {
             if (dataObject.method === 'post') {
-                const type = typeof (dataObject.postData.type) === 'string' ? dataObject.postData.type : false;
+                const type = typeof (dataObject.postData.type) === 'string' ? dataObject.postData.type.toLowerCase() : false;
                 const code = typeof (dataObject.postData.code) === 'string' ? dataObject.postData.code : false;
                 const model = typeof (dataObject.postData.model) === 'string' ? dataObject.postData.model : false;
                 if (type) {
                     let promise;
                     switch (type) {
-                        case "iPhone": {
+                        case "ios": {
                             if (code && model) {
                                 promise = helpers.getiOSDeviceName(model, code);
                             } else {
