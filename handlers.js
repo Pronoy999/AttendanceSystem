@@ -1805,6 +1805,7 @@ handlers.visit = function (dataObject, callback) {
 };
 /**
  * Method to insert the New phone to the Inventory.
+ * GET to get the devices in Transit.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.
  */
@@ -1819,6 +1820,38 @@ handlers.inventoryAdd = function (dataObject, callback) {
                             callback(err, 500, {'res': messages.errorMessage});
                         } else {
                             callback(false, 200, {'res': messages.phoneInserted});
+                        }
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
+            } else {
+                callback(true, 403, {'res': messages.tokenExpiredMessage});
+            }
+        });
+    } else if (dataObject.method === 'get') {
+        helpers.validateToken(dataObject.queryString.key, (isValid) => {
+            if (isValid) {
+                const type = typeof (dataObject.queryString.type) === 'string' ? dataObject.queryString.type : false;
+                if (type) {
+                    let query;
+                    switch (type) {
+                        case "order":
+                            query = "SELECT * FROM inventory WHERE service_stock = 11";
+                            break;
+                        case "service":
+                            query = "SELECT * FROM inventory WHERE service_stock = 10";
+                            break;
+                        case "queued":
+                            query = "SELECT * FROM inventory WHERE service_stock = 4";
+                            break;
+                    }
+                    database.query(query, (err, queuedData) => {
+                        if (err) {
+                            console.error(err.stack);
+                            callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                            callback(false, 200, {'res': queuedData});
                         }
                     });
                 } else {
