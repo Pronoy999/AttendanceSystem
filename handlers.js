@@ -851,6 +851,7 @@ handlers.inventoryData = function (dataObject, callback) {
     let isReponded = false;
     const phone_details = [];
     const key = dataObject.queryString.key;
+
     if (dataObject.method === 'get') {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
@@ -978,28 +979,24 @@ handlers.inventoryData = function (dataObject, callback) {
     } else if (dataObject.method === 'put') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-                let imei = false, status = false;
+                let imei = false, status = false, orderId = false, query = "";
                 try {
                     imei = typeof (dataObject.queryString.imei) === 'string' &&
                     dataObject.queryString.imei.length > 0 ? dataObject.queryString.imei : false;
                     status = typeof (dataObject.queryString.status) === 'string' &&
                     dataObject.queryString.status.length > 0 ? dataObject.queryString.status : false;
+                    orderId = typeof (dataObject.queryString.orderid) === 'string' &&
+                        dataObject.queryString.orderid;
+                    false;
                 } catch (e) {
                     console.log(e);
                 }
                 console.log(imei, status);
-                if (imei && status) {
-                    const query = "UPDATE inventory i, service_stock_sold_details s " +
-                        "SET i.service_stock=s.id WHERE i.product_imei_1 LIKE '" + imei +
-                        "' AND s.sold_stock_service LIKE '" + status + "'";
-                    database.query(query, function (err, updateData) {
-                        if (err) {
-                            console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
-                        } else {
-                            callback(false, 200, {'res': true});
-                        }
-                    });
+
+                if (imei && status && orderId) {
+                    updateInventory(imei, "Queued");
+                } else if (imei && status && !orderId) {
+                    updateInventory(imei, status);
                 } else {
                     callback(true, 404, {'res': messages.insufficientData});
                 }
@@ -1027,6 +1024,20 @@ handlers.inventoryData = function (dataObject, callback) {
             };
             callback(false, 200, {'res': response});
         }
+    }
+
+    function updateInventory(imei, status) {
+        const query = "UPDATE inventory i, service_stock_sold_details s " +
+            "SET i.service_stock=s.id WHERE i.product_imei_1 LIKE '" + imei +
+            "' AND s.sold_stock_service LIKE '" + status + "'";
+        database.query(query, function (err, updateData) {
+            if (err) {
+                console.log(err);
+                callback(err, 500, {'res': messages.errorMessage});
+            } else {
+                callback(false, 200, {'res': true});
+            }
+        });
     }
 };
 /**
@@ -3117,7 +3128,7 @@ handlers.qr = function (dataObject, callback) {
                                         } else {
                                             query = "SELECT * FROM order_details " +
                                                 "WHERE imei_number LIKE '" + qrData[0].imei + "' AND order_status <> 8 " +
-                                                "AND order_status <> 12 ";
+                                                "AND order_status <> 12 AND order_status <>5";
                                             database.query(query, (err, orderData) => {
                                                 if (err) {
                                                     console.error(err.stack);
