@@ -5,7 +5,6 @@ const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
 const fs = require('fs');
-/*
 const {exec} = require('child_process');
 const java = require('./initJava');
 const aws = require('./aws');
@@ -15,7 +14,6 @@ const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
 const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
 const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
 const S3 = new aws.S3();
-*/
 const handlers = {};
 /**
  * Attendance for Pronoy,munish sir,kaisanba
@@ -3437,6 +3435,27 @@ handlers.qrSecurity = function (dataObject, callback) {
                         });
                     }
                 });
+            } else if (dataObject.method === 'get') {
+                const qrId = Number(dataObject.queryString.id) > 0 ? dataObject.queryString.id : false;
+                const type = typeof (dataObject.queryString.type) === 'string' ? dataObject.queryString.type : false;
+                if (qrId && type) {
+                    let promise;
+                    switch (type) {
+                        case "order":
+                            promise = helpers.updateReturnPhoneStatus(qrId, true);
+                            break;
+                        case "service":
+                            promise = helpers.updateReturnPhoneStatus(qrId, false);
+                            break;
+                    }
+                    promise.then(err => {
+                        callback(false, 200, {'res': true});
+                    }).catch(err => {
+                        callback(err, 500, {'res': messages.errorMessage});
+                    });
+                } else {
+                    callback(true, 400, {'res': messages.insufficientData});
+                }
             }
         } else {
             callback(true, 403, {'res': messages.tokenExpiredMessage});

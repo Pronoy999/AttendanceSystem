@@ -761,7 +761,7 @@ helpers.mapPTypeToName = (code) => {
         case "iPad8,8":
             return "iPad Pro (12.9-inch) (3rd generation)";
         default:
-            return sname;
+            return code;
     }
 };
 /**
@@ -855,6 +855,47 @@ helpers.notifyBreachOrder = function (channelOrderID) {
             console.log("Order status TEXT Sent.");
         }
     })
+};
+/**
+ * Method to update the Phone and inventory status based on service or Order Return.
+ * @param qr: The QR Id.
+ * @param isOrder: true for order return else false.
+ * @returns {Promise<any>}
+ */
+helpers.updateReturnPhoneStatus = function (qr, isOrder) {
+    return new Promise((resolve, reject) => {
+        let query = "SELECT * FROM phone_details_qr WHERE id= " + qr;
+        let query1;
+        database.query(query, (err, qrData) => {
+            if (err) {
+                console.error(err.stack);
+                reject(true);
+            } else {
+                if (isOrder) {
+                    query = "UPDATE inventory SET service_stock = 11 WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
+                    query1 = "UPDATE phone_details SET status = 11 WHERE imei LIKE '" + qrData[0].imei + "'";
+                } else {
+                    query = "UPDATE inventory SET service_stock = 10 WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
+                    query1 = "UPDATE phone_details SET status = 10 WHERE imei LIKE '" + qrData[0].imei + "'";
+                }
+                database.query(query, (err, inventoryUpdate) => {
+                    if (err) {
+                        console.error(err.stack);
+                        reject(true);
+                    } else {
+                        resolve(true);
+                    }
+                });
+                database.query(query1, (err, phoneData) => {
+                    if (err) {
+                        console.error(err.stack);
+                    } else {
+                        console.log("Phone details Updated.");
+                    }
+                });
+            }
+        });
+    });
 };
 /**
  * Exporting the module.
