@@ -5,7 +5,7 @@ const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
 const fs = require('fs');
-const {exec} = require('child_process');
+const { exec } = require('child_process');
 const java = require('./initJava');
 const aws = require('./aws');
 const fp_json_file_name = './fp_data.json';
@@ -75,7 +75,7 @@ handlers.notFound = function (data, callback) {
  * @param callback
  */
 handlers.ping = function (dataObject, callback) {
-    callback(false, 200, {'res': 'Welcome to HyperXchange API version 1.0.'});
+    callback(false, 200, { 'res': 'Welcome to HyperXchange API version 1.0.' });
 };
 /**
  * Method to verify or to send OTP.
@@ -124,7 +124,7 @@ handlers.otp = function (dataObject, callback) {
                             }
                             deleteOTP(otp);
                         } else {
-                            callback(false, 400, {'res': false});
+                            callback(false, 400, { 'res': false });
                         }
                     }
                 });
@@ -177,10 +177,10 @@ handlers.otp = function (dataObject, callback) {
             } else if (dataObject.method === 'options') {
                 callback(true, 200, {});//Accepting Options.
             } else {
-                callback(false, 400, {'res': 'Invalid Request Method.'});
+                callback(false, 400, { 'res': 'Invalid Request Method.' });
             }
         } else {
-            callback(false, 403, {'res': messages.tokenExpiredMessage});
+            callback(false, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 
@@ -247,7 +247,7 @@ handlers.text = function (dataObject, callback) {
                 callback(true, 404, response);
             }
         } else {
-            callback(false, 403, {'res': messages.tokenExpiredMessage});
+            callback(false, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 
@@ -258,7 +258,7 @@ handlers.text = function (dataObject, callback) {
     function sendResponse(status) {
         if (!status) overallStatus = false;
         if (counter === array.length - 1) {
-            callback(false, 200, {'res': 'Message Send', 'overall': overallStatus});
+            callback(false, 200, { 'res': 'Message Send', 'overall': overallStatus });
         }
     }
 };
@@ -284,7 +284,7 @@ handlers.phone = function (dataObject, callback) {
                         callback(err, 500, response);
                     } else {
                         if (data.length > 0) {
-                            callback(false, 200, {res: true});
+                            callback(false, 200, { res: true });
                         } else {
                             response = {
                                 'res': false
@@ -314,9 +314,9 @@ handlers.phone = function (dataObject, callback) {
                 try {
                     console.log(dataObject.postData);
                     const imei = typeof (dataObject.postData.imei) === 'string' &&
-                    dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                        dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
                     const status = typeof (dataObject.postData.status) === 'string' &&
-                    dataObject.postData.status.length > 1 ? dataObject.postData.status : false;
+                        dataObject.postData.status.length > 1 ? dataObject.postData.status : false;
                     const isServiceReturn = typeof (dataObject.postData.service_return) === 'boolean' ?
                         dataObject.postData.service_return : false;
 
@@ -329,9 +329,9 @@ handlers.phone = function (dataObject, callback) {
                         database.query(query, function (err, updateData) {
                             if (err) {
                                 console.error(err.stack);
-                                callback(err, 500, {'res': messages.errorMessage});
+                                callback(err, 500, { 'res': messages.errorMessage });
                             } else {
-                                callback(false, 200, {'res': true});
+                                callback(false, 200, { 'res': true });
                                 //updateQRTable(imei);
                                 //deleteInventory(imei);
                                 if (isServiceReturn) {
@@ -343,16 +343,16 @@ handlers.phone = function (dataObject, callback) {
                     } else {
                         console.log("IMEI: ", imei);
                         console.log('STATUS: ', status);
-                        callback(true, 400, {'res': messages.insufficientData});
+                        callback(true, 400, { 'res': messages.insufficientData });
                     }
                 } catch (e) {
                     console.error(e.stack);
                 }
             } else {
-                callback(true, 400, {'res': messages.invalidRequestMessage});
+                callback(true, 400, { 'res': messages.invalidRequestMessage });
             }
         } else {
-            callback(false, 403, {'res': messages.tokenExpiredMessage});
+            callback(false, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 
@@ -411,13 +411,13 @@ handlers.report = function (dataObject, callback) {
     } else if (method === 'put') {
         helpers.updatePhoneReport(dataObject.postData, function (err) {
             if (err) {
-                callback(err, 500, {'res': messages.errorMessage});
+                callback(err, 500, { 'res': messages.errorMessage });
             } else {
-                callback(false, 200, {'res': true});
+                callback(false, 200, { 'res': true });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 };
 /**
@@ -592,7 +592,7 @@ handlers.addVisitor = function (dataObject, callback) {
                         }
                     });
                 } else {
-                    callback(true, 403, {'res': messages.tokenExpiredMessage});
+                    callback(true, 403, { 'res': messages.tokenExpiredMessage });
                 }
             } else {
                 response = {
@@ -611,7 +611,7 @@ handlers.addVisitor = function (dataObject, callback) {
         callback(false, 400, response);
     }
 }
-;
+    ;
 /**
  * Method to get the Visit Log.
  * @param dataObject: The Request Object.
@@ -661,13 +661,13 @@ handlers.visitLog = function (dataObject, callback) {
                     database.query(query, function (err, visitData) {
                         if (err) {
                             console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': visitData});
+                            callback(false, 200, { 'res': visitData });
                         }
                     });
                 } else {
-                    callback(true, 403, {'res': messages.tokenExpiredMessage});
+                    callback(true, 403, { 'res': messages.tokenExpiredMessage });
                 }
             });
         } else if (employeeID === 0) {
@@ -681,18 +681,18 @@ handlers.visitLog = function (dataObject, callback) {
                     database.query(query, function (err, visitData) {
                         if (err) {
                             console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': visitData});
+                            callback(false, 200, { 'res': visitData });
                         }
                     });
                 } else {
-                    callback(true, 403, {'res': messages.tokenExpiredMessage});
+                    callback(true, 403, { 'res': messages.tokenExpiredMessage });
                 }
             });
         } else {
             console.log(employeeID);
-            callback(true, 400, {'res': messages.insufficientData});
+            callback(true, 400, { 'res': messages.insufficientData });
         }
     } else {
         response = {
@@ -781,7 +781,7 @@ handlers.token = function (dataObject, callback) {
                         if (!err) {
                             callback(false, 200, response);
                         } else {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         }
                     });
                 } else {
@@ -789,7 +789,7 @@ handlers.token = function (dataObject, callback) {
                 }
             });
         } else {
-            callback(true, 400, {'res': 'Missing Required Fields'});
+            callback(true, 400, { 'res': 'Missing Required Fields' });
         }
     } else if (dataObject.method === 'put') {
         let extend = dataObject.postData.extend;
@@ -800,7 +800,7 @@ handlers.token = function (dataObject, callback) {
             var query = "SELECT * FROM api_token WHERE api_key LIKE '" + apikey + "'";
             database.query(query, function (err, data) {
                 if (err) {
-                    callback(err, 404, {'res': 'Invalid Api Key'});
+                    callback(err, 404, { 'res': 'Invalid Api Key' });
                 } else {
                     const validity = data[0].validity;
                     console.log(validity);
@@ -811,7 +811,7 @@ handlers.token = function (dataObject, callback) {
                             "WHERE api_key LIKE '" + apikey + "'";
                         database.query(query, function (err, updateData) {
                             if (err) {
-                                callback(err, 500, {'res': 'Error'});
+                                callback(err, 500, { 'res': 'Error' });
                             } else {
                                 const response = {
                                     'apikey': apikey,
@@ -822,15 +822,15 @@ handlers.token = function (dataObject, callback) {
                             }
                         });
                     } else {
-                        callback(true, 409, {'res': messages.tokenExpiredMessage});
+                        callback(true, 409, { 'res': messages.tokenExpiredMessage });
                     }
                 }
             });
         } else {
-            callback(true, 400, {'res': 'Missing Required Fields'});
+            callback(true, 400, { 'res': 'Missing Required Fields' });
         }
     } else {
-        callback(false, 400, {'res': messages.invalidRequestMessage});
+        callback(false, 400, { 'res': messages.invalidRequestMessage });
     }
 };
 /**
@@ -869,11 +869,11 @@ handlers.inventoryData = function (dataObject, callback) {
                         };
                         callback(false, 200, response);
                     } else {
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     }
                 });
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'post') {
@@ -882,9 +882,9 @@ handlers.inventoryData = function (dataObject, callback) {
                 let imei = "", flag = "";
                 try {
                     imei = typeof (dataObject.postData.imei) === 'string'
-                    && dataObject.postData.imei.length > 0 ? dataObject.postData.imei : false;
+                        && dataObject.postData.imei.length > 0 ? dataObject.postData.imei : false;
                     flag = typeof (dataObject.postData.flag) === 'string' &&
-                    dataObject.postData.flag.length > 1 ? dataObject.postData.flag : false;
+                        dataObject.postData.flag.length > 1 ? dataObject.postData.flag : false;
                 } catch (e) {
                     console.log(e);
                 }
@@ -893,9 +893,9 @@ handlers.inventoryData = function (dataObject, callback) {
                     database.query(query, function (err, selectData) {
                         if (err) {
                             console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': selectData});
+                            callback(false, 200, { 'res': selectData });
                         }
                     });
                 } else if (flag === 'all') {
@@ -904,7 +904,7 @@ handlers.inventoryData = function (dataObject, callback) {
                     database.query(query, function (err, phoneData) {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             isPhone = true;
                             phone = phoneData;
@@ -915,7 +915,7 @@ handlers.inventoryData = function (dataObject, callback) {
                     database.query(query, function (err, reportData) {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             isReport = true;
                             report = reportData;
@@ -938,7 +938,7 @@ handlers.inventoryData = function (dataObject, callback) {
                             isService = false;
                             console.error(err.stack);
                             isReponded = true;
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             isService = true;
                             service = serviceData;
@@ -949,7 +949,7 @@ handlers.inventoryData = function (dataObject, callback) {
                     database.query(query, (err, orderData) => {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             isOrder = true;
                             order = orderData;
@@ -960,7 +960,7 @@ handlers.inventoryData = function (dataObject, callback) {
                     database.query(query, (err, qrData) => {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             isQr = true;
                             qr = qrData;
@@ -968,10 +968,10 @@ handlers.inventoryData = function (dataObject, callback) {
                         }
                     })
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'put') {
@@ -980,9 +980,9 @@ handlers.inventoryData = function (dataObject, callback) {
                 let imei = false, status = false, orderId = false, query = "";
                 try {
                     imei = typeof (dataObject.queryString.imei) === 'string' &&
-                    dataObject.queryString.imei.length > 0 ? dataObject.queryString.imei : false;
+                        dataObject.queryString.imei.length > 0 ? dataObject.queryString.imei : false;
                     status = typeof (dataObject.queryString.status) === 'string' &&
-                    dataObject.queryString.status.length > 0 ? dataObject.queryString.status : false;
+                        dataObject.queryString.status.length > 0 ? dataObject.queryString.status : false;
                     orderId = typeof (dataObject.queryString.orderid) === 'string' &&
                         dataObject.queryString.orderid;
                     false;
@@ -996,14 +996,14 @@ handlers.inventoryData = function (dataObject, callback) {
                 } else if (imei && status && !orderId) {
                     updateInventory(imei, status);
                 } else {
-                    callback(true, 404, {'res': messages.insufficientData});
+                    callback(true, 404, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 
     /**
@@ -1020,7 +1020,7 @@ handlers.inventoryData = function (dataObject, callback) {
                 order,
                 qr
             };
-            callback(false, 200, {'res': response});
+            callback(false, 200, { 'res': response });
         }
     }
 
@@ -1031,9 +1031,9 @@ handlers.inventoryData = function (dataObject, callback) {
         database.query(query, function (err, updateData) {
             if (err) {
                 console.log(err);
-                callback(err, 500, {'res': messages.errorMessage});
+                callback(err, 500, { 'res': messages.errorMessage });
             } else {
-                callback(false, 200, {'res': true});
+                callback(false, 200, { 'res': true });
             }
         });
     }
@@ -1048,7 +1048,7 @@ handlers.employee = function (dataObject, callback) {
         if (dataObject.method === 'get') {
             if (isValid) {
                 const id = typeof (dataObject.queryString.id) === 'string' &&
-                dataObject.queryString.id.length > 0 ? dataObject.queryString.id : false;
+                    dataObject.queryString.id.length > 0 ? dataObject.queryString.id : false;
                 let query;
                 if (id) {
                     query = "SELECT * FROM employee_details WHERE id = " + id;
@@ -1057,7 +1057,7 @@ handlers.employee = function (dataObject, callback) {
                 }
                 database.query(query, function (err, data) {
                     if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     } else {
                         const employee = [];
                         for (let i = 0; i < data.length; i++) {
@@ -1070,10 +1070,10 @@ handlers.employee = function (dataObject, callback) {
                     }
                 });
             } else {
-                callback(false, 403, {'res': messages.tokenExpiredMessage});
+                callback(false, 403, { 'res': messages.tokenExpiredMessage });
             }
         } else {
-            callback(true, 400, {'res': messages.invalidRequestMessage});
+            callback(true, 400, { 'res': messages.invalidRequestMessage });
         }
     });
 };
@@ -1101,9 +1101,9 @@ handlers.inventoryPhone = function (dataObject, callback) {
                     database.query(query, function (err, repairData) {
                         if (err) {
                             console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': repairData});
+                            callback(false, 200, { 'res': repairData });
                         }
                     });
                 } else if (flag === 'lost') {
@@ -1117,7 +1117,7 @@ handlers.inventoryPhone = function (dataObject, callback) {
                 }
                 database.query(query, function (err, phoneData) {
                     if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     } else {
                         const array = [];
                         for (let i = 0; i < phoneData.length; i++) {
@@ -1132,26 +1132,26 @@ handlers.inventoryPhone = function (dataObject, callback) {
 
             } else if (dataObject.method === 'put') {
                 const imei = typeof (dataObject.postData.imei) === 'string' &&
-                dataObject.postData.imei.length > 0 ? dataObject.postData.imei : false;
+                    dataObject.postData.imei.length > 0 ? dataObject.postData.imei : false;
                 const serviceCenter = dataObject.postData.service_center > 0 ? dataObject.postData.service_center : false;
                 if (imei && serviceCenter) {
                     const query = "UPDATE inventory SET service_center = " + serviceCenter + " WHERE product_imei_1 LIKE '" + imei + "'";
                     database.query(query, function (err, updateData) {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': true});
+                            callback(false, 200, { 'res': true });
                         }
                     });
                 }
             } else if (dataObject.method === 'get') {
                 const query = "SELECT "
             } else {
-                callback(true, 400, {'res': messages.invalidRequestMessage});
+                callback(true, 400, { 'res': messages.invalidRequestMessage });
             }
         } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 };
@@ -1167,27 +1167,27 @@ handlers.inventoryDead = function (dataObject, callback) {
             if (isValid) {
                 let imei = helpers.getRandomImei(16);
                 const brand = typeof (dataObject.postData.brand) === 'string' &&
-                dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
+                    dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
                 const model = typeof (dataObject.postData.model) === 'string' &&
-                dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
+                    dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
                 const serviceCenter = dataObject.postData.service_center.length > 0 ? dataObject.postData.service_center : false;
                 const remarks = typeof (dataObject.postData.remarks) === 'string' &&
-                dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
+                    dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
                 if (brand && model && serviceCenter && remarks) {
                     const query = "INSERT INTO dead_phone VALUES('','" + imei + "','" + brand + "','"
                         + model + "','" + serviceCenter + "','" + remarks + "')";
                     database.query(query, function (err, insertData) {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': imei});
+                            callback(false, 200, { 'res': imei });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'get') {
@@ -1196,22 +1196,22 @@ handlers.inventoryDead = function (dataObject, callback) {
                 const query = "SELECT model_name, count(model_name) as count FROM dead_phone group by model_name";
                 database.query(query, function (err, deadData) {
                     if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     } else {
-                        callback(false, 200, {'res': deadData});
+                        callback(false, 200, { 'res': deadData });
                     }
                 });
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'put') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 const imei = typeof (dataObject.postData.imei) === 'string' &&
-                dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                    dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
                 const remarks = typeof (dataObject.postData.remarks) === 'string' &&
-                dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
+                    dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
                 if (imei && dataObject) {
                     const query = "UPDATE inventory i, service_stock_sold_details s" +
                         " SET i.service_stock =s.id , i.remarks= '" + remarks + "'" +
@@ -1219,14 +1219,14 @@ handlers.inventoryDead = function (dataObject, callback) {
                     database.query(query, function (err, updateData) {
                         if (err) {
                             console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': true});
+                            callback(false, 200, { 'res': true });
                         }
                     });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     }
@@ -1248,7 +1248,7 @@ handlers.getVendor = function (dataObject, callback) {
                     const query = "SELECT * FROM vendor_details WHERE vendor_id = " + vendorId;
                     database.query(query, function (err, data) {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             callback(false, 200, data[0]);
                         }
@@ -1272,14 +1272,14 @@ handlers.getVendor = function (dataObject, callback) {
                     database.insert("vendor_details", values, function (err, insertData) {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': false, 'msg': messages.errorMessage});
+                            callback(err, 500, { 'res': false, 'msg': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': true});
+                            callback(false, 200, { 'res': true });
                         }
                     });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'get') {
@@ -1293,9 +1293,9 @@ handlers.getVendor = function (dataObject, callback) {
             database.query(query, function (err, spareDate) {
                 if (err) {
                     console.error(err.stack);
-                    callback(err, 500, {'res': messages.errorMessage});
+                    callback(err, 500, { 'res': messages.errorMessage });
                 } else {
-                    callback(false, 200, {'res': spareDate});
+                    callback(false, 200, { 'res': spareDate });
                 }
             });
         } else if (id && type === 'device') {
@@ -1305,16 +1305,16 @@ handlers.getVendor = function (dataObject, callback) {
             database.query(query, function (err, deviceData) {
                 if (err) {
                     console.error(err.stack);
-                    callback(err, 400, {'res': messages.errorMessage});
+                    callback(err, 400, { 'res': messages.errorMessage });
                 } else {
-                    callback(false, 200, {'res': deviceData});
+                    callback(false, 200, { 'res': deviceData });
                 }
             });
         } else {
-            callback(true, 400, {'res': messages.insufficientData});
+            callback(true, 400, { 'res': messages.insufficientData });
         }
     } else {
-        callback(true, 403, {'res': messages.invalidRequestMessage});
+        callback(true, 403, { 'res': messages.invalidRequestMessage });
     }
 };
 /**
@@ -1341,16 +1341,16 @@ handlers.inventoryState = function (dataObject, callback) {
                         "WHERE s.sold_stock_service LIKE '" + state + "' AND s.id = i.service_stock group by (i.model_name)";
                     database.query(query, function (err, serviceData) {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': serviceData});
+                            callback(false, 200, { 'res': serviceData });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'put') {
@@ -1372,13 +1372,13 @@ handlers.inventoryState = function (dataObject, callback) {
                 database.query(query, function (err, updateData) {
                     if (err) {
                         console.error(err.stack);
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     } else {
-                        callback(false, 200, {'res': true});
+                        callback(false, 200, { 'res': true });
                     }
                 });
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         })
     } else if (dataObject.method === 'post') {
@@ -1395,20 +1395,20 @@ handlers.inventoryState = function (dataObject, callback) {
                     database.query(query, (err, updateData) => {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': true});
+                            callback(false, 200, { 'res': true });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 };
 /**
@@ -1446,15 +1446,15 @@ handlers.attendance = function (dataObject, callback) {
                                 });
                                 notifyEmployeeAttendance(id, new_status);
                             } else {
-                                callback(err, 500, {'res': messages.errorMessage});
+                                callback(err, 500, { 'res': messages.errorMessage });
                             }
                         });
                     } else {
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     }
                 });
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'get') {
@@ -1468,74 +1468,74 @@ handlers.attendance = function (dataObject, callback) {
 
                 } catch (e) {
                     employeeID = false;
-                    callback(e, 400, {'res': messages.errorMessage});
+                    callback(e, 400, { 'res': messages.errorMessage });
                 }
                 if (employeeID) {
                     const query = "SELECT * FROM attendance_record WHERE employee_id = " + employeeID;
                     database.query(query, function (err, empData) {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             const attendanceRecord = [];
                             for (let i = 0; i < empData.length; i++) {
                                 attendanceRecord.push(empData[i]);
                             }
-                            callback(false, 200, {'res': attendanceRecord});
+                            callback(false, 200, { 'res': attendanceRecord });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'put') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
-                if (isValid) {
-                    const employeeID = dataObject.queryString.id > 0 ? dataObject.queryString.id : false;
-                    if (employeeID) {
-                        let query = "update employee_details set current_status = CASE " +
-                            "When current_status = 'signed_out' then 'signed_in'" +
-                            "when current_status = 'signed_in' then 'signed_out'" +
-                            "end where id =  " + employeeID;
-                        database.query(query, function (err, updateData) {
-                            if (err) {
-                                console.log(err);
-                                callback(err, 500, {'res': messages.errorMessage});
-                            } else {
-                                const timeDate = Math.floor((new Date().getTime()) / 1000);
-                                const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata')
-                                    .format(messages.dateFormat))
-                                    .split(' ');
-                                const date = formattedDate[0];
-                                const time = formattedDate[1];
-                                query = "INSERT INTO attendance_record VALUES(''," + employeeID + "," +
-                                    "(SELECT current_status FROM employee_details WHERE id=" + employeeID + ")," +
-                                    "'" + timeDate + "',(SELECT location FROM staging_diagnostic_app.employee_details WHERE id=" +
-                                    employeeID + "),'" + date + "','" + time + "')";
-                                console.log(query);
-                                database.query(query, function (err, insertData) {
-                                    if (err) {
-                                        console.log(err);
-                                        callback(err, 500, {'res': messages.errorMessage});
-                                    } else {
-                                        callback(false, 200, {'res': true});
-                                        notifyEmployeeAttendance(employeeID);
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        callback(true, 400, {'res': messages.insufficientData});
-                    }
+            if (isValid) {
+                const employeeID = dataObject.queryString.id > 0 ? dataObject.queryString.id : false;
+                if (employeeID) {
+                    let query = "update employee_details set current_status = CASE " +
+                        "When current_status = 'signed_out' then 'signed_in'" +
+                        "when current_status = 'signed_in' then 'signed_out'" +
+                        "end where id =  " + employeeID;
+                    database.query(query, function (err, updateData) {
+                        if (err) {
+                            console.log(err);
+                            callback(err, 500, { 'res': messages.errorMessage });
+                        } else {
+                            const timeDate = Math.floor((new Date().getTime()) / 1000);
+                            const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata')
+                                .format(messages.dateFormat))
+                                .split(' ');
+                            const date = formattedDate[0];
+                            const time = formattedDate[1];
+                            query = "INSERT INTO attendance_record VALUES(''," + employeeID + "," +
+                                "(SELECT current_status FROM employee_details WHERE id=" + employeeID + ")," +
+                                "'" + timeDate + "',(SELECT location FROM staging_diagnostic_app.employee_details WHERE id=" +
+                                employeeID + "),'" + date + "','" + time + "')";
+                            console.log(query);
+                            database.query(query, function (err, insertData) {
+                                if (err) {
+                                    console.log(err);
+                                    callback(err, 500, { 'res': messages.errorMessage });
+                                } else {
+                                    callback(false, 200, { 'res': true });
+                                    notifyEmployeeAttendance(employeeID);
+                                }
+                            });
+                        }
+                    });
                 } else {
-                    callback(true, 403, {'res': messages.tokenExpiredMessage});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
+            } else {
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
+        }
         );
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 
     /**
@@ -1563,7 +1563,7 @@ handlers.attendance = function (dataObject, callback) {
         });
     }
 }
-;
+    ;
 /**
  * Method to get the Phone details with the IMEI from the Inventory.
  * @param dataObject: The Request Object.
@@ -1575,7 +1575,7 @@ handlers.inventoryImei = function (dataObject, callback) {
         helpers.validateToken(key, function (isValid) {
             if (isValid) {
                 const imei = typeof (dataObject.postData.imei) === 'string' &&
-                dataObject.postData.imei.trim().length > 10 ?
+                    dataObject.postData.imei.trim().length > 10 ?
                     dataObject.postData.imei.trim() : false;
                 if (imei) {
                     const query = "SELECT i.*,v.first_name as vendor_first_name, v.last_name as vendor_last_name FROM " +
@@ -1583,20 +1583,20 @@ handlers.inventoryImei = function (dataObject, callback) {
                         "WHERE i.product_imei_1 LIKE '" + imei + "' AND i.vendor_id = v.vendor_id ";
                     database.query(query, function (err, data) {
                         if (err) {
-                            callback(err, 500, {'res': 'Error'});
+                            callback(err, 500, { 'res': 'Error' });
                         } else {
                             callback(false, 200, data[0]);
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 };
 /**
@@ -1612,17 +1612,17 @@ handlers.inventoryPendingPhones = function (dataObject, callback) {
                 const query = "SELECT * FROM phone_details WHERE status = 5 AND is_customer=0";
                 database.query(query, function (err, phoneData) {
                     if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     } else {
-                        callback(false, 200, {'res': phoneData});
+                        callback(false, 200, { 'res': phoneData });
                     }
                 });
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 };
 /**
@@ -1652,24 +1652,24 @@ handlers.visit = function (dataObject, callback) {
                             const values = "''," + employeeId + "," + visitorID + ",'" + location + "','" + timeStamp + "',3,'" + purpose + "'";
                             database.insert("visit_details", values, function (err, insertVisitData) {
                                 if (!err) {
-                                    callback(false, 200, {'res': true});
+                                    callback(false, 200, { 'res': true });
                                     getTokenAndNotify(employeeId, insertVisitData.insertId);
                                 } else {
-                                    callback(err, 500, {'res': messages.errorMessage});
+                                    callback(err, 500, { 'res': messages.errorMessage });
                                     console.log(err);
                                 }
                             });
                         } else {
                             console.error(err, err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
 
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'put') {
@@ -1692,21 +1692,21 @@ handlers.visit = function (dataObject, callback) {
                     console.log(query);
                     database.query(query, function (err, updateData) {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': true});
+                            callback(false, 200, { 'res': true });
                             notifyVisitor(visitorPhone, status, employeeId);
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 
     /**
@@ -1817,16 +1817,16 @@ handlers.inventoryAdd = function (dataObject, callback) {
                 if (type === 'business') {
                     helpers.addInventoryPhone(dataObject.postData, function (err, data) {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': messages.phoneInserted});
+                            callback(false, 200, { 'res': messages.phoneInserted });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'get') {
@@ -1849,20 +1849,20 @@ handlers.inventoryAdd = function (dataObject, callback) {
                     database.query(query, (err, queuedData) => {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': queuedData});
+                            callback(false, 200, { 'res': queuedData });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 };
 /**
@@ -1887,44 +1887,44 @@ handlers.inventoryPin = function (dataObject, callback) {
                             database.query(query, function (err, updateData) {
                                 if (err) {
                                     console.log(err);
-                                    callback(err, 500, {'res': messages.errorMessage});
+                                    callback(err, 500, { 'res': messages.errorMessage });
                                 } else {
-                                    callback(false, 200, {'res': pin});
+                                    callback(false, 200, { 'res': pin });
                                 }
                             });
                         } else {
                             const values = "'" + emailId + "'," + pin;
                             database.insert("login_pin", values, function (err, insertData) {
                                 if (!err) {
-                                    callback(false, 200, {'res': pin});
+                                    callback(false, 200, { 'res': pin });
                                 } else {
-                                    callback(true, 500, {'res': messages.errorMessage});
+                                    callback(true, 500, { 'res': messages.errorMessage });
                                 }
                             });
                         }
                     });
                 } else {
-                    callback(false, 400, {'res': messages.insufficientData});
+                    callback(false, 400, { 'res': messages.insufficientData });
                 }
             } else if (dataObject.method === 'get') {
                 const userPin = dataObject.queryString.pin;
                 query = "SELECT * FROM login_pin WHERE passcode=" + userPin;
                 database.query(query, function (err, Data) {
                     if (err) {
-                        callback(err, 404, {'res': messages.errorMessage});
+                        callback(err, 404, { 'res': messages.errorMessage });
                     } else {
                         if (Data.length > 0) {
-                            callback(false, 200, {'res': true, 'email': Data[0].email});
+                            callback(false, 200, { 'res': true, 'email': Data[0].email });
                         } else {
-                            callback(false, 200, {'res': false});
+                            callback(false, 200, { 'res': false });
                         }
                     }
                 });
             } else {
-                callback(true, 400, {'res': messages.invalidRequestMessage});
+                callback(true, 400, { 'res': messages.invalidRequestMessage });
             }
         } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 };
@@ -1955,7 +1955,7 @@ handlers.inventoryAuth = function (dataObject, callback) {
                     checkLoggedIn(email);
                     checkValidity(email, password);
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData, 'msg': false});
+                    callback(true, 400, { 'res': messages.insufficientData, 'msg': false });
                 }
             } else if (dataObject.method === 'get') {
                 try {
@@ -1968,7 +1968,7 @@ handlers.inventoryAuth = function (dataObject, callback) {
                 console.log(query);
                 database.query(query, function (err, deleteData) {
                     if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                         isOTPDeleted = false;
                     } else {
                         isOTPDeleted = true;
@@ -1979,7 +1979,7 @@ handlers.inventoryAuth = function (dataObject, callback) {
                 database.query(query, function (err, updateData) {
                     if (err) {
                         isSessionDeleted = false;
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     } else {
                         isSessionDeleted = true;
                         sendResponse();
@@ -1991,7 +1991,7 @@ handlers.inventoryAuth = function (dataObject, callback) {
                  */
                 function sendResponse() {
                     if (isOTPDeleted && isSessionDeleted) {
-                        callback(false, 200, {'res': true});
+                        callback(false, 200, { 'res': true });
                     }
                 }
             } else if (dataObject.method === 'put') {
@@ -2009,19 +2009,19 @@ handlers.inventoryAuth = function (dataObject, callback) {
                     var query = "UPDATE people set sessionid='" + session + "' WHERE email LIKE '" + email + "'";
                     database.query(query, function (err, sessionData) {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': true});
+                            callback(false, 200, { 'res': true });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 400, {'res': messages.invalidRequestMessage});
+                callback(true, 400, { 'res': messages.invalidRequestMessage });
             }
         } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 
@@ -2033,12 +2033,12 @@ handlers.inventoryAuth = function (dataObject, callback) {
         const query = "SELECT * FROM login_pin WHERE email LIKE '" + email + "'";
         database.query(query, function (err, pinData) {
             if (err) {
-                callback(err, 500, {'res': messages.errorMessage});
+                callback(err, 500, { 'res': messages.errorMessage });
             } else {
                 if (pinData.length === 0) {
                     isLoggedIn = false;
                 } else {
-                    callback(false, 202, {'res': messages.alreadyLoggedIn});
+                    callback(false, 202, { 'res': messages.alreadyLoggedIn });
                 }
                 sendResponse(email);
             }
@@ -2054,17 +2054,17 @@ handlers.inventoryAuth = function (dataObject, callback) {
         const query = "SELECT * FROM people WHERE email LIKE '" + email + "'";
         database.query(query, function (err, loginData) {
             if (err) {
-                callback(err, 500, {'res': messages.errorMessage});
+                callback(err, 500, { 'res': messages.errorMessage });
             } else {
                 if (loginData.length > 0) {
                     if (loginData[0].email === email && loginData[0].password === password) {
                         isPasswordValid = true;
                         sendResponse(email);
                     } else {
-                        callback(true, 403, {'res': false, 'message': messages.invalidPassword});
+                        callback(true, 403, { 'res': false, 'message': messages.invalidPassword });
                     }
                 } else {
-                    callback(true, 403, {'res': false, 'message': messages.invalidPassword});
+                    callback(true, 403, { 'res': false, 'message': messages.invalidPassword });
                 }
             }
         });
@@ -2081,9 +2081,9 @@ handlers.inventoryAuth = function (dataObject, callback) {
             const query = "INSERT INTO login_pin VALUES('" + email + "'," + otp + ")";
             database.query(query, function (err, pinData) {
                 if (err) {
-                    callback(err, 500, {'res': messages.errorMessage});
+                    callback(err, 500, { 'res': messages.errorMessage });
                 } else {
-                    callback(false, 200, {'res': true, 'otp': otp, 'email': email});
+                    callback(false, 200, { 'res': true, 'otp': otp, 'email': email });
                 }
             });
         }
@@ -2105,13 +2105,13 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
                 console.log(postData);
                 helpers.addSellPhoneOrder(postData, function (err) {
                     if (err) {
-                        callback(err, 500, {'res': false});
+                        callback(err, 500, { 'res': false });
                     } else {
-                        callback(false, 200, {'res': true});
+                        callback(false, 200, { 'res': true });
                     }
                 });
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'get') {
@@ -2121,13 +2121,13 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
                 const query = "SELECT * FROM buy_back_phone_order WHERE imei LIKE '" + imei + "'";
                 database.query(query, function (err, sellData) {
                     if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     } else {
-                        callback(false, 200, {'res': sellData[0]});
+                        callback(false, 200, { 'res': sellData[0] });
                     }
                 });
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'put') {
@@ -2139,17 +2139,17 @@ handlers.sellPhoneOrder = function (dataObject, callback) {
                     "AND order_id = " + orderId;
                 database.query(query, function (err, updateData) {
                     if (err) {
-                        callback(err, 500, {'res': false});
+                        callback(err, 500, { 'res': false });
                     } else {
-                        callback(false, 200, {'res': true});
+                        callback(false, 200, { 'res': true });
                     }
                 });
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 };
 /**
@@ -2171,13 +2171,13 @@ handlers.sellPhone = function (dataObject, callback) {
                     query = "SELECT model FROM buy_back_phone WHERE brand LIKE '" + brandName + "'";
                     database.query(query, function (err, modelData) {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             const arr = [];
                             for (let i = 0; i < modelData.length; i++) {
                                 arr[i] = modelData[i].model;
                             }
-                            callback(false, 200, {'res': arr});
+                            callback(false, 200, { 'res': arr });
                         }
                     });
                 } else if (brandName && modelName) {
@@ -2185,15 +2185,15 @@ handlers.sellPhone = function (dataObject, callback) {
                         "' AND brand LIKE '" + brandName + "'";
                     database.query(query, function (err, phoneIdData) {
                         if (err) {
-                            callback(true, 500, {'res': messages.errorMessage});
+                            callback(true, 500, { 'res': messages.errorMessage });
                         } else {
                             const id = phoneIdData[0].id;
                             query = "SELECT storage,price FROM buy_back_phone_price WHERE phoneId = " + id;
                             database.query(query, function (err, phoneData) {
                                 if (err) {
-                                    callback(true, 500, {'res': messages.errorMessage});
+                                    callback(true, 500, { 'res': messages.errorMessage });
                                 } else {
-                                    callback(false, 200, {'res': phoneData});
+                                    callback(false, 200, { 'res': phoneData });
                                 }
                             });
                         }
@@ -2202,25 +2202,25 @@ handlers.sellPhone = function (dataObject, callback) {
                     query = "SELECT distinct(brand) FROM buy_back_phone";
                     database.query(query, function (err, brandData) {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             const arr = [];
                             for (let i = 0; i < brandData.length; i++) {
                                 arr[i] = brandData[i].brand;
                             }
-                            callback(false, 200, {'res': arr});
+                            callback(false, 200, { 'res': arr });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else if (dataObject.method === 'options') {
                 callback(false, 200, {});//Accepting Options Request.
             } else {
-                callback(false, 400, {'res': messages.invalidRequestMessage});
+                callback(false, 400, { 'res': messages.invalidRequestMessage });
             }
         } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 };
@@ -2241,45 +2241,45 @@ handlers.phonePrice = function (dataObject, callback) {
                     let query = "SELECT * FROM buy_back_phone WHERE brand LIKE '" + brand + "' AND model LIKE '" + model + "'";
                     database.query(query, function (err, phoneData) {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             const id = phoneData[0].id;
                             query = "SELECT * FROM buy_back_phone_price WHERE phoneId = " + id;
                             database.query(query, function (err, priceData) {
                                 if (err) {
-                                    callback(err, 500, {'res': messages.errorMessage});
+                                    callback(err, 500, { 'res': messages.errorMessage });
                                 } else {
                                     const response = {
                                         'storage': priceData[0].storage,
                                         'ram': priceData[0].ram,
                                         'price': priceData[0].price
                                     };
-                                    callback(false, 200, {'res': response});
+                                    callback(false, 200, { 'res': response });
                                 }
                             });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         })
     } else if (dataObject.method === 'put') {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 const model = typeof (dataObject.postData.model) === 'string' &&
-                dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
+                    dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
                 const storage = Number(dataObject.postData.storage) > 0 ? Number(dataObject.postData.storage) : false;
                 const price = Number(dataObject.postData.price) > 0 ? Number(dataObject.postData.price) : false;
                 const brand = typeof (dataObject.postData.brand) === 'string' &&
-                dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
+                    dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
                 let query = "SELECT id FROM buy_back_phone WHERE model LIKE '" + model + "'";
                 database.query(query, function (err, modelData) {
                     if (err) {
                         console.error(err.stack);
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     } else {
                         if (modelData.length > 0) {
                             query = "UPDATE buy_back_phone_price SET price = " + price + " " +
@@ -2287,9 +2287,9 @@ handlers.phonePrice = function (dataObject, callback) {
                             database.query(query, function (err, updateData) {
                                 if (err) {
                                     console.error(err.stack);
-                                    callback(err, 500, {'res': messages.errorMessage});
+                                    callback(err, 500, { 'res': messages.errorMessage });
                                 } else {
-                                    callback(false, 200, {'res': true});
+                                    callback(false, 200, { 'res': true });
                                 }
                             });
                         } else {
@@ -2298,16 +2298,16 @@ handlers.phonePrice = function (dataObject, callback) {
                             database.query(query, function (err, insertData) {
                                 if (err) {
                                     console.error(err.stack);
-                                    callback(err, 500, {'res': messages.errorMessage});
+                                    callback(err, 500, { 'res': messages.errorMessage });
                                 } else {
                                     const id = insertData.insertId;
                                     query = "INSERT INTO buy_back_phone_price VALUES (" + id + ",0," + storage + ",''," + price + ")";
                                     database.query(query, function (err, priceInsertData) {
                                         if (err) {
                                             console.error(err.stack);
-                                            callback(err, 500, {'res': messages.errorMessage});
+                                            callback(err, 500, { 'res': messages.errorMessage });
                                         } else {
-                                            callback(false, 200, {'res': true});
+                                            callback(false, 200, { 'res': true });
                                         }
                                     });
                                 }
@@ -2316,11 +2316,11 @@ handlers.phonePrice = function (dataObject, callback) {
                     }
                 });
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 };
 /**
@@ -2338,21 +2338,21 @@ handlers.orderReturned = function (dataObject, callback) {
                     "(SELECT distinct return_order_id FROM report_details WHERE length(return_order_id) > 9)";
                 database.query(query, function (err, returnedData) {
                     if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     } else {
                         const array = [];
                         for (let i = 0; i < returnedData.length; i++) {
                             array.push(returnedData[i]);
                         }
-                        callback(false, 200, {'res': array});
+                        callback(false, 200, { 'res': array });
                     }
                 });
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 };
 /**
@@ -2369,14 +2369,14 @@ handlers.orderDetails = function (dataObject, callback) {
             if (isValid) {
                 let status = dataObject.queryString.status;
                 const date = typeof (dataObject.queryString.date) === 'string' &&
-                dataObject.queryString.date.length > 1 ? dataObject.queryString.date : false;
+                    dataObject.queryString.date.length > 1 ? dataObject.queryString.date : false;
                 const channelname = typeof (dataObject.queryString.channel) === 'string' &&
-                dataObject.queryString.channel.length > 1 ? dataObject.queryString.channel : false;
+                    dataObject.queryString.channel.length > 1 ? dataObject.queryString.channel : false;
                 status = typeof (status) === 'string' && status.length > 1 ? status : false;
                 const hxOrderId = typeof (dataObject.queryString.orderid) === 'string' &&
-                dataObject.queryString.orderid.length > 0 ? dataObject.queryString.orderid : false;
+                    dataObject.queryString.orderid.length > 0 ? dataObject.queryString.orderid : false;
                 const imei = typeof (dataObject.queryString.imei) === 'string' &&
-                dataObject.queryString.imei.length > 0 ? dataObject.queryString.imei : false;
+                    dataObject.queryString.imei.length > 0 ? dataObject.queryString.imei : false;
                 let query;
                 if (!status && date && channelname) {
                     query = "SELECT * FROM order_details WHERE channel_name LIKE '" + channelname + "'  AND insertion_date " +
@@ -2398,29 +2398,29 @@ handlers.orderDetails = function (dataObject, callback) {
                 console.log(query);
                 database.query(query, function (err, orderData) {
                     if (err) {
-                        callback(err, 500, {'res': orderData});
+                        callback(err, 500, { 'res': orderData });
                     } else {
                         const array = [];
                         for (let i = 0; i < orderData.length; i++) {
                             array.push(orderData[i]);
                         }
-                        callback(false, 200, {'res': array});
+                        callback(false, 200, { 'res': array });
                     }
                 });
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'post') {
         helpers.insertOrder(dataObject.postData, function (err) {
             if (err) {
-                callback(err, 500, {'res': messages.errorMessage});
+                callback(err, 500, { 'res': messages.errorMessage });
             } else {
-                callback(false, 200, {'res': true});
+                callback(false, 200, { 'res': true });
             }
         });
     } else {
-        callback(false, 400, {'res': messages.invalidRequestMessage});
+        callback(false, 400, { 'res': messages.invalidRequestMessage });
     }
 };
 /**
@@ -2436,15 +2436,15 @@ handlers.orderStatus = function (dataObject, callback) {
                 let type = false, channelOrderID = false, hxorderid = false, status = false, value = false;
                 try {
                     type = typeof (dataObject.queryString.type) === 'string' &&
-                    dataObject.queryString.type.length > 1 ? dataObject.queryString.type : false;
+                        dataObject.queryString.type.length > 1 ? dataObject.queryString.type : false;
                     channelOrderID = typeof (dataObject.queryString.orderid) === 'string' &&
-                    dataObject.queryString.orderid.length > 1 ? dataObject.queryString.orderid : false;
+                        dataObject.queryString.orderid.length > 1 ? dataObject.queryString.orderid : false;
                     hxorderid = typeof (dataObject.queryString.hxorderid) === 'string' &&
-                    dataObject.queryString.hxorderid.length > 0 ? dataObject.queryString.hxorderid : false;
+                        dataObject.queryString.hxorderid.length > 0 ? dataObject.queryString.hxorderid : false;
                     status = typeof (dataObject.queryString.status) === 'string' &&
-                    dataObject.queryString.status.length > 1 ? dataObject.queryString.status : false;
+                        dataObject.queryString.status.length > 1 ? dataObject.queryString.status : false;
                     value = typeof (dataObject.queryString.value) === 'string' &&
-                    dataObject.queryString.value.length > 0 ? dataObject.queryString.value : false;
+                        dataObject.queryString.value.length > 0 ? dataObject.queryString.value : false;
                 } catch (e) {
                     console.log(e);
                 }
@@ -2454,17 +2454,17 @@ handlers.orderStatus = function (dataObject, callback) {
                     database.query(query, function (err, updateData) {
                         if (err) {
                             console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': true});
+                            callback(false, 200, { 'res': true });
                         }
                     });
                 } else if (type === 'status') {
                     if (status) {
                         const remarks = typeof (dataObject.postData.remarks) === 'string' &&
-                        dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
+                            dataObject.postData.remarks.length > 0 ? dataObject.postData.remarks : false;
                         const imei = typeof (dataObject.postData.imei) === 'string' &&
-                        dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                            dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
                         let query;
                         if (remarks) {
                             query = "UPDATE order_details o, order_status_details s " +
@@ -2487,13 +2487,13 @@ handlers.orderStatus = function (dataObject, callback) {
                         database.query(query, function (err, updateData) {
                             if (err) {
                                 console.log(err);
-                                callback(err, 500, {'res': messages.errorMessage});
+                                callback(err, 500, { 'res': messages.errorMessage });
                             } else {
-                                callback(false, 200, {'res': true});
+                                callback(false, 200, { 'res': true });
                             }
                         });
                     } else {
-                        callback(true, 400, {'res': messages.insufficientData});
+                        callback(true, 400, { 'res': messages.insufficientData });
                     }
                 } else if (type === 'invoice') {
                     if (hxorderid && value) {
@@ -2504,13 +2504,13 @@ handlers.orderStatus = function (dataObject, callback) {
                         database.query(query, function (err, updateData) {
                             console.log(updateData);
                             if (err) {
-                                callback(err, 500, {'res': messages.errorMessage});
+                                callback(err, 500, { 'res': messages.errorMessage });
                             } else {
-                                callback(false, 200, {'res': true});
+                                callback(false, 200, { 'res': true });
                             }
                         });
                     } else {
-                        callback(type, 400, {'res': messages.insufficientData});
+                        callback(type, 400, { 'res': messages.insufficientData });
                     }
                 } else if (type === 'pack') {
                     if (hxorderid && value) {
@@ -2520,17 +2520,17 @@ handlers.orderStatus = function (dataObject, callback) {
                             " AND s.status='Ready-to-Ship' AND o.is_video_taken=1";
                         database.query(query, function (err, updateData) {
                             if (err) {
-                                callback(err, 500, {'res': messages.errorMessage});
+                                callback(err, 500, { 'res': messages.errorMessage });
                             } else {
                                 if (updateData.affectedRows > 0) {
-                                    callback(false, 200, {'res': true});
+                                    callback(false, 200, { 'res': true });
                                 } else {
-                                    callback(false, 200, {'res': messages.noVideo});
+                                    callback(false, 200, { 'res': messages.noVideo });
                                 }
                             }
                         });
                     } else {
-                        callback(true, 400, {'res': messages.insufficientData});
+                        callback(true, 400, { 'res': messages.insufficientData });
                     }
                 } else if (type === 'ship') {
                     if (hxorderid && value) {
@@ -2541,13 +2541,13 @@ handlers.orderStatus = function (dataObject, callback) {
                         updateQRTable(hxorderid, 5);
                         database.query(query, function (err, updateData) {
                             if (err) {
-                                callback(err, 500, {'res': messages.errorMessage});
+                                callback(err, 500, { 'res': messages.errorMessage });
                             } else {
-                                callback(false, 200, {'res': true});
+                                callback(false, 200, { 'res': true });
                             }
                         });
                     } else {
-                        callback(true, 400, {'res': messages.insufficientData});
+                        callback(true, 400, { 'res': messages.insufficientData });
                     }
                 } else if (type === 'Delivered') {
                     if (hxorderid) {
@@ -2555,20 +2555,20 @@ handlers.orderStatus = function (dataObject, callback) {
                         database.query(query, function (err, updateData) {
                             if (err) {
                                 console.error(err.stack);
-                                callback(err, 500, {'res': messages.errorMessage});
+                                callback(err, 500, { 'res': messages.errorMessage });
                             } else {
-                                callback(false, 200, {'res': true});
+                                callback(false, 200, { 'res': true });
                                 updateQRTable(hxorderid, 6);
                             }
                         });
                     } else {
-                        callback(true, 400, {'res': messages.insufficientData});
+                        callback(true, 400, { 'res': messages.insufficientData });
                     }
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'get') {
@@ -2578,13 +2578,13 @@ handlers.orderStatus = function (dataObject, callback) {
                 database.query(query, (err, statusData) => {
                     if (err) {
                         console.error(err.stack);
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     } else {
-                        callback(false, 200, {'res': statusData});
+                        callback(false, 200, { 'res': statusData });
                     }
                 });
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else if (dataObject.method === 'post') {
@@ -2596,18 +2596,18 @@ handlers.orderStatus = function (dataObject, callback) {
                     database.query(query, (err, updateData) => {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': true});
+                            callback(false, 200, { 'res': true });
                         }
                     });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 
     /**
@@ -2710,7 +2710,7 @@ handlers.details = function (dataObject, callback) {
                 let type;
                 try {
                     type = typeof (dataObject.queryString.type) === 'string' &&
-                    dataObject.queryString.type.length > 1 ? dataObject.queryString.type.trim() : false;
+                        dataObject.queryString.type.length > 1 ? dataObject.queryString.type.trim() : false;
                 } catch (e) {
                     console.log(e);
                     type = false;
@@ -2720,9 +2720,9 @@ handlers.details = function (dataObject, callback) {
                     database.query(query, function (err, vendorData) {
                         if (err) {
                             console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': vendorData});
+                            callback(false, 200, { 'res': vendorData });
                         }
                     });
                 } else if (type === 'productGrade') {
@@ -2730,9 +2730,9 @@ handlers.details = function (dataObject, callback) {
                     database.query(query, function (err, gradeData) {
                         if (err) {
                             console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': gradeData});
+                            callback(false, 200, { 'res': gradeData });
                         }
                     });
                 } else if (type === 'serviceStock') {
@@ -2740,18 +2740,18 @@ handlers.details = function (dataObject, callback) {
                     database.query(query, function (err, serviceData) {
                         if (err) {
                             console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': serviceData});
+                            callback(false, 200, { 'res': serviceData });
                         }
                     });
                 } else if (type === 'orderStatus') {
                     query = "SELECT * FROM order_status_details";
                     database.query(query, function (err, orderData) {
                         if (!err) {
-                            callback(false, 200, {'res': orderData});
+                            callback(false, 200, { 'res': orderData });
                         } else {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         }
                     });
                 } else if (type === 'courier') {
@@ -2759,9 +2759,9 @@ handlers.details = function (dataObject, callback) {
                     database.query(query, function (err, courierData) {
                         if (err) {
                             console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': courierData});
+                            callback(false, 200, { 'res': courierData });
                         }
                     });
                 } else if (type === 'sku') {
@@ -2769,9 +2769,9 @@ handlers.details = function (dataObject, callback) {
                     database.query(query, function (err, skuData) {
                         if (err) {
                             console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': skuData});
+                            callback(false, 200, { 'res': skuData });
                         }
                     });
                 } else if (type === 'serviceCenter') {
@@ -2779,9 +2779,9 @@ handlers.details = function (dataObject, callback) {
                     database.query(query, function (err, serviceCenterData) {
                         if (err) {
                             console.log(err);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': serviceCenterData});
+                            callback(false, 200, { 'res': serviceCenterData });
                         }
                     });
                 } else if (type === 'service') {
@@ -2792,20 +2792,20 @@ handlers.details = function (dataObject, callback) {
                     database.query(query, (err, serviceData) => {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': serviceData});
+                            callback(false, 200, { 'res': serviceData });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, { 'res': messages.invalidRequestMessage });
     }
 };
 /**
@@ -2816,7 +2816,7 @@ handlers.details = function (dataObject, callback) {
 handlers.bioAuth = function (data, callback) {
     helpers.validateToken(data.queryString.key, valid => {
         if (!valid) {
-            callback(true, 403, {'res': 'Token expired or invalid'});
+            callback(true, 403, { 'res': 'Token expired or invalid' });
             console.log('error token invalid');
             return
         }
@@ -2828,7 +2828,7 @@ handlers.bioAuth = function (data, callback) {
                 let offsets = data.queryString.offsets;
 
                 if (!id || !offsets) {
-                    callback(true, 400, {'res': 'insuccfient data'});
+                    callback(true, 400, { 'res': 'insuccfient data' });
                     console.log('error no id or offsets');
                     return
                 }
@@ -2838,14 +2838,14 @@ handlers.bioAuth = function (data, callback) {
                 offsets = JSON.parse(offsets);
 
                 if (Object.values(offsets).some(isNaN)) {
-                    callback(true, 400, {'res': 'invalid offset data'});
+                    callback(true, 400, { 'res': 'invalid offset data' });
                     console.log('error invalid offsets');
                     return
                 }
 
                 finger_names.forEach(n => {
                     if (!Object.keys(offsets).includes(n)) {
-                        callback(true, 400, {'res': `fingerprint not found: ${n}`});
+                        callback(true, 400, { 'res': `fingerprint not found: ${n}` });
                         console.log(`error fingerprint not found: ${n}`);
 
                     }
@@ -2869,7 +2869,7 @@ handlers.bioAuth = function (data, callback) {
                         let end = (i === offsets.length - 1) ? fp_data_raw.byteLength : offsets[i + 1].value - 1;
 
                         if (off > fp_data_raw.length || end > fp_data_raw.length) {
-                            callback(true, 400, {'res': 'invalid offset data'});
+                            callback(true, 400, { 'res': 'invalid offset data' });
                             console.log('error invalid offsets');
                             return
                         }
@@ -2881,7 +2881,7 @@ handlers.bioAuth = function (data, callback) {
 
                         fp_json[id][offsets[i].key] = fpT.serializeSync();
 
-                        let params = {Bucket: messages.bucketName, Key: filename, Body: fpd};
+                        let params = { Bucket: messages.bucketName, Key: filename, Body: fpd };
 
                         const upromise = S3.putObject(params).promise();
                         upromise.then(d => {
@@ -2896,17 +2896,17 @@ handlers.bioAuth = function (data, callback) {
                         if (err) return console.log(err)
                     });
 
-                    callback(false, 200, {'res': 'successfully inserted fingerprint into database'});
+                    callback(false, 200, { 'res': 'successfully inserted fingerprint into database' });
 
                 } catch (error) {
                     console.log(error);
-                    callback(true, 400, {'res': 'invalid fingerprint'});
+                    callback(true, 400, { 'res': 'invalid fingerprint' });
                     console.log('error invalid fp');
 
                 }
             } else if (data.queryString.type === 'check') {
                 if (!id) {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                     console.log('error no id or offsets');
                     return
                 }
@@ -2927,18 +2927,18 @@ handlers.bioAuth = function (data, callback) {
                 }
 
                 if (fp_id) {
-                    callback(false, 200, {res: fp_id})
+                    callback(false, 200, { res: fp_id })
                 } else {
-                    callback(false, 200, {res: {}})
+                    callback(false, 200, { res: {} })
                 }
 
             } else {
-                callback(true, 400, {'res': 'invalid type'});
+                callback(true, 400, { 'res': 'invalid type' });
                 console.log('error invalid type')
             }
         } else if (data.method === 'post') {
             if (!data.queryString.type) {
-                callback(true, 400, {'res': messages.insufficientData});
+                callback(true, 400, { 'res': messages.insufficientData });
                 console.log('error no type');
                 return
             }
@@ -2948,19 +2948,19 @@ handlers.bioAuth = function (data, callback) {
             try {
                 fp_probe = fp_probe.dpiSync(500).createSync(java.newArray("byte", Array.prototype.slice.call(data.data, 0)))
             } catch (err) {
-                callback(true, 400, {'res': 'invalid fingerprint'});
+                callback(true, 400, { 'res': 'invalid fingerprint' });
                 console.log('error invalid fp');
                 console.error(err, err.stack);
                 return
             }
             if (!fp_probe) {
-                callback(true, 400, {'res': 'invalid fingerprint'});
+                callback(true, 400, { 'res': 'invalid fingerprint' });
                 console.log('error invalid fp');
                 return
             }
 
             if (data.queryString.type === 'generate') {
-                callback(false, 200, {res: fp_probe.serializeSync()})
+                callback(false, 200, { res: fp_probe.serializeSync() })
             } else if (data.queryString.type === 'verify') {
                 let finger = data.queryString.finger;
                 let fingerParam = finger;
@@ -2986,7 +2986,7 @@ handlers.bioAuth = function (data, callback) {
 
                     if (fingerParam) {
                         if (!finger_names.includes(finger) || !fps[finger]) {
-                            callback(true, 400, {'res': 'invalid finger specified'});
+                            callback(true, 400, { 'res': 'invalid finger specified' });
                             console.log('error invalid finger');
                             return
                         }
@@ -2999,13 +2999,13 @@ handlers.bioAuth = function (data, callback) {
                     }
                 }
 
-                callback(false, 200, {res: high, match, finger})
+                callback(false, 200, { res: high, match, finger })
             } else {
-                callback(true, 400, {'res': 'invalid type'});
+                callback(true, 400, { 'res': 'invalid type' });
                 console.log('error invalid type')
             }
         } else {
-            callback(true, 400, {'res': 'invalid request method'});
+            callback(true, 400, { 'res': 'invalid request method' });
             console.log('error invalid method')
         }
     });
@@ -3020,25 +3020,25 @@ handlers.firebaseToken = function (dataObject, callback) {
         helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
                 const token = typeof (dataObject.postData.token) === 'string' &&
-                dataObject.postData.token.length > 10 ? dataObject.postData.token : false;
+                    dataObject.postData.token.length > 10 ? dataObject.postData.token : false;
                 const employeeid = typeof (dataObject.postData.id) === 'string' &&
-                dataObject.postData.id.length > 0 ? dataObject.postData.id : false;
+                    dataObject.postData.id.length > 0 ? dataObject.postData.id : false;
                 if (employeeid && token) {
                     const query = "UPDATE employee_details SET device_token = '" + token + "' WHERE id= " + employeeid;
                     database.query(query, function (err, updateData) {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': true});
+                            callback(false, 200, { 'res': true });
                         }
                     });
                 }
             } else {
-                callback(true, 400, {'res': messages.insufficientData});
+                callback(true, 400, { 'res': messages.insufficientData });
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage})
+        callback(true, 400, { 'res': messages.invalidRequestMessage })
     }
 };
 /**
@@ -3051,42 +3051,42 @@ handlers.permittedVersions = function (dataObject, callback) {
         if (isValid) {
             if (dataObject.method === 'post') {
                 const packageName = typeof (dataObject.postData.package) === 'string' &&
-                dataObject.postData.package.length > 0 ? dataObject.postData.package : false;
+                    dataObject.postData.package.length > 0 ? dataObject.postData.package : false;
                 const version = dataObject.postData.version > 0 ? dataObject.postData.version : false;
                 if (packageName && version) {
                     const query = "SELECT * FROM permitted_versions WHERE package_name LIKE '" + packageName + "'";
                     database.query(query, function (err, versionData) {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             if (version >= versionData[0].version) {
-                                callback(false, 200, {'res': true});
+                                callback(false, 200, { 'res': true });
                             } else {
-                                callback(false, 200, {'res': false});
+                                callback(false, 200, { 'res': false });
                             }
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else if (dataObject.method === 'get') {
                 const query = "SELECT * FROM permitted_versions";
                 database.query(query, (err, versionData) => {
                     if (err) {
                         console.error(err.stack);
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     } else {
-                        callback(false, 200, {'res': versionData});
+                        callback(false, 200, { 'res': versionData });
                     }
                 });
             } else if (dataObject.method === 'put') {
-                callback(false, 200, {'res': "https://www.hyperxchange.com/about-hx-store"});
+                callback(false, 200, { 'res': "https://www.hyperxchange.com/about-hx-store" });
             } else {
-                callback(true, 400, {'res': messages.invalidRequestMessage});
+                callback(true, 400, { 'res': messages.invalidRequestMessage });
             }
         } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 };
@@ -3112,7 +3112,7 @@ handlers.qr = function (dataObject, callback) {
                     database.query(query, function (err, maxData) {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             let start = maxData[0].id;
                             query = "INSERT INTO phone_details_qr VALUES (" + Number(start + 1) + ",'','7','14')";
@@ -3127,9 +3127,9 @@ handlers.qr = function (dataObject, callback) {
                             database.query(query, function (err, insertData) {
                                 if (err) {
                                     console.error(err.stack);
-                                    callback(err, 500, {'res': messages.errorMessage});
+                                    callback(err, 500, { 'res': messages.errorMessage });
                                 } else {
-                                    callback(false, 200, {'res': start + 1});
+                                    callback(false, 200, { 'res': start + 1 });
                                 }
                             })
                         }
@@ -3142,20 +3142,20 @@ handlers.qr = function (dataObject, callback) {
                     database.query(query, function (err, qrData) {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             if (!security) {
                                 if (qrData[0].phone_status === 7) {
-                                    callback(false, 200, {'res': false, 'msg': messages.notAssigned});
+                                    callback(false, 200, { 'res': false, 'msg': messages.notAssigned });
                                 } else if (qrData[0].phone_status === 4 && qrData[0].imei.length < 0) {
-                                    callback(false, 200, {'res': false, 'msg': messages.imeiNotLinked});
+                                    callback(false, 200, { 'res': false, 'msg': messages.imeiNotLinked });
                                 } else if (qrData[0].imei.length > 0) {
                                     query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
                                     console.log(query);
                                     database.query(query, function (err, selectData) {
                                         if (err) {
                                             console.error(err.stack);
-                                            callback(err, 500, {'res': messages.errorMessage});
+                                            callback(err, 500, { 'res': messages.errorMessage });
                                         } else {
                                             query = "SELECT * FROM order_details " +
                                                 "WHERE imei_number LIKE '" + qrData[0].imei + "' AND order_status <> 8 " +
@@ -3163,7 +3163,7 @@ handlers.qr = function (dataObject, callback) {
                                             database.query(query, (err, orderData) => {
                                                 if (err) {
                                                     console.error(err.stack);
-                                                    callback(err, 500, {'res': messages.errorMessage});
+                                                    callback(err, 500, { 'res': messages.errorMessage });
                                                 } else {
                                                     callback(false, 200, {
                                                         'res': true,
@@ -3181,15 +3181,15 @@ handlers.qr = function (dataObject, callback) {
                                 database.query(query, (err, orderData) => {
                                     if (err) {
                                         console.error(err.stack);
-                                        callback(err, 500, {'res': messages.errorMessage});
+                                        callback(err, 500, { 'res': messages.errorMessage });
                                     } else {
                                         if (orderData.length > 0) {
-                                            callback(false, 200, {'res': true, 'msg': orderData});
+                                            callback(false, 200, { 'res': true, 'msg': orderData });
                                             updateOrderStatus(orderData[0].hx_order_id);
                                             helpers.logOrder(orderData[0].channel_order_id, orderData[0].order_status,
                                                 orderData[0].imei_number, "AUTH");
                                         } else {
-                                            callback(false, 200, {'res': false, 'msg': orderData});
+                                            callback(false, 200, { 'res': false, 'msg': orderData });
                                         }
                                     }
                                 });
@@ -3202,7 +3202,7 @@ handlers.qr = function (dataObject, callback) {
                 let query = "";
                 console.log(dataObject.postData);
                 const type = typeof (dataObject.postData.type) === 'string' &&
-                dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
+                    dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
                 const id = dataObject.postData.id > 0 ? dataObject.postData.id : false;
                 const imei = typeof (dataObject.postData.imei) === 'string' ? dataObject.postData.imei : false;
                 const serviceCenter = Number(dataObject.postData.service_center) > 0 ? dataObject.postData.service_center : false;
@@ -3212,20 +3212,20 @@ handlers.qr = function (dataObject, callback) {
                     database.query(query, function (err, selectData) {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             if (Number(selectData[0].phone_status) === 7) {
                                 query = "UPDATE phone_details_qr SET phone_status = 4 WHERE id = " + id;
                                 database.query(query, function (err, updateData) {
                                     if (err) {
                                         console.error(err.stack);
-                                        callback(err, 500, {'res': messages.errorMessage});
+                                        callback(err, 500, { 'res': messages.errorMessage });
                                     } else {
-                                        callback(false, 200, {'res': true});
+                                        callback(false, 200, { 'res': true });
                                     }
                                 });
                             } else {
-                                callback(false, 202, {'res': false});
+                                callback(false, 202, { 'res': false });
                             }
                         }
                     });
@@ -3236,7 +3236,7 @@ handlers.qr = function (dataObject, callback) {
                         database.query(query, (err, qrData) => {
                             if (err) {
                                 console.error(err.stack);
-                                callback(err, 500, {'res': messages.errorMessage});
+                                callback(err, 500, { 'res': messages.errorMessage });
                             } else {
                                 console.log(qrData);
                                 query = "UPDATE phone_details_qr SET imei = '" + qrData[0].imei +
@@ -3244,9 +3244,9 @@ handlers.qr = function (dataObject, callback) {
                                 console.log(query);
                                 database.query(query, (err, updateData) => {
                                     if (err) {
-                                        console.error(err, 500, {'res': messages.errorMessage});
+                                        console.error(err, 500, { 'res': messages.errorMessage });
                                     } else {
-                                        callback(false, 200, {'res': true});
+                                        callback(false, 200, { 'res': true });
                                     }
                                 })
                             }
@@ -3257,12 +3257,12 @@ handlers.qr = function (dataObject, callback) {
                         database.query(query, function (err, updateData) {
                             if (err) {
                                 console.error(err.stack);
-                                callback(err, 500, {'res': messages.errorMessage});
+                                callback(err, 500, { 'res': messages.errorMessage });
                             } else {
                                 if (updateData.affectedRows > 0) {
-                                    callback(false, 200, {'res': true});
+                                    callback(false, 200, { 'res': true });
                                 } else {
-                                    callback(false, 202, {'res': false});
+                                    callback(false, 202, { 'res': false });
                                 }
                             }
                         });
@@ -3272,7 +3272,7 @@ handlers.qr = function (dataObject, callback) {
                     database.query(query, function (err, selectData) {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             if (Number(selectData[0].phone_status === 3)) {
                                 query = "INSERT INTO service_center VALUES " +
@@ -3280,13 +3280,13 @@ handlers.qr = function (dataObject, callback) {
                                 database.query(query, function (err, insertData) {
                                     if (err) {
                                         console.error(err.stack);
-                                        callback(err, 500, {'res': messages.errorMessage});
+                                        callback(err, 500, { 'res': messages.errorMessage });
                                     } else {
-                                        callback(false, 200, {'res': true});
+                                        callback(false, 200, { 'res': true });
                                     }
                                 });
                             } else {
-                                callback(true, 202, {'res': false, 'msg': 'Not Authorized'});
+                                callback(true, 202, { 'res': false, 'msg': 'Not Authorized' });
                             }
                         }
                     });
@@ -3295,50 +3295,50 @@ handlers.qr = function (dataObject, callback) {
                     database.query(query, (err, qrData) => {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             query = "UPDATE inventory SET service_stock =2 WHERE product_imei_1 = '" + qrData[0].imei + "'";
                             database.query(query, (err, updateData) => {
                                 if (err) {
                                     console.error(err.stack);
-                                    callback(err, 400, {'res': messages.errorMessage});
+                                    callback(err, 400, { 'res': messages.errorMessage });
                                 } else {
-                                    callback(false, 200, {'res': true});
+                                    callback(false, 200, { 'res': true });
                                     updateOrderAndPhoneDetails(qrData[0].imei);
                                 }
                             });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else if (dataObject.method === 'post') {
                 let query = "";
                 const type = typeof (dataObject.postData.type) === 'string' &&
-                dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
+                    dataObject.postData.type.length > 0 ? dataObject.postData.type.trim() : false;
                 const id = dataObject.postData.id.length > 0 ? dataObject.postData.id : false;
                 if (type && type === 'Shipping') {
                     query = "SELECT * FROM phone_details_qr WHERE id = " + id + " AND order_status = 5";
                     database.query(query, function (err, queryData) {
                         if (err) {
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                             console.error(err.stack);
                         } else {
                             if (queryData.length > 0) {
-                                callback(false, 200, {'res': true});
+                                callback(false, 200, { 'res': true });
                             } else {
-                                callback(false, 200, {'res': false});
+                                callback(false, 200, { 'res': false });
                             }
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 400, {'res': messages.invalidRequestMessage});
+                callback(true, 400, { 'res': messages.invalidRequestMessage });
             }
         } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 
@@ -3414,18 +3414,18 @@ handlers.qrDeactivate = function (dataObject, callback) {
                             database.query(query, (err, updateData) => {
                                 if (err) {
                                     console.error(err.stack);
-                                    callback(err, 500, {'res': messages.errorMessage});
+                                    callback(err, 500, { 'res': messages.errorMessage });
                                 } else {
-                                    callback(false, 200, {'res': true});
+                                    callback(false, 200, { 'res': true });
                                 }
                             });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 403, {'res': messages.tokenExpiredMessage});
+                callback(true, 403, { 'res': messages.tokenExpiredMessage });
             }
         });
     }
@@ -3444,14 +3444,14 @@ handlers.qrSecurity = function (dataObject, callback) {
                 database.query(query, (err, qrData) => {
                     if (err) {
                         console.error(err.stack);
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     } else {
                         query = "SELECT * FROM order_details " +
                             "WHERE imei_number LIKE '" + qrData[0].imei + "' AND order_status <> 8 AND order_status <> 12";
                         database.query(query, (err, orderData) => {
                             if (err) {
                                 console.error(err.stack);
-                                callback(err, 500, {'res': messages.errorMessage});
+                                callback(err, 500, { 'res': messages.errorMessage });
                             } else {
                                 let auth;
                                 if (orderData[0].order_status === 4) {
@@ -3463,7 +3463,7 @@ handlers.qrSecurity = function (dataObject, callback) {
                                 helpers.logOrder(orderData[0].channel_order_id,
                                     orderData[0].order_status, orderData[0].imei_number, auth);
                                 updateOrderStatus(orderData[0].hx_order_id);
-                                callback(false, 200, {'res': true});
+                                callback(false, 200, { 'res': true });
                             }
                         });
                     }
@@ -3482,16 +3482,16 @@ handlers.qrSecurity = function (dataObject, callback) {
                             break;
                     }
                     promise.then(err => {
-                        callback(false, 200, {'res': true});
+                        callback(false, 200, { 'res': true });
                     }).catch(err => {
-                        callback(err, 500, {'res': messages.errorMessage});
+                        callback(err, 500, { 'res': messages.errorMessage });
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             }
         } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 
@@ -3530,7 +3530,7 @@ handlers.meeting = function (dataObject, callback) {
                 console.log(empID);
                 if (requestID) {
                     deleteTemp(requestID);
-                    callback(false, 200, {'res': true});
+                    callback(false, 200, { 'res': true });
                 } else if (empID < 100) {
                     const query = "SELECT m.*, r.room_name, s.slot_start_time,s.slot_end_time " +
                         "FROM meeting_request_details m,meeting_slot_details s ,meeting_room_details r " +
@@ -3538,9 +3538,9 @@ handlers.meeting = function (dataObject, callback) {
                     database.query(query, (err, meetingData) => {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': meetingData});
+                            callback(false, 200, { 'res': meetingData });
                         }
                     });
                 } else if (Number(empID) > Number(100)) {
@@ -3551,13 +3551,13 @@ handlers.meeting = function (dataObject, callback) {
                     database.query(query, (err, meetingData) => {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 200, {'res': meetingData});
+                            callback(false, 200, { 'res': meetingData });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else if (dataObject.method === 'post') {
                 const room = typeof (dataObject.postData.room_name) === 'string' ? dataObject.postData.room_name : false;
@@ -3573,15 +3573,15 @@ handlers.meeting = function (dataObject, callback) {
                     database.query(query, (err, slotData) => {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
                             const requestID = helpers.getRandomKey(16);
-                            callback(false, 200, {'res': slotData, 'request_id': requestID});
+                            callback(false, 200, { 'res': slotData, 'request_id': requestID });
                             insertTempLock(meetingDate, slotData, requestID, room);
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else if (dataObject.method === 'put') {
                 const slot = typeof (dataObject.postData.slot_id) === 'string' ? dataObject.postData.slot_id : false;
@@ -3601,19 +3601,19 @@ handlers.meeting = function (dataObject, callback) {
                     database.query(query, (err, insertData) => {
                         if (err) {
                             console.error(err.stack);
-                            callback(err, 500, {'res': messages.errorMessage});
+                            callback(err, 500, { 'res': messages.errorMessage });
                         } else {
-                            callback(false, 201, {'res': true});
+                            callback(false, 201, { 'res': true });
                             insertRequest(room, empId, requestID, slotIDs, meetingDate);
                             deleteTemp(requestID);
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             }
         } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 
@@ -3710,9 +3710,9 @@ handlers.meeting = function (dataObject, callback) {
 handlers.prokotags = function (dataObject, callback) {
     helpers.validateToken(dataObject.queryString.key, (isValid) => {
         if (isValid) {
-            callback(false, 200, {'res': "https://s3.ap-south-1.amazonaws.com/neuro-tag/"});
+            callback(false, 200, { 'res': "https://s3.ap-south-1.amazonaws.com/neuro-tag/" });
         } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 };
@@ -3735,7 +3735,7 @@ handlers.devNames = function (dataObject, callback) {
                             if (code && model) {
                                 promise = helpers.getiOSDeviceName(model, code);
                             } else {
-                                callback(true, 400, {'res': messages.insufficientData});
+                                callback(true, 400, { 'res': messages.insufficientData });
                             }
                             break;
                         }
@@ -3743,27 +3743,27 @@ handlers.devNames = function (dataObject, callback) {
                             if (code) {
                                 promise = helpers.getAndroidDeviceName(code);
                             } else {
-                                callback(true, 400, {'res': messages.insufficientData});
+                                callback(true, 400, { 'res': messages.insufficientData });
                             }
                         }
                             break;
                         default:
-                            callback(true, 400, {'res': messages.invalidRequestMessage});
+                            callback(true, 400, { 'res': messages.invalidRequestMessage });
                     }
                     promise.then(response => {
-                        callback(false, 200, {'res': response});
+                        callback(false, 200, { 'res': response });
                     }).catch(err => {
                         console.error(err);
-                        callback(err, 500, {'res': err});
+                        callback(err, 500, { 'res': err });
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 400, {'res': messages.invalidRequestMessage});
+                callback(true, 400, { 'res': messages.invalidRequestMessage });
             }
         } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 };
@@ -3785,16 +3785,16 @@ handlers.errorLog = function (dataObject, callback) {
                             (err, data) => {
                                 if (err) {
                                     console.error(err.stack);
-                                    callback(err, 500, {'res': messages.errorMessage});
+                                    callback(err, 500, { 'res': messages.errorMessage });
                                 } else {
-                                    callback(false, 200, {'res': data});
+                                    callback(false, 200, { 'res': data });
                                 }
                             });
                     }
                 }
             });
         } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 };
@@ -3808,14 +3808,14 @@ handlers.fuckops = function (dataObject, callback) {
         if (isValid) {
             if (dataObject.method === 'post') {
                 const brand = typeof (dataObject.postData.brand) === 'string' &&
-                dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
+                    dataObject.postData.brand.length > 0 ? dataObject.postData.brand : false;
                 const model = typeof (dataObject.postData.model) === 'string' &&
-                dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
+                    dataObject.postData.model.length > 0 ? dataObject.postData.model : false;
                 const imei = typeof (dataObject.postData.imei) === 'string' &&
-                dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
+                    dataObject.postData.imei.length > 10 ? dataObject.postData.imei : false;
                 const storage = Number(dataObject.postData.storage) > 0 ? dataObject.postData.storage : false;
                 const color = typeof (dataObject.postData.color) === 'string' &&
-                dataObject.postData.color.length > 0 ? dataObject.postData.color : "NA";
+                    dataObject.postData.color.length > 0 ? dataObject.postData.color : "NA";
                 if (brand && model && imei) {
                     const timeDate = Math.floor((new Date().getTime()) / 1000);
                     const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
@@ -3824,22 +3824,67 @@ handlers.fuckops = function (dataObject, callback) {
                         formattedDate + "','" + timeDate + "')";
                     database.query(query, (err, insertData) => {
                         if (err) {
-                            callback(err, 200, {'res': false});
+                            callback(err, 200, { 'res': false });
                         } else {
-                            callback(false, 200, {'res': true});
+                            callback(false, 200, { 'res': true });
                         }
                     });
                 } else {
-                    callback(true, 400, {'res': messages.insufficientData});
+                    callback(true, 400, { 'res': messages.insufficientData });
                 }
             } else {
-                callback(true, 400, {'res': messages.invalidRequestMessage});
+                callback(true, 400, { 'res': messages.invalidRequestMessage });
             }
         } else {
-            callback(true, 403, {'res': messages.tokenExpiredMessage});
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
         }
     });
 };
+/**
+ * Method to get the details for the next board meeting.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.boardMeeting = (dataObject, callback) => {
+    helpers.validateToken(dataObject.queryString.key, (isValid) => {
+        if (isValid) {
+            if (dataObject.method === 'get') {
+                // const query = `SELECT d.*,e.* FROM board_meeting_details d, board_meeting_entries e WHERE d.id=e.entry_id AND d.meeting_date LIKE ${dataObject.queryString.meeting_date}`;
+                // get details for attendees
+                let query = `SELECT * FROM board_meeting_details WHERE meeting_date LIKE '${dataObject.queryString.meeting_date}'`;
+                database.query(query, (err, board_meeting_data) => {
+                    if (err) {
+                        console.error(err.stack);
+                        callback(err, 500, { 'res': messages.errorMessage });
+                    } else {
+                        // callback(true, 200, { res: board_meeting_data });
+                        let details = [];
+                        board_meeting_data.forEach(x => {
+                            query = `SELECT * FROM board_meeting_entries WHERE entry_id LIKE '${x.id}'`
+                            database.query(query, (err, board_meeting_entries) => {
+                                if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 500, { 'res': messages.errorMessage });
+                                } else {
+                                    x.entries = board_meeting_entries;
+                                    details.push(x)
+
+                                    if (details.length === board_meeting_data.length) {
+                                        callback(true, 200, { res: { attendees: details.length, details } });
+                                    }
+                                }
+                            });
+                        })
+                    }
+                });
+            } else {
+                callback(true, 400, { 'res': messages.invalidRequestMessage });
+            }
+        } else {
+            callback(true, 403, { 'res': messages.tokenExpiredMessage });
+        }
+    });
+}
 /**
  * Exporting the Handlers.
  */
