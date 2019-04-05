@@ -75,3 +75,7 @@ typings/
 .serverless
 
 /package-lock.json
+/.idea/
+.idea/encodings.xml
+.idea/vcs.xml
+.idea/workspace.xml
