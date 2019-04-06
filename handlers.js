@@ -5,7 +5,7 @@ const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
 const fs = require('fs');
-const {exec} = require('child_process');
+/*const {exec} = require('child_process');
 const java = require('./initJava');
 const aws = require('./aws');
 const fp_json_file_name = './fp_data.json';
@@ -13,7 +13,7 @@ const fp_json = require(fp_json_file_name);
 const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
 const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
 const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
-const S3 = new aws.S3();
+const S3 = new aws.S3();*/
 const handlers = {};
 /**
  * Attendance for Pronoy,munish sir,kaisanba
@@ -2351,6 +2351,24 @@ handlers.orderReturned = function (dataObject, callback) {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
          }
       });
+   } else if (dataObject.method === 'post') {
+      helpers.validateToken(dataObject.queryString.key, (isValid) => {
+         if (isValid) {
+            const query = "select product_imei_1, model_name from diagnostic_app.inventory where " +
+              "service_stock = 11 union " +
+              "select id, 'Not Known' from phone_details_qr where phone_details_qr.phone_status = 14";
+            database.query(query, (err, returnData) => {
+               if (err) {
+                  console.error(err.stack);
+                  callback(err, 500, {'res': messages.errorMessage});
+               } else {
+                  callback(false, 200, {'res': returnData});
+               }
+            });
+         } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+         }
+      });
    } else {
       callback(true, 400, {'res': messages.invalidRequestMessage});
    }
@@ -3255,7 +3273,7 @@ handlers.qr = function (dataObject, callback) {
                      } else {
                         console.log(qrData);
                         query = "UPDATE phone_details_qr SET imei = '" + qrData[0].imei +
-                          "' WHERE id = " + id + " AND phone_status = 4";
+                          "', SET phone_status = 4 WHERE id = " + id + " AND (phone_status = 4 OR phone_status=14)";
                         console.log(query);
                         database.query(query, (err, updateData) => {
                            if (err) {
@@ -3267,7 +3285,8 @@ handlers.qr = function (dataObject, callback) {
                      }
                   });
                } else {
-                  query = "UPDATE phone_details_qr SET imei = '" + imei + "' WHERE id = " + id + " AND phone_status = 4";
+                  query = "UPDATE phone_details_qr SET imei = '" + imei + "', phone_status = 4 " +
+                    "WHERE id = " + id + " AND (phone_status = 4 OR phone_status=14)";
                   console.log(query);
                   database.query(query, function (err, updateData) {
                      if (err) {
@@ -3454,21 +3473,25 @@ handlers.qrDeactivate = function (dataObject, callback) {
          if (isValid) {
             const id = Number(dataObject.queryString.id) > 0 ? dataObject.queryString.id : false;
             if (id) {
-               let query = "SELECT * FROM phone_details_qr WHERE id = " + id;
+               let query = "SELECT * FROM phone_details_qr WHERE id = " + id + " AND phone_status <> 14";
                database.query(query, (err, qrData) => {
                   if (err) {
                      console.error(err.stack);
                   } else {
-                     query = "UPDATE phone_details_qr SET phone_status = 7, order_status=14 , imei = ''" +
-                       " WHERE imei = '" + qrData[0].imei + "'";
-                     database.query(query, (err, updateData) => {
-                        if (err) {
-                           console.error(err.stack);
-                           callback(err, 500, {'res': messages.errorMessage});
-                        } else {
-                           callback(false, 200, {'res': true});
-                        }
-                     });
+                     if (qrData.length > 0) {
+                        query = "UPDATE phone_details_qr SET phone_status = 7, order_status=14 , imei = ''" +
+                          " WHERE imei = '" + qrData[0].imei + "'";
+                        database.query(query, (err, updateData) => {
+                           if (err) {
+                              console.error(err.stack);
+                              callback(err, 500, {'res': messages.errorMessage});
+                           } else {
+                              callback(false, 200, {'res': true});
+                           }
+                        });
+                     } else {
+                        callback(false, 202, {'res': false});
+                     }
                   }
                });
             } else {

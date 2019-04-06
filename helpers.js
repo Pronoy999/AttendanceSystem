@@ -897,7 +897,7 @@ helpers.updateReturnPhoneStatus = function (qr, isOrder) {
                   }
                });
             } else {
-               query2 = "UPDATE phone_details_qr SET phone_status = 16 WHERE id = " + qr;
+               query2 = "UPDATE phone_details_qr SET phone_status = 14 WHERE id = " + qr;
                database.query(query2, (err, qrData) => {
                   if (err) {
                      console.log(err.stack);

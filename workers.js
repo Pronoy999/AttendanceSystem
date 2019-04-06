@@ -49,4 +49,7 @@ workers._loopCheck = function () {
       }
    });
 };
+/**
+ * Exporting Workers.
+ */
 module.exports = workers;
