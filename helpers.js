@@ -865,34 +865,47 @@ helpers.notifyBreachOrder = function (channelOrderID) {
 helpers.updateReturnPhoneStatus = function (qr, isOrder) {
    return new Promise((resolve, reject) => {
       let query = "SELECT * FROM phone_details_qr WHERE id= " + qr;
-      let query1;
+      let query1, query2;
       database.query(query, (err, qrData) => {
          if (err) {
             console.error(err.stack);
             reject(true);
          } else {
-            if (isOrder) {
-               query = "UPDATE inventory SET service_stock = 11 WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
-               query1 = "UPDATE phone_details SET status = 11 WHERE imei LIKE '" + qrData[0].imei + "'";
+            if (qr[0].imei > 0) {
+               if (isOrder) {
+                  query = "UPDATE inventory SET service_stock = 11 WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
+                  query1 = "UPDATE phone_details SET status = 11 WHERE imei LIKE '" + qrData[0].imei + "'";
+                  //query2 = "UPDATE phone_details_qr SET phone_status = 11 WHERE id = " + qr;
+               } else {
+                  query = "UPDATE inventory SET service_stock = 10 WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
+                  query1 = "UPDATE phone_details SET status = 10 WHERE imei LIKE '" + qrData[0].imei + "'";
+                  //query2 = "UPDATE phone_details_qr SET phone_status = 10 WHERE id = " + qr;
+               }
+               database.query(query, (err, inventoryUpdate) => {
+                  if (err) {
+                     console.error(err.stack);
+                     reject(true);
+                  } else {
+                     resolve(true);
+                  }
+               });
+               database.query(query1, (err, phoneData) => {
+                  if (err) {
+                     console.error(err.stack);
+                  } else {
+                     console.log("Phone details Updated.");
+                  }
+               });
             } else {
-               query = "UPDATE inventory SET service_stock = 10 WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
-               query1 = "UPDATE phone_details SET status = 10 WHERE imei LIKE '" + qrData[0].imei + "'";
+               query2 = "UPDATE phone_details_qr SET phone_status = 16 WHERE id = " + qr;
+               database.query(query2, (err, qrData) => {
+                  if (err) {
+                     console.log(err.stack);
+                  } else {
+                     console.log("QR Table Updated.");
+                  }
+               });
             }
-            database.query(query, (err, inventoryUpdate) => {
-               if (err) {
-                  console.error(err.stack);
-                  reject(true);
-               } else {
-                  resolve(true);
-               }
-            });
-            database.query(query1, (err, phoneData) => {
-               if (err) {
-                  console.error(err.stack);
-               } else {
-                  console.log("Phone details Updated.");
-               }
-            });
          }
       });
    });

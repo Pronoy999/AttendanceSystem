@@ -52,7 +52,8 @@ const router = {
    'prokotags': handlers.prokotags,
    'device-name': handlers.devNames,
    'error': handlers.errorLog,
-   'fuck-ops': handlers.fuckops
+   'fuck-ops': handlers.fuckops,
+   'board-meeting': handlers.boardMeeting,
 };
 /**
  * Method which controls the Server.

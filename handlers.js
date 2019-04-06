@@ -3892,6 +3892,50 @@ handlers.fuckops = function (dataObject, callback) {
    });
 };
 /**
+ * Method to get the details for the next board meeting.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.boardMeeting = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, (isValid) => {
+      if (isValid) {
+         if (dataObject.method === 'get') {
+            // const query = `SELECT d.*,e.* FROM board_meeting_details d, board_meeting_entries e WHERE d.id=e.entry_id AND d.meeting_date LIKE ${dataObject.queryString.meeting_date}`;
+            // get details for attendees
+            let query = `SELECT * FROM board_meeting_details WHERE meeting_date LIKE '${dataObject.queryString.meeting_date}'`;
+            database.query(query, (err, board_meeting_data) => {
+               if (err) {
+                  console.error(err.stack);
+                  callback(err, 500, {'res': messages.errorMessage});
+               } else {
+                  // callback(true, 200, { res: board_meeting_data });
+                  let details = [];
+                  board_meeting_data.forEach(x => {
+                     query = `SELECT * FROM board_meeting_entries WHERE entry_id LIKE '${x.id}'`;
+                     database.query(query, (err, board_meeting_entries) => {
+                        if (err) {
+                           console.error(err.stack);
+                           callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                           x.entries = board_meeting_entries;
+                           details.push(x);
+                           if (details.length === board_meeting_data.length) {
+                              callback(true, 200, {res: {attendees: details.length, details}});
+                           }
+                        }
+                     });
+                  })
+               }
+            });
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(true, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;
