@@ -3273,7 +3273,7 @@ handlers.qr = function (dataObject, callback) {
                      } else {
                         console.log(qrData);
                         query = "UPDATE phone_details_qr SET imei = '" + qrData[0].imei +
-                          "', SET phone_status = 4 WHERE id = " + id + " AND (phone_status = 4 OR phone_status=14)";
+                          "',phone_status = 4 WHERE id = " + id + " AND phone_status = 4 OR phone_status=14";
                         console.log(query);
                         database.query(query, (err, updateData) => {
                            if (err) {
