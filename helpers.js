@@ -80,9 +80,9 @@ helpers.insertNewPhone = function (data, callback) {
    const price = data.price_offered > 0 ? data.price_offered : 0;
    console.log(location);
    const values = "'" + manufacturer + "','" + model + "','" + serial_number + "','" +
-     imei + "','" + bssid + "','" + region + "','" + uuid + "','" + storage + "','" +
-     actual_battery_capacity + "','" + battery_wear_capacity + "','" + color + "','" +
-     status + "','" + is_customer + "','" + formattedDate + "','" + location + "'," + price;
+      imei + "','" + bssid + "','" + region + "','" + uuid + "','" + storage + "','" +
+      actual_battery_capacity + "','" + battery_wear_capacity + "','" + color + "','" +
+      status + "','" + is_customer + "','" + formattedDate + "','" + location + "'," + price;
    database.insert("phone_details_duplicate", values, function (err, data) {
       if (err) {
          console.error(err.stack);
@@ -146,14 +146,14 @@ helpers.insertNewReport = function (data, callback) {
    const isUpdated = data.is_updated;
    const orderIdReturn = typeof (data.return_order_id) === 'string' ? data.return_order_id : "NA";
    const values = "'" + imei + "','" + ram + "','" + battery + "','" + wifi + "','" + bluetooth + "','" + nfc + "','" +
-     flash + "','" + acclerometer + "','" + gyroscope + "','" + external_storage + "','" + touch + "','" +
-     speaker + "','" + volume_up + "','" + volume_down + "','" + proximity + "','" + rear_camera + "','" +
-     front_camera + "','" + back_button + "','" + home_button + "','" + power_button + "','" +
-     vibration + "','" + charger + "','" + headphone + "','" + rgb + "','" + microphone + "','" +
-     screen_brightness + "','" + fingerprint + "','" + actualBattery + "','" + batteryWear + "','" +
-     matchIMEI + "','" + scratches + "','" + dents + "','" + appleId + "','" + temperedGlass + "','" +
-     pasting + "','" + marks + "','" + softSleeve + "','" + plasticWrap + "','" + overall_status + "','" + report_uuid + "','" +
-     formattedDate + "','" + email + "'," + isUpdated + ",'" + orderIdReturn + "'";
+      flash + "','" + acclerometer + "','" + gyroscope + "','" + external_storage + "','" + touch + "','" +
+      speaker + "','" + volume_up + "','" + volume_down + "','" + proximity + "','" + rear_camera + "','" +
+      front_camera + "','" + back_button + "','" + home_button + "','" + power_button + "','" +
+      vibration + "','" + charger + "','" + headphone + "','" + rgb + "','" + microphone + "','" +
+      screen_brightness + "','" + fingerprint + "','" + actualBattery + "','" + batteryWear + "','" +
+      matchIMEI + "','" + scratches + "','" + dents + "','" + appleId + "','" + temperedGlass + "','" +
+      pasting + "','" + marks + "','" + softSleeve + "','" + plasticWrap + "','" + overall_status + "','" + report_uuid + "','" +
+      formattedDate + "','" + email + "'," + isUpdated + ",'" + orderIdReturn + "'";
    database.insert("report_details", values, function (err, data) {
       callback(err, data);
    });
@@ -329,7 +329,7 @@ helpers.addInventoryPhone = function (data, callback) {
    connector = checkValid(connector);
 
    const sku_query = "select * from sku_master where brand LIKE '%" + brand + "%' and lower(model) LIKE lower('%" + model_name
-     + "%') and storage = " + storage + " and color LIKE '%" + color + "%' or grade LIKE '%" + grade + "%'";
+      + "%') and storage = " + storage + " and color LIKE '%" + color + "%' or grade LIKE '%" + grade + "%'";
    console.log(sku_query);
    database.query(sku_query, function (err, skuData) {
       let sku;
@@ -342,9 +342,9 @@ helpers.addInventoryPhone = function (data, callback) {
             sku = "";
          }
          const values = "'" + model_name + "','" + sku + "','" + imei_1 + "','" + imei_2 + "','" + color + "','" + time + "','" + date + "','" +
-           price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "',2," +
-           isApproved + ",'" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
-           manual + "','" + connector + "','" + remarks + "',0,0,'" + isManual + "'";
+            price + "','" + grade + "','" + vendorId + "','" + email + "','" + service_stock + "',2," +
+            isApproved + ",'" + storage + "','" + charger + "','" + head_phone + "','" + ejectorTool + "','" + back_cover + "','" +
+            manual + "','" + connector + "','" + remarks + "',0,0,'" + isManual + "'";
          database.insert("inventory", values, function (err, insertData) {
             if (!err) {
                callback(false);
@@ -353,8 +353,8 @@ helpers.addInventoryPhone = function (data, callback) {
             } else if (err) {
                //If the phone is already present in inventory then the status will be updated.
                const query = "UPDATE inventory SET service_stock = " + service_stock +
-                 ", remarks = '" + remarks + "', operations_email = '" + email + "', is_video_taken = 0 " +
-                 "WHERE product_imei_1 LIKE '" + imei_1 + "'";
+                  ", remarks = '" + remarks + "', operations_email = '" + email + "', is_video_taken = 0 " +
+                  "WHERE product_imei_1 LIKE '" + imei_1 + "'";
                database.query(query, function (err, updateData) {
                   if (err) {
                      console.error(err.stack);
@@ -395,13 +395,13 @@ helpers.addInventoryPhone = function (data, callback) {
    function updatePhoneDetails(imei, serviceStock) {
       const where = "imei LIKE '" + imei + "'";
       database.update("phone_details", "status",
-        serviceStock, where, function (err, updateData) {
-           if (err) {
-              console.error(err.stack);
-           } else {
-              console.log("Updated Phone_details.");
-           }
-        });
+         serviceStock, where, function (err, updateData) {
+            if (err) {
+               console.error(err.stack);
+            } else {
+               console.log("Updated Phone_details.");
+            }
+         });
    }
 
    /**
@@ -417,7 +417,7 @@ helpers.addInventoryPhone = function (data, callback) {
          } else {
             const id = qrData[qrData.length - 1].id;
             query = "UPDATE phone_details_qr SET phone_status = " + serviceStock +
-              " WHERE id = " + id + " AND imei LIKE '" + imei + "'";
+               " WHERE id = " + id + " AND imei LIKE '" + imei + "'";
             database.query(query, function (err, updateData) {
                console.log(err);
                console.log("Rows affected in QR: " + updateData.affectedRows);
@@ -468,10 +468,10 @@ helpers.addSellPhoneOrder = function (postData, callback) {
    const earphones = postData.earphones;
    const status = postData.status;
    const values = "'','" + firstName + "','" + lastName + "','" + email + "','" + phone + "','" + address + "','" +
-     modelName + "','" + imei + "','" + price + "','" + date + "','" + time + "','" + touch + "','" + screen + "','" + camera +
-     "','" + volume + "','" + power + "','" + home + "','" + headphone + "','" + wifi + "','" + speaker + "','" +
-     microphone + "','" + charging + "','" + battery + "','" + wallCharger + "','" + box + "','" + usbCable +
-     "','" + earphones + "','" + status + "'";
+      modelName + "','" + imei + "','" + price + "','" + date + "','" + time + "','" + touch + "','" + screen + "','" + camera +
+      "','" + volume + "','" + power + "','" + home + "','" + headphone + "','" + wifi + "','" + speaker + "','" +
+      microphone + "','" + charging + "','" + battery + "','" + wallCharger + "','" + box + "','" + usbCable +
+      "','" + earphones + "','" + status + "'";
    database.insert("buy_back_phone_order", values, function (err, insertData) {
       if (!err) {
          const msg = "Hi " + firstName + ", " + messages.sellPhoneMessage;
@@ -542,10 +542,10 @@ helpers.insertOrder = function (postData, callback) {
    const imei = postData.imei_number;
    const remarks = postData.remarks;
    const values = "'','" + awbNumber + "','" + channelOrderId + "','" + channelName + "','" + productDetails + "','" +
-     customerName + "','" + customerEmail + "','" + customerPhone + "','" + address + "','" + courierId + "','" +
-     orderDate + "','" + orderTime + "','" + formattedDate + "','" + dispatchBefore + "','" + invoiceNumber + "','" + invoiceDate + "','" +
-     paymentMethod + "','" + productPrice + "','" + orderStatus + "','" + isVideoTaken + "','" +
-     productGrade + "','" + imei + "','" + remarks + "',''";
+      customerName + "','" + customerEmail + "','" + customerPhone + "','" + address + "','" + courierId + "','" +
+      orderDate + "','" + orderTime + "','" + formattedDate + "','" + dispatchBefore + "','" + invoiceNumber + "','" + invoiceDate + "','" +
+      paymentMethod + "','" + productPrice + "','" + orderStatus + "','" + isVideoTaken + "','" +
+      productGrade + "','" + imei + "','" + remarks + "',''";
    database.insert("order_details", values, function (err, insertData) {
       if (err) {
          callback(err);
@@ -590,15 +590,15 @@ helpers.sendFirebaseNotification = function (token, msg, content, extra, callbac
       token: token
    };
    admin.messaging().send(message)
-     .then((response) => {
-        // Response is a message ID string.
-        console.log('Successfully sent message:', response);
-        callback(false, response);
-     })
-     .catch((error) => {
-        console.log('Error sending message:', error);
-        callback(error);
-     });
+      .then((response) => {
+         // Response is a message ID string.
+         console.log('Successfully sent message:', response);
+         callback(false, response);
+      })
+      .catch((error) => {
+         console.log('Error sending message:', error);
+         callback(error);
+      });
 };
 /**
  * Method to add the service repair cost.
@@ -632,7 +632,7 @@ helpers.addServiceCost = function (dataObject) {
          }
          console.log(serviceCenter);
          query = "INSERT INTO service_center_cost VALUES ('" + imei + "'," + serviceCenter + "," + body + "," + screen + "," + battery + "," +
-           pasting + "," + fingerprint + "," + cleaning + "," + camera + "," + speaker + "," + buttons + "," + microphone + "," + cost + ")";
+            pasting + "," + fingerprint + "," + cleaning + "," + camera + "," + speaker + "," + buttons + "," + microphone + "," + cost + ")";
          console.log(query);
          database.query(query, function (err, insertData) {
             if (err) {
@@ -776,24 +776,23 @@ helpers.getiOSDeviceName = (model, codename) => {
          reject('model not specified')
       }
 
-      const db_file = './ios-devices.db';
+      let query = `SELECT d_name as name,color,model FROM ios_device_names WHERE model like '${model}' LIMIT 1`
 
-      let db = new sqlite.Database(db_file, 'OPEN_READONLY');
+      database.query(query, (err, data) => {
+         if (err || data.length < 1) {
+            // reject(err)
+            query = `SELECT d_name as name,codename FROM ios_device_codes WHERE codename LIKE '${codename}'`
 
-      db.serialize(() => {
-         db.all(`SELECT name,color,model from devices WHERE model like '${model}' LIMIT 1`, (err, data) => {
-            if (err || data.length < 1) {
-               // reject(err)
-               let name = mapPTypeToName(codename);
-               if (name === codename) {
-                  reject(err)
+            database.query(query, (err, dataX) => {
+               if (err || dataX.length < 1) {
+                  reject(err);
                } else {
-                  resolve({name, color: '', codename, model: ''})
+                  resolve({ color: '', model, ...dataX[0] });
                }
-            } else {
-               resolve({...data[0], codename})
-            }
-         })
+            })
+         } else {
+            resolve({ ...data[0], codename })
+         }
       })
    })
 };
@@ -807,19 +806,14 @@ helpers.getAndroidDeviceName = (code) => {
       if (!code) {
          reject('codename not specified')
       }
-
-      const db_file = './android-devices.db';
-
-      let db = new sqlite.Database(db_file, 'OPEN_READONLY');
-
-      db.serialize(() => {
-         db.all(`SELECT name,codename,model FROM (SELECT name,codename,model,MAX(LENGTH(name)) as length FROM devices WHERE codename like '${code}' LIMIT 1)`, (err, data) => {
-            if (err) {
-               reject(err)
-            } else {
-               resolve(data[0])
-            }
-         })
+      let query = `SELECT d_name as name,model,codename FROM android_device_names WHERE codename like '${code}' LIMIT 1`
+      
+      database.query(query, (err, data) => {
+         if (err || data.length < 1) {
+            reject(err)
+         } else {
+            resolve(data[0])
+         }
       })
    })
 };
@@ -832,7 +826,7 @@ helpers.getAndroidDeviceName = (code) => {
  */
 helpers.logOrder = function (channelOrderId, orderStatus, imeiNumber, isAuth) {
    const query = "INSERT INTO order_status_log VALUES ('" + channelOrderId + "'," +
-     1 + ",'355409070707199','" + isAuth + "',NOW())";
+      1 + ",'355409070707199','" + isAuth + "',NOW())";
    console.log(query);
    database.query(query, (err, insertData) => {
       if (err) {
