@@ -3216,6 +3216,7 @@ handlers.qr = function (dataObject, callback) {
                                     } else {
                                        if (inventoryData[0].service_stock === 12) {
                                           callback(false, 200, {'res': true, 'isPos': true});
+                                          updateInventory(inventoryData[0].product_imei_1, 13);
                                           helpers.logOrder("POS ORDER", 1,
                                             qrData[0].imei, "AUTH");
                                        } else {
@@ -3379,7 +3380,7 @@ handlers.qr = function (dataObject, callback) {
                            console.error(err.stack);
                            callback(err, 500, {'res': messages.errorMessage});
                         } else {
-                           updatePhoneDetails(qrData[0].imei);
+                           updatePhoneDetails(qrData[0].imei, 12);
                            callback(false, 200, {'res': true});
                         }
                      });
@@ -3450,9 +3451,10 @@ handlers.qr = function (dataObject, callback) {
    /**
     * Method to update the Phone details.
     * @param imei: The Imei number of the device.
+    * @param status
     */
-   function updatePhoneDetails(imei) {
-      const query = "UPDATE phone_details SET status = 12 WHERE imei LIKE '" + imei + "'";
+   function updatePhoneDetails(imei, status) {
+      const query = "UPDATE phone_details SET status = " + status + " WHERE imei LIKE '" + imei + "'";
       database.query(query, (err, updateData) => {
          if (err) {
             console.error(err.stack);
@@ -3460,6 +3462,22 @@ handlers.qr = function (dataObject, callback) {
             console.log("Phone details Updated.");
          }
       })
+   }
+
+   /**
+    * Method to update the Inventory.
+    * @param imei: The imei.
+    * @param status: The status.
+    */
+   function updateInventory(imei, status) {
+      const query = "UPDATE inventory SET service_stock = " + status + " WHERE product_imei_1 LIKE '" + imei + "'";
+      database.query(query, (err, updateData) => {
+         if (err) {
+            console.error(err.stack);
+         } else {
+            console.log('Inventory updated to', status);
+         }
+      });
    }
 };
 /**
