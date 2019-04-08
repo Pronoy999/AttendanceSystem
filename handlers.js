@@ -3908,11 +3908,13 @@ handlers.fuckops = function (dataObject, callback) {
             const storage = Number(dataObject.postData.storage) > 0 ? dataObject.postData.storage : false;
             const color = typeof (dataObject.postData.color) === 'string' &&
             dataObject.postData.color.length > 0 ? dataObject.postData.color : "NA";
-            if (brand && model && imei) {
+            const region = typeof (dataObject.postData.region) === 'string' &&
+            dataObject.postData.region.length > 0 ? dataObject.postData.region : false;
+            if (brand && model && imei && region) {
                const timeDate = Math.floor((new Date().getTime()) / 1000);
                const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat));
                const query = "INSERT INTO phone_dump VALUES ('" + brand + "','"
-                 + model + "','" + imei + "'," + storage + ",'" + color + "','" +
+                 + model + "','" + imei + "'," + storage + ",'" + color + "','" + region + "','" +
                  formattedDate + "','" + timeDate + "')";
                database.query(query, (err, insertData) => {
                   if (err) {
