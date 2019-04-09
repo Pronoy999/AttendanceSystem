@@ -776,7 +776,7 @@ helpers.getiOSDeviceName = (model, codename) => {
          reject('model not specified')
       }
 
-      let query = `SELECT d_name as name,color,model FROM ios_device_names WHERE model like '${model}' LIMIT 1`
+      let query = `SELECT d_name as name,color,model FROM ios_device_names WHERE model like '%${model.slice(1)}' LIMIT 1`
 
       database.query(query, (err, data) => {
          if (err || data.length < 1) {
