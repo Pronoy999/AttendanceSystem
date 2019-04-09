@@ -871,7 +871,7 @@ helpers.updateReturnPhoneStatus = function (qr, isOrder) {
             console.error(err.stack);
             reject(true);
          } else {
-            if (qr[0].imei > 0) {
+            if (qrData[0].imei > 0) {
                if (isOrder) {
                   query = "UPDATE inventory SET service_stock = 11 WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
                   query1 = "UPDATE phone_details SET status = 11 WHERE imei LIKE '" + qrData[0].imei + "'";
@@ -881,6 +881,7 @@ helpers.updateReturnPhoneStatus = function (qr, isOrder) {
                   query1 = "UPDATE phone_details SET status = 10 WHERE imei LIKE '" + qrData[0].imei + "'";
                   //query2 = "UPDATE phone_details_qr SET phone_status = 10 WHERE id = " + qr;
                }
+               console.log(query);
                database.query(query, (err, inventoryUpdate) => {
                   if (err) {
                      console.error(err.stack);
@@ -901,8 +902,10 @@ helpers.updateReturnPhoneStatus = function (qr, isOrder) {
                database.query(query2, (err, qrData) => {
                   if (err) {
                      console.log(err.stack);
+                     reject(err);
                   } else {
                      console.log("QR Table Updated.");
+                     resolve(false);
                   }
                });
             }
