@@ -983,16 +983,15 @@ handlers.inventoryData = function (dataObject, callback) {
                dataObject.queryString.imei.length > 0 ? dataObject.queryString.imei : false;
                status = typeof (dataObject.queryString.status) === 'string' &&
                dataObject.queryString.status.length > 0 ? dataObject.queryString.status : false;
-               orderId = typeof (dataObject.queryString.orderid) === 'string' &&
-                 dataObject.queryString.orderid;
-               false;
+               orderId = typeof (dataObject.queryString.orderid) === 'string' ?
+                 dataObject.queryString.orderid : false;
             } catch (e) {
                console.log(e);
             }
             console.log(imei, status);
 
             if (imei && status && orderId) {
-               updateInventory(imei, "Queued");
+               updateInventory(imei, status);
             } else if (imei && status && !orderId) {
                updateInventory(imei, status);
             } else {
@@ -1027,7 +1026,7 @@ handlers.inventoryData = function (dataObject, callback) {
    function updateInventory(imei, status) {
       const query = "UPDATE inventory i, service_stock_sold_details s " +
         "SET i.service_stock=s.id WHERE i.product_imei_1 LIKE '" + imei +
-        "' AND s.sold_stock_service LIKE '" + status + "'";
+        "' AND s.sold_stock_service LIKE '" + status + "' AND service_stock <> 2";
       database.query(query, function (err, updateData) {
          if (err) {
             console.log(err);
