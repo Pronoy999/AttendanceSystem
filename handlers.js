@@ -3316,7 +3316,7 @@ handlers.qr = function (dataObject, callback) {
                         } else {
                            if (inventoryData[0].service_stock === 3) {
                               query = "INSERT INTO service_center (imei, service_center, `current_time`) " +
-                                "VALUES('" + selectData[0].imei + "'," + serviceCenter + ",NOW())";
+                                "VALUES('" + selectData[0].imei + "'," + serviceCenter + ",NOW(),'out')";
                               database.query(query, function (err, insertData) {
                                  if (err) {
                                     console.error(err.stack);
@@ -3578,6 +3578,7 @@ handlers.qrSecurity = function (dataObject, callback) {
                      break;
                   case "service":
                      promise = helpers.updateReturnPhoneStatus(qrId, false);
+                     updateServiceReturn(qrId);
                      break;
                }
                promise.then(err => {
@@ -3608,10 +3609,30 @@ handlers.qrSecurity = function (dataObject, callback) {
          }
       });
    }
+
+   function updateServiceReturn(qrID) {
+      let query = "SELECT * FROM phone_details_qr WHERE id = " + qrID;
+      database.query(query, (err, qrData) => {
+         if (err) {
+            console.error(err.stack);
+         } else {
+            query = "INSERT INTO diagnostic_app.service_center " +
+              "( imei, service_center, `current_time`, current_status)" +
+              " VALUES ('" + qrData[0].imei + "', 2, NOW(), 'in')";
+            database.query(query, (err, insertData) => {
+               if (err) {
+                  console.error(err.stack);
+               } else {
+                  console.log("Service inserted.");
+               }
+            });
+         }
+      });
+   }
 };
 /**
  * Method to handle the meeting requests.
- * POST to get the avaiable Slots.
+ * POST to get the available Slots.
  * PUT to make the requests.
  * It stores the temp slots allocated to a temp table.
  * After the Request is Completed then it deletes the temp data.
