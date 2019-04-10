@@ -5,7 +5,7 @@ const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
 const fs = require('fs');
-const {exec} = require('child_process');
+/*const {exec} = require('child_process');
 const java = require('./initJava');
 const aws = require('./aws');
 const fp_json_file_name = './fp_data.json';
@@ -13,7 +13,7 @@ const fp_json = require(fp_json_file_name);
 const finger_names = ['left_index', 'right_index', 'left_thumb', 'right_thumb'];
 const FingerprintTemplate = java.import("com.machinezoo.sourceafis.FingerprintTemplate");
 const FingerprintMatcher = java.import("com.machinezoo.sourceafis.FingerprintMatcher");
-const S3 = new aws.S3();
+const S3 = new aws.S3();*/
 const handlers = {};
 /**
  * Attendance for Pronoy,munish sir,kaisanba
@@ -1145,7 +1145,7 @@ handlers.inventoryPhone = function (dataObject, callback) {
                });
             }
          } else if (dataObject.method === 'get') {
-            const query = "SELECT "
+            //const query = "SELECT "
          } else {
             callback(true, 400, {'res': messages.invalidRequestMessage});
          }
@@ -3308,20 +3308,28 @@ handlers.qr = function (dataObject, callback) {
                      console.error(err.stack);
                      callback(err, 500, {'res': messages.errorMessage});
                   } else {
-                     if (Number(selectData[0].phone_status === 3)) {
-                        query = "INSERT INTO service_center VALUES " +
-                          "('','" + selectData[0].imei + "'," + serviceCenter + ")";
-                        database.query(query, function (err, insertData) {
-                           if (err) {
-                              console.error(err.stack);
-                              callback(err, 500, {'res': messages.errorMessage});
+                     let query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + selectData[0].imei + "'";
+                     database.query(query, (err, inventoryData) => {
+                        if (err) {
+                           console.error(err.stack);
+                           callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                           if (inventoryData[0].service_stock === 3) {
+                              query = "INSERT INTO service_center (imei, service_center, `current_time`) " +
+                                "VALUES('" + selectData[0].imei + "'," + serviceCenter + ",NOW())";
+                              database.query(query, function (err, insertData) {
+                                 if (err) {
+                                    console.error(err.stack);
+                                    callback(err, 500, {'res': messages.errorMessage});
+                                 } else {
+                                    callback(false, 200, {'res': true});
+                                 }
+                              });
                            } else {
-                              callback(false, 200, {'res': true});
+                              callback(true, 202, {'res': false, 'msg': 'Not Authorized'});
                            }
-                        });
-                     } else {
-                        callback(true, 202, {'res': false, 'msg': 'Not Authorized'});
-                     }
+                        }
+                     });
                   }
                });
             } else if (type && type === 'return') {
