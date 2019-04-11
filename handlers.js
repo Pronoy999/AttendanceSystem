@@ -3505,7 +3505,7 @@ handlers.qrDeactivate = function (dataObject, callback) {
                   } else {
                      if (qrData.length > 0) {
                         query = "UPDATE phone_details_qr SET phone_status = 7, order_status=14 , imei = ''" +
-                          " WHERE imei = '" + qrData[0].imei + "'";
+                          " WHERE id = '" + qrData[0].id + "'";
                         database.query(query, (err, updateData) => {
                            if (err) {
                               console.error(err.stack);
