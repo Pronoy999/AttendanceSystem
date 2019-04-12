@@ -3580,6 +3580,9 @@ handlers.qrSecurity = function (dataObject, callback) {
                      promise = helpers.updateReturnPhoneStatus(qrId, false);
                      updateServiceReturn(qrId);
                      break;
+                  case "procurement":
+                     promise = helpers.updateProcurement(qrId);
+                     break;
                }
                promise.then(err => {
                   callback(false, 200, {'res': true});

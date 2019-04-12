@@ -914,6 +914,32 @@ helpers.updateReturnPhoneStatus = function (qr, isOrder) {
    });
 };
 /**
+ * Method to update the phone details for procurement return.
+ * @param qr: The QR ID.
+ * @returns {Promise<any>}
+ */
+helpers.updateProcurement = (qr) => {
+   return new Promise((resolve, reject) => {
+      let query = "SELECT * FROM phone_details_qr WHERE id= " + qr;
+      database.query(query, (err, qrData) => {
+         if (err) {
+            console.error(err.stack);
+            reject(err);
+         } else {
+            query = "UPDATE phone_details SET status = 16 WHERE imei = '" + qrData[0].imei + "'";
+            database.query(query, (err, updateData) => {
+               if (err) {
+                  console.error(err.stack);
+                  reject(err);
+               } else {
+                  resolve(false);
+               }
+            });
+         }
+      });
+   });
+};
+/**
  * Exporting the module.
  */
 module.exports = helpers;
