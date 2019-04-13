@@ -3132,7 +3132,7 @@ handlers.qr = function (dataObject, callback) {
                      callback(err, 500, {'res': messages.errorMessage});
                   } else {
                      let start = maxData[0].id;
-                     query = "INSERT INTO phone_details_qr_1 VALUES (" + Number(start + 1) + ",'','7','14')";
+                     query = "INSERT INTO phone_details_qr VALUES (" + Number(start + 1) + ",'','7','14')";
                      console.log(start);
                      console.log(num);
                      for (let i = start + 2; i <= (start + num); i++) {
