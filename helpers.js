@@ -876,6 +876,7 @@ helpers.updateReturnPhoneStatus = function (qr, isOrder) {
                   query = "UPDATE inventory SET service_stock = 11 WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
                   query1 = "UPDATE phone_details SET status = 11 WHERE imei LIKE '" + qrData[0].imei + "'";
                   //query2 = "UPDATE phone_details_qr SET phone_status = 11 WHERE id = " + qr;
+                  insertOrderReturn(qrData[0].imei);
                } else {
                   query = "UPDATE inventory SET service_stock = 10 WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
                   query1 = "UPDATE phone_details SET status = 10 WHERE imei LIKE '" + qrData[0].imei + "'";
@@ -912,6 +913,17 @@ helpers.updateReturnPhoneStatus = function (qr, isOrder) {
          }
       });
    });
+
+   function insertOrderReturn(imeiNumber) {
+      const query = "INSERT INTO order_return_log VALUES('" + imeiNumber + "',NOW())";
+      database.query(query, (err, insertData) => {
+         if (err) {
+            console.error(err.stack);
+         } else {
+            console.log("Inserted to Order return log.");
+         }
+      });
+   }
 };
 /**
  * Method to update the phone details for procurement return.
