@@ -909,6 +909,7 @@ helpers.updateReturnPhoneStatus = function (qr, isOrder) {
                      resolve(false);
                   }
                });
+               insertOrderReturn(qr);
             }
          }
       });
