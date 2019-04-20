@@ -1025,13 +1025,14 @@ handlers.inventoryData = function (dataObject, callback) {
    function updateInventory(imei, status) {
       let query = "UPDATE inventory i, service_stock_sold_details s " +
         "SET i.service_stock=s.id WHERE i.product_imei_1 LIKE '" + imei +
-        "' AND s.sold_stock_service LIKE '" + status + "' AND service_stock <> 2";
+        "' AND s.sold_stock_service LIKE '" + status + "' AND i.service_stock <> 2";
       database.query(query, function (err, updateData) {
          if (err) {
             console.log(err);
             callback(err, 500, {'res': messages.errorMessage});
          } else {
-            query = "UPDATE phone_details p,service_stock_details s SET p.status = s.id WHERE p.imei LIKE '" + imei + "'";
+            query = "UPDATE phone_details p,service_stock_details s" +
+              " SET p.status = s.id WHERE p.imei LIKE '" + imei + "'";
             database.query(query, (err, updateData) => {
                if (err) {
                   console.error(err);
