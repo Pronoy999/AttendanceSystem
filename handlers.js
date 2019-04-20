@@ -1477,7 +1477,7 @@ handlers.attendance = function (dataObject, callback) {
                callback(e, 400, {'res': messages.errorMessage});
             }
             if (employeeID) {
-               const query = "SELECT * FROM attendance_record WHERE employee_id = " + employeeID;
+               const query = "SELECT * FROM attendance_record  WHERE employee_id= " + employeeID + " ORDER BY id DESC LIMIT 1";
                database.query(query, function (err, empData) {
                   if (err) {
                      callback(err, 500, {'res': messages.errorMessage});
