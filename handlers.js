@@ -989,7 +989,6 @@ handlers.inventoryData = function (dataObject, callback) {
                console.log(e);
             }
             console.log(imei, status);
-
             if (imei && status && orderId) {
                updateInventory(imei, status);
             } else if (imei && status && !orderId) {
@@ -1024,7 +1023,7 @@ handlers.inventoryData = function (dataObject, callback) {
    }
 
    function updateInventory(imei, status) {
-      const query = "UPDATE inventory i, service_stock_sold_details s " +
+      let query = "UPDATE inventory i, service_stock_sold_details s " +
         "SET i.service_stock=s.id WHERE i.product_imei_1 LIKE '" + imei +
         "' AND s.sold_stock_service LIKE '" + status + "' AND service_stock <> 2";
       database.query(query, function (err, updateData) {
@@ -1032,7 +1031,14 @@ handlers.inventoryData = function (dataObject, callback) {
             console.log(err);
             callback(err, 500, {'res': messages.errorMessage});
          } else {
-            callback(false, 200, {'res': true});
+            query = "UPDATE phone_details p,service_stock_details s SET p.status = s.id WHERE p.imei LIKE '" + imei + "'";
+            database.query(query, (err, updateData) => {
+               if (err) {
+                  console.error(err);
+               } else {
+                  callback(false, 200, {'res': true});
+               }
+            });
          }
       });
    }

@@ -24,7 +24,7 @@ const router = {
    'update': handlers.updateIphoneModel,
    'auth': handlers.token,
    'attendance': handlers.attendance,
-   'fuckattendance': handlers.fuckAttendance,
+   //'fuckattendance': handlers.fuckAttendance,
    'inventory-data': handlers.inventoryData,
    'employee': handlers.employee,
    'inventory-phone': handlers.inventoryPhone,
