@@ -677,7 +677,7 @@ handlers.visitLog = function (dataObject, callback) {
                  "visitor_details v , employee_details e," +
                  " visit_details vi, visit_status_details s WHERE  s.id=vi.status AND" +
                  " v.id in (SELECT visitor_id FROM visit_details) AND " +
-                 "e.id in (SELECT id FROM employee_details WHERE id=vi.employee_id) ";
+                 "e.id in (SELECT id FROM employee_details WHERE id=vi.employee_id) LIMIT 10";
                database.query(query, function (err, visitData) {
                   if (err) {
                      console.log(err);
