@@ -136,3 +136,6 @@ const httpServer = http.createServer(function (req, res) {
 httpServer.listen(7009, function () {
    console.log("Server Listening on Port 7009");
 });
+
+// workers.updateAndroidDeviceNames();
+// workers.updateiOSDeviceNames();

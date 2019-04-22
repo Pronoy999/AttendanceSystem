@@ -353,8 +353,7 @@ helpers.addInventoryPhone = function (data, callback) {
             } else if (err) {
                //If the phone is already present in inventory then the status will be updated.
                const query = "UPDATE inventory SET service_stock = " + service_stock +
-                 ", remarks = '" + remarks + "', operations_email = '" + email + "', product_grade ='" + grade +
-                 "', is_video_taken = 0 " +
+                 ", remarks = '" + remarks + "', operations_email = '" + email + "', is_video_taken = 0 " +
                  "WHERE product_imei_1 LIKE '" + imei_1 + "'";
                database.query(query, function (err, updateData) {
                   if (err) {
@@ -777,24 +776,23 @@ helpers.getiOSDeviceName = (model, codename) => {
          reject('model not specified')
       }
 
-      const db_file = './ios-devices.db';
+      let query = `SELECT d_name as name,color,model FROM ios_device_names WHERE model like '%${model.slice(1)}' LIMIT 1`
 
-      let db = new sqlite.Database(db_file, 'OPEN_READONLY');
+      database.query(query, (err, data) => {
+         if (err || data.length < 1) {
+            // reject(err)
+            query = `SELECT d_name as name,codename FROM ios_device_codes WHERE codename LIKE '${codename}'`
 
-      db.serialize(() => {
-         db.all(`SELECT name,color,model from devices WHERE model like '${model}' LIMIT 1`, (err, data) => {
-            if (err || data.length < 1) {
-               // reject(err)
-               let name = mapPTypeToName(codename);
-               if (name === codename) {
-                  reject(err)
+            database.query(query, (err, dataX) => {
+               if (err || dataX.length < 1) {
+                  reject(err);
                } else {
-                  resolve({name, color: '', codename, model: ''})
+                  resolve({color: '', model, ...dataX[0]});
                }
-            } else {
-               resolve({...data[0], codename})
-            }
-         })
+            })
+         } else {
+            resolve({...data[0], codename})
+         }
       })
    })
 };
@@ -808,19 +806,14 @@ helpers.getAndroidDeviceName = (code) => {
       if (!code) {
          reject('codename not specified')
       }
+      let query = `SELECT d_name as name,model,codename FROM android_device_names WHERE codename like '${code}' LIMIT 1`
 
-      const db_file = './android-devices.db';
-
-      let db = new sqlite.Database(db_file, 'OPEN_READONLY');
-
-      db.serialize(() => {
-         db.all(`SELECT name,codename,model FROM (SELECT name,codename,model,MAX(LENGTH(name)) as length FROM devices WHERE codename like '${code}' LIMIT 1)`, (err, data) => {
-            if (err) {
-               reject(err)
-            } else {
-               resolve(data[0])
-            }
-         })
+      database.query(query, (err, data) => {
+         if (err || data.length < 1) {
+            reject(err)
+         } else {
+            resolve(data[0])
+         }
       })
    })
 };
