@@ -3298,7 +3298,7 @@ handlers.qr = function (dataObject, callback) {
                            callback(err, 500, {'res': messages.errorMessage});
                         } else {
                            if (inventoryData[0].service_stock === 3) {
-                              query = "INSERT INTO service_center (imei, service_center, `current_time`) " +
+                              query = "INSERT INTO service_center (imei, service_center, `current_time`,`current_status`) " +
                                 "VALUES('" + selectData[0].imei + "'," + serviceCenter + ",NOW(),'out')";
                               database.query(query, function (err, insertData) {
                                  if (err) {
