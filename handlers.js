@@ -122,7 +122,7 @@ handlers.otp = function (dataObject, callback) {
                         };
                         callback(false, 200, response);
                      }
-                     deleteOTP(otp);
+                     //deleteOTP(otp);
                   } else {
                      callback(false, 400, {'res': false});
                   }
@@ -3407,7 +3407,7 @@ handlers.qr = function (dataObject, callback) {
     * @param imei: The Imei number.
     */
    function updateOrderAndPhoneDetails(imei) {
-      let query = "UPDATE order_details SET order_status=8 WHERE imei_number ='" + imei + "' AND order_status =5";
+      let query = "UPDATE order_details SET order_status=8 WHERE imei_number ='" + imei + "' AND order_status in (4,5,10,11,3)";
       database.query(query, (err, updateOrderData) => {
          if (err) {
             console.error(err.stack);
