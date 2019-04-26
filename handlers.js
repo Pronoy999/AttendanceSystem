@@ -3359,7 +3359,7 @@ handlers.qr = function (dataObject, callback) {
             } else if (type === 'sell') {
                const qrId = Number(dataObject.postData.id) > 0 ? dataObject.postData.id : false;
                let query = "SELECT * FROM phone_details_qr WHERE id = " + qrId;
-               const serviceStockId = typeof (dataObject.postData.service_id) === 'string' ?
+               const serviceStockId = Number(dataObject.postData.service_id) > 0 ?
                  dataObject.postData.service_id : false;
                database.query(query, (err, qrData) => {
                   if (err) {
