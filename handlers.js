@@ -3359,21 +3359,28 @@ handlers.qr = function (dataObject, callback) {
             } else if (type === 'sell') {
                const qrId = Number(dataObject.postData.id) > 0 ? dataObject.postData.id : false;
                let query = "SELECT * FROM phone_details_qr WHERE id = " + qrId;
+               const serviceStockId = typeof (dataObject.postData.service_id) === 'string' ?
+                 dataObject.postData.service_id : false;
                database.query(query, (err, qrData) => {
                   if (err) {
                      console.error(err.stack);
                      callback(err, 500, {'res': messages.errorMessage});
                   } else {
-                     query = "UPDATE inventory SET service_stock=12 WHERE product_imei_1 = '" + qrData[0].imei + "'";
-                     database.query(query, (err, updateData) => {
-                        if (err) {
-                           console.error(err.stack);
-                           callback(err, 500, {'res': messages.errorMessage});
-                        } else {
-                           updatePhoneDetails(qrData[0].imei, 12);
-                           callback(false, 200, {'res': true});
-                        }
-                     });
+                     if (serviceStockId) {
+                        query = "UPDATE inventory SET service_stock= " + serviceStockId +
+                          " WHERE product_imei_1 = '" + qrData[0].imei + "'";
+                        database.query(query, (err, updateData) => {
+                           if (err) {
+                              console.error(err.stack);
+                              callback(err, 500, {'res': messages.errorMessage});
+                           } else {
+                              updatePhoneDetails(qrData[0].imei, serviceStockId);
+                              callback(false, 200, {'res': true});
+                           }
+                        });
+                     } else {
+                        callback(true, 400, {'res': messages.insufficientData});
+                     }
                   }
                });
             } else {
