@@ -2788,7 +2788,7 @@ handlers.details = function (dataObject, callback) {
                      callback(false, 200, {'res': serviceCenterData});
                   }
                });
-            } else if (type === 'service') {
+            } else if (type === 'service&') {
                query = "SELECT i.*,s.service_center FROM diagnostic_app.inventory i," +
                   " service_center_details s " +
                   "WHERE s.id=i.service_center AND i.service_center <> 2 " +
@@ -2801,7 +2801,23 @@ handlers.details = function (dataObject, callback) {
                      callback(false, 200, {'res': serviceData});
                   }
                });
-            } else {
+            }
+            else if (type === 'service') {
+               query = "SELECT i.*,s.service_center FROM diagnostic_app.inventory i," +
+                   " service_center_details s " +
+                   "WHERE s.id=i.service_center  " +
+                   "AND i.service_stock=3";
+               database.query(query, (err, serviceData) => {
+                  if (err) {
+                     console.error(err.stack);
+                     callback(err, 500, {'res': messages.errorMessage});
+                  } else {
+                     callback(false, 200, {'res': serviceData});
+                  }
+               });
+            }
+
+            else {
                callback(true, 400, {'res': messages.insufficientData});
             }
          } else {
