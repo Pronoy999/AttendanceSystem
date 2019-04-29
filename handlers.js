@@ -2788,7 +2788,7 @@ handlers.details = function (dataObject, callback) {
                      callback(false, 200, {'res': serviceCenterData});
                   }
                });
-            } else if (type === 'service&') {
+            } else if (type === 'services') {
                query = "SELECT i.*,s.service_center FROM diagnostic_app.inventory i," +
                   " service_center_details s " +
                   "WHERE s.id=i.service_center AND i.service_center <> 2 " +
