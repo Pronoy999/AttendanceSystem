@@ -3216,7 +3216,9 @@ handlers.qr = function (dataObject, callback) {
                                        console.error(err.stack);
                                        callback(err, 500, {'res': messages.errorMessage});
                                     } else {
-                                       if (inventoryData[0].service_stock === 12) {
+                                       if (inventoryData[0].service_stock === 12 || inventoryData[0].service_stock === 17
+                                           || inventoryData[0].service_stock === 19 || inventoryData[0].service_stock === 21
+                                       || inventoryData[0].service_stock === 23) {
                                           callback(false, 200, {'res': true, 'isPos': true});
                                           updateInventory(inventoryData[0].product_imei_1, 13);
                                           helpers.logOrder("POS ORDER", 1,
