@@ -504,7 +504,7 @@ handlers.logCheck = function (dataObject, callback) {
    if (dataObject.method === 'get') {
       const mobileNumber = dataObject.queryString.mobileNumber;
       let query = "SELECT * FROM employee_details " +
-         "WHERE mobile_number LIKE '" + mobileNumber + "'";
+        "WHERE mobile_number LIKE '" + mobileNumber + "' AND current_status NOT LIKE 'inactive'";
       database.query(query, function (err, data) {
          if (typeof (data[0]) === 'undefined') {
             query = "SELECT * FROM visitor_details " +
@@ -1426,7 +1426,7 @@ handlers.attendance = function (dataObject, callback) {
             const new_status = postData.new_status;
             const location = postData.location;
             const timestamp = postData.timestamp;
-            let query = "UPDATE employee_details SET current_status = '" + new_status + "' WHERE id = " + id;
+            let query = "UPDATE employee_details SET current_status = '" + new_status + "' WHERE id = " + id + " AND current_status NOT LIKE 'inactive'";
             database.query(query, function (err, data) {
                if (!err) {
                   const timeDate = Math.floor((new Date().getTime()) / 1000);
