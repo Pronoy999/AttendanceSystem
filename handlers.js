@@ -3176,8 +3176,8 @@ handlers.qr = function (dataObject, callback) {
                                  console.error(err.stack);
                                  callback(err, 500, {'res': messages.errorMessage});
                               } else {
-                                 query = "SELECT * FROM order_details " +
-                                   "WHERE imei_number LIKE '" + qrData[0].imei + "' AND order_status <> 8 " +
+                                 query = "SELECT * FROM order_details" +
+                                   " WHERE imei_number LIKE '" + qrData[0].imei + "' AND order_status <> 8 " +
                                    "AND order_status <> 12 AND order_status <>5";
                                  database.query(query, (err, orderData) => {
                                     if (err) {
