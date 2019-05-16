@@ -1146,7 +1146,17 @@ handlers.inventoryPhone = function (dataObject, callback) {
                });
             }
          } else if (dataObject.method === 'get') {
-            const query = "SELECT "
+            const query = "select model_name, storage, product_price from inventory where product_price <> 0 " +
+              "group by model_name, storage order " +
+              "by model_name, storage";
+            database.query(query, (err, priceData) => {
+               if (err) {
+                  console.error(err.stack);
+                  callback(err, 500, {'res': messages.errorMessage});
+               } else {
+                  callback(false, 200, {'res': priceData});
+               }
+            });
          } else {
             callback(true, 400, {'res': messages.invalidRequestMessage});
          }
