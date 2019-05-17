@@ -1146,9 +1146,8 @@ handlers.inventoryPhone = function (dataObject, callback) {
                });
             }
          } else if (dataObject.method === 'get') {
-            const query = "select model_name, storage, product_price from inventory where product_price <> 0 " +
-              "group by model_name, storage, product_price  order " +
-              "by model_name, storage, product_price";
+            const query = "select product_type, os, brand, model_name, storage, procurement_price from"+
+             " procurement_price_master order by product_type, os, brand, model_name, storage";
             database.query(query, (err, priceData) => {
                if (err) {
                   console.error(err.stack);
