@@ -1147,8 +1147,8 @@ handlers.inventoryPhone = function (dataObject, callback) {
             }
          } else if (dataObject.method === 'get') {
             const query = "select model_name, storage, product_price from inventory where product_price <> 0 " +
-              "group by model_name, storage order " +
-              "by model_name, storage";
+              "group by model_name, storage, product_price  order " +
+              "by model_name, storage, product_price";
             database.query(query, (err, priceData) => {
                if (err) {
                   console.error(err.stack);
