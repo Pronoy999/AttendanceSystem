@@ -1112,7 +1112,7 @@ handlers.inventoryPhone = function (dataObject, callback) {
             } else if (flag === 'procurement') {
 
                const productType = typeof (dataObject.postData.product_type) === "string" &&
-               dataObject.postData.productType.length > 0 ? dataObject.postData.productType : false;
+               dataObject.postData.product_type.length > 0 ? dataObject.postData.product_type : false;
 
                const productOs = typeof (dataObject.postData.os) === "string" &&
                dataObject.postData.os.length > 0 ? dataObject.postData.os : false;
@@ -1168,7 +1168,7 @@ handlers.inventoryPhone = function (dataObject, callback) {
                      }
                   }
                });
-
+               return;
 
             } else {
                query = "SELECT i.*,v.first_name as vendor_first_name,v.last_name as vendor_last_name, p.status " +
@@ -1239,7 +1239,7 @@ handlers.inventoryPhone = function (dataObject, callback) {
    function insertData(type, os, brand, model, storage, price, vendorId, callback) {
       const query = "INSERT INTO diagnostic_app.procurement_price_master (product_type, os, brand, " +
          "model_name, storage, procurement_price, vendor_id, is_active) VALUES ('" + type + "','" + os + "','" + brand + "','" + model
-         + "','" + storage + "','" + price + "','" + vendorId + "')";
+         + "','" + storage + "','" + price + "','" + vendorId + "',1)";
       database.query(query, (err, result) => {
          if (err) {
             callback(err, false);
