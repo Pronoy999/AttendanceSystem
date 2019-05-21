@@ -1208,7 +1208,7 @@ handlers.inventoryPhone = function (dataObject, callback) {
             }
          } else if (dataObject.method === 'get') {
             const query = "select product_type, os, brand, model_name, storage, procurement_price from" +
-               " procurement_price_master order by product_type, os, brand, model_name, storage";
+               " procurement_price_master where is_active = 1 order by product_type, os, brand, model_name, storage";
             database.query(query, (err, priceData) => {
                if (err) {
                   console.error(err.stack);
@@ -1287,7 +1287,8 @@ handlers.inventoryDead = function (dataObject, callback) {
    } else if (dataObject.method === 'get') {
       helpers.validateToken(dataObject.queryString.key, function (isValid) {
          if (isValid) {
-            const query = "SELECT model_name, count(model_name) as count FROM dead_phone group by model_name";
+            const query = "SELECT model_name, count(model_name) as count FROM dead_phone group by model_name union " +
+                "select  model_name";
             database.query(query, function (err, deadData) {
                if (err) {
                   callback(err, 500, {'res': messages.errorMessage});
