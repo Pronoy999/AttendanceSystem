@@ -3304,7 +3304,7 @@ handlers.qr = function (dataObject, callback) {
                                     orderData[0].imei_number, "AUTH");
                               } else {
                                  //callback(false, 200, {'res': false, 'msg': orderData,'isPos':false});
-                                 query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
+                                 query = "SELECT * FROM inventory WHERE is_video_taken = 1 and product_imei_1 LIKE '" + qrData[0].imei + "'";
                                  database.query(query, (err, inventoryData) => {
                                     if (err) {
                                        console.error(err.stack);
