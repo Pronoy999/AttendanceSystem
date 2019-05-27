@@ -398,7 +398,7 @@ handlers.report = function (dataObject, callback) {
     if(dataObject.method === 'get')
     {
         const query = "SELECT product_imei_1 as imei , model_name as model FROM inventory WHERE is_video_taken = -1 union "+
-            "select imei_number as imei , product_details as model from order_details where is_video_taken = -1";
+            "select channel_order_id as imei , product_details as model from order_details where is_video_taken = -1";
         database.query(query, function (err, data) {
             if (err) {
                 response = {
