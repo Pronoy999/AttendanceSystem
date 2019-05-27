@@ -53,7 +53,7 @@ const router = {
    'device-name': handlers.devNames,
    'error': handlers.errorLog,
    'fuck-ops': handlers.fuckops,
-   'board-meeting': handlers.boardreportMeeting,
+   'board-meeting': handlers.boardreportMeeting
 };
 /**
  * Method which controls the Server.
@@ -140,4 +140,4 @@ httpServer.listen(7009, function () {
 // workers.updateAndroidDeviceNames();
 // workers.updateiOSDeviceNames();
 
-//workers.checkVideoUploadStatus();
+workers.checkVideoUploadStatus();
