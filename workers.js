@@ -11,7 +11,7 @@ const workers = {};
  */
 workers.checkVideoUploadStatus = function () {
     setInterval(function () {
-        const query = "Select channel_order_id as name from order_details where is_video_taken = 1 and insertion_date > '2019-05-20' and order_status = 5" +
+        const query = "Select channel_order_id as name from order_details where is_video_taken = 1  and order_status = 5" +
             " union select product_imei_1 as name from inventory where is_video_taken = 1 and service_stock = 1";
 
         database.query(query, async function (err, videoUpdated) {
