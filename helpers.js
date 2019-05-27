@@ -4,7 +4,6 @@ const moment = require('moment');
 const tz = require('moment-timezone');
 const messages = require('./Constants');
 const snsLib = require('./snsLib');
-const sqlite = require('sqlite3').verbose();
 const admin = require('firebase-admin');
 /**
  * Method to parse JSON to Objects.
