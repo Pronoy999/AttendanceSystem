@@ -140,4 +140,4 @@ httpServer.listen(7009, function () {
 // workers.updateAndroidDeviceNames();
 // workers.updateiOSDeviceNames();
 
-workers.checkVideoUploadStatus();
+//workers.checkVideoUploadStatus();

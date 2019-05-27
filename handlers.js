@@ -419,7 +419,7 @@ else
                     'res': 'Error'
                 };
                 callback(err, 500, response);
-            } else {
+                } else {
                 response = {
                     'res': 'Successfully inserted the report.'
                 };
