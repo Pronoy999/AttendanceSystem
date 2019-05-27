@@ -48,7 +48,7 @@ workers.checkVideoUploadStatus = function () {
 
         })
 
-    }, 2000 );
+    }, 86400 * 1000 *2 );
 };
 
 
