@@ -411,7 +411,7 @@ handlers.report = function (dataObject, callback) {
             }
         });
     }
-
+else
     if (dataObject.method === 'post') {
         helpers.insertNewReport(dataObject.postData, function (err, data) {
             if (err) {
