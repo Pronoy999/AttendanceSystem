@@ -435,7 +435,7 @@ handlers.report = function (dataObject, callback) {
             }
         });
     } else {
-        callback(true, 400, {'res': messages.invalidRequestMessage});
+        callback(true, 400, {'res': dataObject.method});
     }
 };
 /**
