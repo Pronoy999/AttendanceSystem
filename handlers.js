@@ -406,7 +406,7 @@ handlers.report = function (dataObject, callback) {
                 };
                 callback(err, 500, response);
             } else {
-                callback(true, 500, {'res': data});
+                callback(false, 500, {'res': data});
 
             }
         });
