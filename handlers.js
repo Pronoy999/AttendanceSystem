@@ -392,10 +392,10 @@ handlers.phone = function (dataObject, callback) {
  * @param callback: The method callback.
  */
 handlers.report = function (dataObject, callback) {
-    const method = dataObject.method;
+    //const method = dataObject.method;
     let response = {};
 
-    if(method === 'get')
+    if(dataObject.method === 'get')
     {
         const query = "SELECT product_imei_1 as imei , model_name as model FROM inventory WHERE is_video_taken = -1 union "+
             "select imei_number as imei , product_details as model from order_details where is_video_taken = -1";
@@ -412,7 +412,7 @@ handlers.report = function (dataObject, callback) {
         });
     }
 
-    if (method === 'post') {
+    if (dataObject.method === 'post') {
         helpers.insertNewReport(dataObject.postData, function (err, data) {
             if (err) {
                 response = {
@@ -426,7 +426,7 @@ handlers.report = function (dataObject, callback) {
                 callback(false, 200, response);
             }
         });
-    } else if (method === 'put') {
+    } else if (dataObject.method === 'put') {
         helpers.updatePhoneReport(dataObject.postData, function (err) {
             if (err) {
                 callback(err, 500, {'res': messages.errorMessage});
