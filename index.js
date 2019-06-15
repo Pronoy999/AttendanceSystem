@@ -54,6 +54,7 @@ const router = {
    'error': handlers.errorLog,
    'fuck-ops': handlers.fuckops,
    'board-meeting': handlers.boardMeeting,
+   'franchise': handlers.franchise
 };
 /**
  * Method which controls the Server.
@@ -70,7 +71,7 @@ const unifiedServer = function (req, res) {
    let postData = '';
    const header = req.headers['content-type'];
    const chosenHandler = typeof (router[trimmedPath]) !== 'undefined' ?
-     router[trimmedPath] : handlers.notFound;
+      router[trimmedPath] : handlers.notFound;
 
    if (header === 'application/octet-stream') {
       var data = [];
