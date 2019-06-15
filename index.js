@@ -53,8 +53,7 @@ const router = {
    'device-name': handlers.devNames,
    'error': handlers.errorLog,
    'fuck-ops': handlers.fuckops,
-   'board-meeting': handlers.boardMeeting,
-   'franchise': handlers.franchise
+   'board-meeting': handlers.boardreportMeeting
 };
 /**
  * Method which controls the Server.
@@ -71,7 +70,7 @@ const unifiedServer = function (req, res) {
    let postData = '';
    const header = req.headers['content-type'];
    const chosenHandler = typeof (router[trimmedPath]) !== 'undefined' ?
-      router[trimmedPath] : handlers.notFound;
+     router[trimmedPath] : handlers.notFound;
 
    if (header === 'application/octet-stream') {
       var data = [];
@@ -140,3 +139,5 @@ httpServer.listen(7009, function () {
 
 // workers.updateAndroidDeviceNames();
 // workers.updateiOSDeviceNames();
+
+workers.checkVideoUploadStatus();
