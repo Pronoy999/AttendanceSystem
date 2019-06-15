@@ -53,7 +53,8 @@ const router = {
    'device-name': handlers.devNames,
    'error': handlers.errorLog,
    'fuck-ops': handlers.fuckops,
-   'board-meeting': handlers.boardreportMeeting
+   'board-meeting': handlers.boardMeeting,
+   'franchise': handlers.franchise
 };
 /**
  * Method which controls the Server.
