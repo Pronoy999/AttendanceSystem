@@ -54,7 +54,8 @@ const router = {
    'error': handlers.errorLog,
    'fuck-ops': handlers.fuckops,
    'board-meeting': handlers.boardMeeting,
-   'franchise': handlers.franchise
+   'franchise': handlers.franchise,
+   'email': handlers.email
 };
 /**
  * Method which controls the Server.
