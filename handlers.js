@@ -4196,6 +4196,35 @@ handlers.franchise = (dataObject, callback) => {
    });
 };
 /**
+ * Handler for sending email.
+ * @param dataObject: The request Object.
+ * @param callback: The method callback.
+ */
+handlers.email = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, (isValid) => {
+      if (isValid) {
+         if (dataObject.method === 'post') {
+            const targetAddress = typeof (dataObject.postData.email) === 'string' ? dataObject.postData.email : false;
+            const subject = typeof (dataObject.postData.subject) === 'string' ? dataObject.postData.subject : false;
+            const body = typeof (dataObject.postData.body) === 'string' ? dataObject.postData.body : false;
+            if (targetAddress && subject && body) {
+               helpers.sendEmail(targetAddress, subject, body).then(() => {
+                  callback(false, 200, {'res': true});
+               }).catch(err => {
+                  callback(true, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(true, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+/**
  * Method to get the All the Service Requester Details.
  * @param dataObject: The Request Object.
  * @param callback: The Method callback.

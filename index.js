@@ -56,7 +56,8 @@ const router = {
    'board-meeting': handlers.boardMeeting,
    'franchise': handlers.franchise,
    'service-requester': handlers.serviceRequester,
-   'service-request': handlers.serviceRequest
+   'service-request': handlers.serviceRequest,
+   'email': handlers.email
 };
 /**
  * Method which controls the Server.
