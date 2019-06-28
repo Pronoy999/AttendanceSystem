@@ -952,22 +952,24 @@ helpers.updateProcurement = (qr) => {
  * @param targetAddress: The target to whom you are sending the email.
  * @param subject: The subject of the email.
  * @param body: The HTML body of the EMAIL.
+ * @param attachments: The attachments array according to nodemailer specifications.
  * @returns {Promise<any>}
  */
-helpers.sendEmail = (targetAddress, subject, body) => {
+helpers.sendEmail = (targetAddress, subject, body, attachments) => {
    return new Promise((resolve, reject) => {
       const transporter = nodemailer.createTransport({
          service: 'gmail',
          auth: {
             user: 'admin@hyperxchange.com',
-            pass: 'hyp123**'
+            pass: 'hxadmin123'
          }
       });
       const mailOptions = {
          from: 'admin@hyperxchange.com',
          to: targetAddress,
-         subject: subject,
-         html: body
+         subject,
+         html: body,
+         attachments
       };
       transporter.sendMail(mailOptions, (err, info) => {
          if (err) {
