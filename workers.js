@@ -101,7 +101,12 @@ workers.generateStockServiceCSVforAccounts = () => {
    setInterval(() => {
       const generateCSV = (service_stock, filename) => new Promise((resolve, reject) => {
          const query =
-            `select model_name as Model, product_color as Color, storage as Storage, count(model_name) as Quantity
+            `select 
+             model_name as Model, 
+             product_color as Color, 
+             storage as Storage, 
+             count(model_name) as Quantity, 
+             product_price as 'Procurement Price'
              from diagnostic_app.inventory
              where service_stock = ${service_stock}
              group by model_name, product_color, storage;`;
