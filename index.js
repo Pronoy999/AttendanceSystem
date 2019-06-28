@@ -145,4 +145,5 @@ httpServer.listen(7009, function () {
 // workers.updateiOSDeviceNames();
 
 workers.checkVideoUploadStatus();
-workers.generateStockServiceCSV();
+workers.generateStockServiceCSVforAccounts();
+workers.generateStockServiceCSVforOperations();
