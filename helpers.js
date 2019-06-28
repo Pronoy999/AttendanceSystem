@@ -979,6 +979,29 @@ helpers.sendEmail = (targetAddress, subject, body) => {
    });
 };
 /**
+ * Method to compare two objects based on their properties.
+ * @param a: first object
+ * @param b: second object
+ * @returns true if equivalent, otherwise false.
+ */
+helpers.isEquivalent = (a, b) => {
+   var aProps = Object.getOwnPropertyNames(a);
+   var bProps = Object.getOwnPropertyNames(b);
+
+   if (aProps.length !== bProps.length) {
+      return false;
+   }
+
+   for (var i = 0; i < aProps.length; i++) {
+      var propName = aProps[i];
+
+      if (a[propName] !== b[propName]) {
+         return false;
+      }
+   }
+   return true;
+};
+/**
  * Exporting the module.
  */
 module.exports = helpers;

@@ -4196,6 +4196,236 @@ handlers.franchise = (dataObject, callback) => {
    });
 };
 /**
+ * Method to get the All the Service Requester Details.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.serviceRequester = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, isValid => {
+      if (dataObject.method === 'get') {
+         if (isValid) {
+            const id = typeof (dataObject.queryString.id) === 'string' &&
+            dataObject.queryString.id.length > 0 ? dataObject.queryString.id : false;
+            let query;
+            if (id) {
+               query = "SELECT * FROM service_requester_details WHERE id = " + id;
+            } else {
+               query = "SELECT * FROM service_requester_details";
+            }
+            database.query(query, (err, data) => {
+               if (err) {
+                  callback(err, 500, {'res': messages.errorMessage});
+               } else {
+                  const requester = [];
+                  for (let i = 0; i < data.length; i++) {
+                     requester.push(data[i]);
+                  }
+                  const response = {
+                     'res': requester
+                  };
+                  callback(false, 200, response);
+               }
+            });
+         } else {
+            callback(false, 403, {'res': messages.tokenExpiredMessage});
+         }
+      } else {
+         callback(true, 400, {'res': messages.invalidRequestMessage});
+      }
+   });
+};
+
+/**
+ * Method to get the service request details for specific id.
+ * @param dataObject: The Request Object.
+ * @param callback: The Method callback.
+ */
+handlers.serviceRequest = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, isValid => {
+      if (isValid) {
+         let query;
+         if (dataObject.method === 'get') {
+            const id = typeof (dataObject.queryString.id) === 'string' &&
+            dataObject.queryString.id.length > 0 ? dataObject.queryString.id : false;
+
+            const model_name = typeof (dataObject.queryString.model_name) === 'string' &&
+            dataObject.queryString.model_name.length > 0 ? dataObject.queryString.model_name : false;
+
+            if (id) {
+               query = "SELECT * FROM service_requester_details WHERE id = " + id + " LIMIT 1";
+               database.query(query, (err, data) => {
+                  if (err || !data.length) {
+                     callback(err, 500, {'res': messages.errorMessage});
+                  } else {
+                     const requester = data[0];
+                     query = `SELECT * from service_request${id || model_name ? ` WHERE ` : ''}${!requester.employee_id ? `service_center_id = ${id}${model_name ? ` AND ` : ''}` : ''}${model_name ? `imei IN (SELECT product_imei_1 FROM inventory WHERE model_name like '${model_name}')` : ''}`;
+                     database.query(query, (err, data) => {
+                        const fetchIssues = r_id => new Promise((resolve, reject) => {
+                           query = `SELECT * from service_issues WHERE request_id = '${x.id}'`;
+                           database.query(query, (err, data) => {
+                              if (err) {
+                                 reject(err);
+                              } else {
+                                 resolve(data);
+                              }
+                           });
+                        });
+                        if (err) {
+                           callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                           const requests = data;
+                           Promise.all(data.map(x => fetchIssues(x.id))).then(datas => {
+                              for (let i = 0; i < datas.length; i++) {
+                                 requests[i].issues = datas[i];
+                              }
+
+                              callback(false, 200, requests);
+                           }).catch(err => {
+                              callback(err, 500, {'res': messages.errorMessage});
+                           });
+                        }
+                     });
+                  }
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else if (dataObject.method === 'post') {
+            const timestamp = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
+            const {id, imei, requester_id, service_center_id, request_status, issues} = dataObject.postData;
+
+            const updateIssue = issue => new Promise((resolve, reject) => {
+               query =
+                  `UPDATE service_issues SET
+                  request_id=${issue.request_id},
+                  issue_details=${issue.issue_details},
+                  repair_cost=${issue.repair_cost},
+                  issue_status=${issue.issue_status},
+                  requester_id=${issue.requester_id},
+                  timestamp=${timestamp}`;
+               database.query(query, (err, data) => {
+                  if (err) {
+                     console.log(err);
+                     reject(err);
+                  } else {
+                     resolve(data);
+                  }
+               });
+            });
+
+            const updateIssues = (issues, r_id) => {
+               query = "SELECT * from service_issues WHERE request_id = " + id;
+               database.query(query, (err, data) => {
+                  if (data && data.length) {
+                     const issuesToBeCreated = [];
+                     const issuesToBeUpdatedPromises = [];
+                     for (let i = 0; i < issues.length; i++) {
+                        const oldIssues = issues[i].id ? data.filter(x => x.id === issues[i].id) : [];
+                        if (oldIssues.length) {
+                           if (!helpers.isEquivalent(oldIssues[0], issues[i])) {
+                              issuesToBeUpdatedPromises.push(updateIssue(issues[i]));
+                           }
+                        } else {
+                           issuesToBeCreated.push(issues[i]);
+                        }
+                     }
+
+                     if (issuesToBeUpdatedPromises.length) {
+                        Promise.all(issuesToBeUpdatedPromises).then(x => {
+                        }).catch(err => {
+                           callback(err, 500, {'res': messages.errorMessage});
+                        })
+                     }
+
+                     if (issuesToBeCreated.length) {
+                        createIssues(issuesToBeCreated, r_id);
+                     } else {
+                        callback(false, 200, {res: true});
+                     }
+                  } else {
+                     createIssues(issues, r_id);
+                  }
+               });
+            };
+
+            const createIssues = (iss, r_id) => {
+               query = `INSERT INTO service_issues(id,request_id,issue_details,repair_cost,issue_status,requester_id,timestamp)
+                VALUES ${iss.map(i => `('','${r_id}','${i.issue_details}','${i.repair_cost}','${i.issue_status}','${i.requester_id}','${timestamp}')`).join(',')}`;
+               database.query(query, (err, data) => {
+                  if (err) {
+                     callback(err, 500, {'res': messages.errorMessage});
+                  } else {
+                     callback(false, 200, {res: true});
+                  }
+               });
+            };
+
+            const createRequest = () => {
+               query = `INSERT INTO service_request(id,imei,requester_id,timestamp,request_status,service_center_id)
+                VALUES('','${imei}','${requester_id}','${timestamp}','${request_status}','${service_center_id}')`;
+               database.query(query, (err, data) => {
+                  if (err) {
+                     callback(err, 500, {'res': messages.errorMessage});
+                  } else {
+                     createIssues(issues, data.insertId);
+                  }
+               });
+            };
+
+            const updateRequest = request => {
+               if (!helpers.isEquivalent({...dataObject.postData, issues: null}, {...request, issues: null})) {
+                  // update the request actually
+                  query =
+                     `UPDATE service_request 
+                     SET imei=${imei},
+                     requester_id=${requester_id},
+                     timestamp=${request.timestamp || timestamp},
+                     request_status=${request_status},
+                     service_center_id=${service_center_id}
+                     WHERE id=${id}`;
+                  database.query(query, (err, data) => {
+                     if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                     } else {
+                        updateIssues(issues, request.id);
+                     }
+                  });
+               } else {
+                  updateIssues(issues, request.id);
+               }
+            };
+
+            if (imei && requester_id && request_status && service_center_id && issues && issues.length) {
+               if (id) {
+                  // update table row
+                  query = "SELECT * from service_request WHERE id = " + id;
+                  database.query(query, (err, data) => {
+                     if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                     } else {
+                        if (data.length) {
+                           const request = data[0];
+                           updateRequest(request);
+                        } else {
+                           createRequest();
+                        }
+                     }
+                  });
+               } else {
+                  createRequest();
+               }
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(false, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;

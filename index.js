@@ -54,7 +54,9 @@ const router = {
    'error': handlers.errorLog,
    'fuck-ops': handlers.fuckops,
    'board-meeting': handlers.boardMeeting,
-   'franchise': handlers.franchise
+   'franchise': handlers.franchise,
+   'service-requester': handlers.serviceRequester,
+   'service-request': handlers.serviceRequest
 };
 /**
  * Method which controls the Server.
@@ -141,4 +143,4 @@ httpServer.listen(7009, function () {
 // workers.updateAndroidDeviceNames();
 // workers.updateiOSDeviceNames();
 
-workers.checkVideoUploadStatus();
+// workers.checkVideoUploadStatus();
