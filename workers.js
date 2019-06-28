@@ -98,47 +98,47 @@ workers.generateStockServiceCSVforOperations = () => {
 };
 
 workers.generateStockServiceCSVforAccounts = () => {
-   // setInterval(() => {
-   const generateCSV = (service_stock, filename) => new Promise((resolve, reject) => {
-      const query =
-         `select model_name as Model, product_color as Color, storage as Storage, count(model_name) as Quantity
+   setInterval(() => {
+      const generateCSV = (service_stock, filename) => new Promise((resolve, reject) => {
+         const query =
+            `select model_name as Model, product_color as Color, storage as Storage, count(model_name) as Quantity
              from diagnostic_app.inventory
              where service_stock = ${service_stock}
              group by model_name, product_color, storage;`;
 
-      database.query(query, (err, data) => {
-         if (err) {
-            reject(err);
-         } else {
-            const replacer = (key, value) => value === null ? '' : value;
-            const header = Object.keys(data[0]);
-            let csv = data.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','));
-            csv.unshift(header.join(','));
-            csv = csv.join('\r\n');
+         database.query(query, (err, data) => {
+            if (err) {
+               reject(err);
+            } else {
+               const replacer = (key, value) => value === null ? '' : value;
+               const header = Object.keys(data[0]);
+               let csv = data.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','));
+               csv.unshift(header.join(','));
+               csv = csv.join('\r\n');
 
-            resolve({
-               filename,
-               content: csv
-            });
-         }
+               resolve({
+                  filename,
+                  content: csv
+               });
+            }
+         });
       });
-   });
 
-   Promise.all([generateCSV(2, 'STOCK.csv'),
-      generateCSV(3, 'SERVICE.csv')]).then(datas => {
-      // console.log(datas);
-      const date = moment().tz('Asia/Kolkata').format('DD/MM/YYYY');
-      /* helpers.sendEmail(`writwick.das@hyperxchange.com`,
-         `STOCK and SERVICE status ${date}`,
-         `Please find attached the stock and service details for ${date}`,
-         datas);
-         */
-      helpers.sendEmail(`accounts@hyperxchange.com`,
-         `STOCK and SERVICE status ${date}`,
-         `Please find attached the stock and service details for ${date}`,
-         datas);
-   }).catch(err => console.log(err));
-   // }, 1000 * 60 * 60 * 24);
+      Promise.all([generateCSV(2, 'STOCK.csv'),
+         generateCSV(3, 'SERVICE.csv')]).then(datas => {
+         // console.log(datas);
+         const date = moment().tz('Asia/Kolkata').format('DD/MM/YYYY');
+         /* helpers.sendEmail(`writwick.das@hyperxchange.com`,
+            `STOCK and SERVICE status ${date}`,
+            `Please find attached the stock and service details for ${date}`,
+            datas);
+            */
+         helpers.sendEmail(`accounts@hyperxchange.com`,
+            `STOCK and SERVICE status ${date}`,
+            `Please find attached the stock and service details for ${date}`,
+            datas);
+      }).catch(err => console.log(err));
+   }, 1000 * 60 * 60 * 24);
 };
 
 workers._ifPresent = function (fileName) {
