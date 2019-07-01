@@ -354,7 +354,7 @@ helpers.addInventoryPhone = function (data, callback) {
                //If the phone is already present in inventory then the status will be updated.
                const query = "UPDATE inventory SET service_stock = " + service_stock +
                   ", remarks = '" + remarks + "', operations_email = '" + email + "', is_video_taken = 0 " +
-                  ", product_color = '" + color + "', service_center=2, " + "product_price = (product_price + " + price + " ) " +
+                  ", product_color = '" + color + "', service_center=2, product_grade = "+ grade + ", " + "product_price = (product_price + " + price + " ) " +
                   "WHERE product_imei_1 LIKE '" + imei_1 + "'";
                database.query(query, function (err, updateData) {
                   if (err) {
