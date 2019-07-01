@@ -22,33 +22,47 @@ workers.checkVideoUploadStatus = function () {
                 const vidNames = fileData.Contents.map(y=>y.Key);
                 const updateData = videoUpdated.filter(x=> !vidNames.includes("hx_" + x.name + ".mp4"));
                 // const updateData = fileData.Contents.filter(x=> !vidNames.includes(x.Key));
+                let fileName = "";
                 for (let i = 0; i < updateData.length; i++) {
 
-                 fileName = updateData[i].name;
+                 fileName = fileName + "'" + updateData[i].name+"',";
+                }
 
-                        const query = "update inventory set is_video_taken = -1 where product_imei_1 = '" + fileName + "'";
-                        database.query(query, function (err, updatedData) {
-                            if (err) {
-                                console.log(err);
-                            } else {
-                                console.log('Inventory Updated.');
-                            }
-                        });
-                        const query1 = "update order_details set is_video_taken = -1 where channel_order_id = '" + fileName + "'";
-                        database.query(query1, function (err, updatedData) {
-                            if (err) {
-                                console.log(err);
-                            } else {
-                                console.log('Order details Updated.');
-                            }
-                        });
+                fileName = fileName.slice(0, fileName.length-1);
+
+                if (fileName.length>0) {
+                    const query = "update inventory set is_video_taken = -1 where is_video_taken = 1 and  product_imei_1 in (" + fileName + ")";
+                    database.query(query, function (err, updatedData) {
+                        if (err) {
+                            console.log(err);
+                        } else {
+                            console.log('Inventory Updated.');
+                            var mobileNumber = '+918240706149';
+                            var message = "The videos of the following IMEI/Order Ids were not uploaded to the server.\n" + fileName;
+                            sns.sendMessage(mobileNumber, message, function (err) {
+                                if (err) {
+                                    console.log(err);
+                                } else {
+                                    console.log('Sms Send.');
+                                }
+                            });
+                        }
+                    });
+                    const query1 = "update order_details set is_video_taken = -1 where is_video_taken = 1 and channel_order_id in (" + fileName + ")";
+                    database.query(query1, function (err, updatedData) {
+                        if (err) {
+                            console.log(err);
+                        } else {
+                            console.log('Order details Updated.');
+                        }
+                    });
 
                 }
             }
 
         })
 
-    }, 86400 * 1000 *2 );
+    }, 2000 );
 };
 
 
