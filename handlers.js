@@ -4458,7 +4458,7 @@ handlers.serviceRequest = (dataObject, callback) => {
 };
 
 /**
- * Handler for sending email.
+ * Handler for sending email FOR NDA.
  * @param dataObject: The request Object.
  * @param callback: The method callback.
  */
@@ -4470,9 +4470,8 @@ handlers.ndaEmail = (dataObject, callback) => {
             const vName = typeof (dataObject.postData.name) === 'string' ? dataObject.postData.name : false;
             const company = typeof (dataObject.postData.company) === 'string' ? dataObject.postData.company : false;
             const sign = typeof (dataObject.postData.sign) === 'string' ? dataObject.postData.sign : false;
-
             if (target && vName && company) {
-               helpers.sendEmail(target, subject, body).then(() => { // todo subject and body here (i will do the attachments later)
+               helpers.sendEmail(target, messages.NDA_SUBJECT, messages.NDA_EMAIL_BODY).then(() => {
                   callback(false, 200, {'res': true});
                }).catch(err => {
                   callback(true, 500, {'res': messages.errorMessage});

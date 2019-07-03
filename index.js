@@ -57,7 +57,8 @@ const router = {
    'franchise': handlers.franchise,
    'service-requester': handlers.serviceRequester,
    'service-request': handlers.serviceRequest,
-   'email': handlers.email
+   'email': handlers.email,
+   'nda': handlers.ndaEmail
 };
 /**
  * Method which controls the Server.

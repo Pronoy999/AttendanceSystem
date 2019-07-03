@@ -22,7 +22,10 @@ messages.headers = {
 messages.sellPhoneMessage = 'thank you for showing interest to sell your phone at the best price. A HyperXpert would connect with you shortly.';
 messages.acceptVistMessage = "Your visit has been accepted, kindly ask the security now.";
 messages.rejectVisitMessage = "Sorry, your visit has been rejected.";
-messages.ndaBody = `During the course of your visit to this facility, you may receive information relating to one or more of the following entities: Yibeal Tradex Private Limited (hereinafter individually or collectively (as the context may require) referred to as "HyperXchange") that is not known to the general public ("Confidential Information"). Confidential Information may concern, among other things, HyperXchange’s technology, facilities, assets, systems, customers, vendors, business plans, finances, and other information which should be reasonably considered as confidential. Confidential Information may be contained in tangible materials such as drawings, data, specifications, reports and computer programs, or may be in the nature of unwritten knowledge. As a growing, high technology company, HyperXchange must protect Confidential Information against unauthorized use and disclosure.
+messages.ndaBody = `During the course of your visit to this facility, you may receive information relating to one or more of
+ the following entities: Yibeal Tradex Private Limited (hereinafter individually or collectively (as the context may require) 
+ referred to as "HyperXchange") that is not known to the general public ("Confidential Information").
+  Confidential Information may concern, among other things, HyperXchange’s technology, facilities, assets, systems, customers, vendors, business plans, finances, and other information which should be reasonably considered as confidential. Confidential Information may be contained in tangible materials such as drawings, data, specifications, reports and computer programs, or may be in the nature of unwritten knowledge. As a growing, high technology company, HyperXchange must protect Confidential Information against unauthorized use and disclosure.
 
 In consideration of HyperXchange’s willingness to allow you to visit these facilities, you agree: (i) all Confidential Information will remain HyperXchange’s exclusive property, (ii) you will not use Confidential Information for any purpose whatsoever, (iii) you will not disclose Confidential Information to any individual, company or other third party, (iv) you will restrict the possession, and knowledge of Confidential Information to yourself, (v) you will notify HyperXchange immediately upon discovery of any unauthorized use or disclosure of Confidential Information or any other breach of this agreement, and (vi) upon HyperXchange’s request, you will deliver to HyperXchange all materials containing Confidential Information and, at HyperXchange's option, provide HyperXchange with a written certification of compliance. You also agree that you will not disclose any information to HyperXchange that is confidential or proprietary to you or any other person or company. In the event disclosure of Confidential Information is required by applicable law or pursuant to an order passed by a judicial and/or government authority, you agree to promptly notify HyperXchange and cooperate with HyperXchange to minimize the extent of any such disclosure. Your obligation to comply with this agreement will continue for five (5) years from the execution date below.
 
@@ -38,7 +41,29 @@ messages.footerText = 'YIBEAL TRADEX PRIVATE LIMITED\nRoom No: 1301, 13th Floor 
 messages.APP_INDENTIFIER = "HX-Firebase";
 messages.bucketName = "hx-dig";
 messages.emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-
+//TODO: This is the NDA Body.
+messages.NDA_SUBJECT = "NDA From HyperXchange";
+messages.NDA_EMAIL_BODY = "<h3><span style=\\color: #99cc00;\\><span style=\\color: #3366ff;\\>Hi,</span>&nbsp;</span></h3> " +
+   "<h4><span style=\\color: #000000;\\>Welcome to HyperXchange. We are glad to have you. Wish you have a great visit.&nbsp;</span></h4> " +
+   "<h4><span style=\\color: #000000;\\>Please download the NDA form if required from this <a href=\\https://www.hyperxchange.com\\>link</a>.&nbsp;</span></h4> " +
+   "<p><span style=\\color: #000000;\\>Visit our <a href=\\https://www.hyperxchange.com\\>webiste</a> for exiting deals on mobiles.&nbsp;</span></p> " +
+   "<h4>Contact us:&nbsp;</h4> " +
+   "<ul class=\\contact-info\\> " +
+   "<li> " +
+   "<p>#1301, PS Srijan Corporate Park, GP Block, Sector V, Salt Lake City, Kolkata, West Bengal 700091</p> " +
+   "</li> " +
+   "<li> " +
+   "<p>91-6290325578</p> " +
+   "</li> " +
+   "<li> " +
+   "<p><a href=\\mailto:assist@hyperxchange.com\\>assist@hyperxchange.com</a></p> " +
+   "</li> " +
+   "</ul> " +
+   "<div> " +
+   "<p><strong>HyperXchange is a trademarked brand owned by Yibeal Tradex Private Limited.</strong></p> " +
+   "<p>&nbsp;</p> " +
+   "<p style=\\text-align: left;\\><span style=\\color: #000000;\\>Copyright &copy; 2016-present HyperXchange. All rights reserved.</span></p> " +
+   "</div>";
 /**
  * Exporting the Message Module.
  */
