@@ -981,25 +981,25 @@ helpers.sendEmail = (targetAddress, subject, body, attachments) => {
       });
    });
 };
-/*
-helpers.generatePDF = ({name, company, sign, date}) => {
+
+helpers.generatePDF = ({name, company, sign, date}) => new Promise((resolve, reject) => {
    const lastPageFooter = [
       {
-         image: sign,
-         fit: [260, 100],
-         relativePosition: {x: 84, y: -272}
+         svg: sign,
+         fit: [100, 100],
+         relativePosition: {x: 96, y: -212}
       },
       {
          canvas: [{
             type: 'line',
             x1: 64, y1: 0,
-            x2: 324, y2: 0,
+            x2: 204, y2: 0,
             lineHeight: 1
          }],
          relativePosition: {x: 0, y: -164}
       },
-      {text: 'SIGNATURE', style: 'lastFooterTextStyle', relativePosition: {x: 150, y: -160}},
-      {text: `Print Name: \t\t${vName}`, style: 'lastFooterTextStyle', relativePosition: {x: 64, y: -112}},
+      {text: 'SIGNATURE', style: 'lastFooterTextStyle', relativePosition: {x: 96, y: -160}},
+      {text: `Print Name: \t\t${name}`, style: 'lastFooterTextStyle', relativePosition: {x: 64, y: -112}},
       company && {text: `Company:\t\t\t${company}`, style: 'lastFooterTextStyle', relativePosition: {x: 64, y: -80}},
       {text: `Date:\t\t${date}`, style: 'dateStyle', relativePosition: {x: -64, y: -80}},
    ];
@@ -1024,7 +1024,7 @@ helpers.generatePDF = ({name, company, sign, date}) => {
          fit: [144, 84],
          relativePosition: {x: 384, y: 40}
       }],
-      footer: (currentPage, pageCount) => [
+      footer: (currentPage, pageCount, pageSize) => [
          {
             text: messages.footerText,
             style: 'footerTextStyle'
@@ -1037,7 +1037,7 @@ helpers.generatePDF = ({name, company, sign, date}) => {
             alignment: 'center',
          },
          body: {
-            fontSize: 14,
+            fontSize: 12,
             alignment: 'justify',
             marginTop: 16,
          },
@@ -1058,10 +1058,12 @@ helpers.generatePDF = ({name, company, sign, date}) => {
          }
       }
    };
-   var pdf = pdfmake.createPdf(pdfDef);
-   pdf.write('pdfs/basics.pdf');
-};
- */
+   const pdf = pdfmake.createPdf(pdfDef);
+   pdf.getBuffer(buffer => {
+      resolve(buffer);
+   })
+});
+
 /**
  * Method to compare two objects based on their properties.
  * @param a: first object
