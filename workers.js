@@ -91,7 +91,7 @@ workers.generateStockServiceCSVforOperations = () => {
             helpers.sendEmail(`operations@hyperxchange.com`,
                `STOCK and SERVICE status ${date}`,
                `Please find attached the stock and service details for ${date}`,
-               datas);
+               "", datas);
          }).catch(err => console.log(err));
       }
    }, 1000 * 60 * 60 * 24);
@@ -140,7 +140,7 @@ workers.generateStockServiceCSVforAccounts = () => {
          helpers.sendEmail(`accounts@hyperxchange.com`,
             `STOCK and SERVICE status ${date}`,
             `Please find attached the stock and service details for ${date}`,
-            datas);
+            "", datas);
       }).catch(err => console.log(err));
    }, 1000 * 60 * 60 * 24);
 };
