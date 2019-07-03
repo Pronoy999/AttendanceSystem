@@ -4471,11 +4471,17 @@ handlers.ndaEmail = (dataObject, callback) => {
             const company = typeof (dataObject.postData.company) === 'string' ? dataObject.postData.company : false;
             const sign = typeof (dataObject.postData.sign) === 'string' ? dataObject.postData.sign : false;
             if (target && vName && company) {
-               helpers.sendEmail(target, messages.NDA_SUBJECT, messages.NDA_EMAIL_BODY).then(() => {
-                  callback(false, 200, {'res': true});
-               }).catch(err => {
-                  callback(true, 500, {'res': messages.errorMessage});
-               });
+               helpers.generatePDF(vName, company, sign, moment().tz('Asia/Kolkata').format("DD/MM/YYYY")).then(pdf => {
+                  helpers.sendEmail(target, messages.NDA_SUBJECT, messages.NDA_EMAIL_BODY, /*'dipanjan@hyperxchange.com'*/ null, [{   // binary buffer as an attachment
+                     filename: `NDA_${vName.replace(' ', '_')}_${moment().tz('Asia/Kolkata').format("DD_MM_YYYY")}.pdf`,
+                     content: pdf,
+                     contentType: 'application/pdf'
+                  }]).then(() => {
+                     callback(false, 200, {'res': true});
+                  }).catch(err => {
+                     callback(true, 500, {'res': messages.errorMessage});
+                  });
+               }).catch(err => callback(err, 500, {'res': messages.errorMessage}));
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }

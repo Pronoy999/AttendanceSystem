@@ -984,7 +984,7 @@ helpers.sendEmail = (targetAddress, subject, body, cc, attachments) => {
    });
 };
 
-helpers.generatePDF = ({name, company, sign, date}) => new Promise((resolve, reject) => {
+helpers.generatePDF = (name, company, sign, date) => new Promise((resolve, reject) => {
    const lastPageFooter = [
       {
          svg: sign,
@@ -1002,7 +1002,11 @@ helpers.generatePDF = ({name, company, sign, date}) => new Promise((resolve, rej
       },
       {text: 'SIGNATURE', style: 'lastFooterTextStyle', relativePosition: {x: 96, y: -160}},
       {text: `Print Name: \t\t${name}`, style: 'lastFooterTextStyle', relativePosition: {x: 64, y: -112}},
-      company && {text: `Company:\t\t\t${company}`, style: 'lastFooterTextStyle', relativePosition: {x: 64, y: -80}},
+      company ? {
+         text: `Company:\t\t\t${company}`,
+         style: 'lastFooterTextStyle',
+         relativePosition: {x: 64, y: -80}
+      } : '',
       {text: `Date:\t\t${date}`, style: 'dateStyle', relativePosition: {x: -64, y: -80}},
    ];
    const pdfDef = {
