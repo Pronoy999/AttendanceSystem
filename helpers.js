@@ -6,6 +6,7 @@ const messages = require('./Constants');
 const snsLib = require('./snsLib');
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
+const pdfmake = require('pdfmake');
 /**
  * Method to parse JSON to Objects.
  * @param data
@@ -354,7 +355,7 @@ helpers.addInventoryPhone = function (data, callback) {
                //If the phone is already present in inventory then the status will be updated.
                const query = "UPDATE inventory SET service_stock = " + service_stock +
                   ", remarks = '" + remarks + "', operations_email = '" + email + "', is_video_taken = 0 " +
-                  ", product_color = '" + color + "', service_center=2, product_grade = "+ grade + ", " + "product_price = (product_price + " + price + " ) " +
+                  ", product_color = '" + color + "', service_center=2, product_grade = " + grade + ", " + "product_price = (product_price + " + price + " ) " +
                   "WHERE product_imei_1 LIKE '" + imei_1 + "'";
                database.query(query, function (err, updateData) {
                   if (err) {
@@ -980,6 +981,87 @@ helpers.sendEmail = (targetAddress, subject, body, attachments) => {
       });
    });
 };
+/*
+helpers.generatePDF = ({name, company, sign, date}) => {
+   const lastPageFooter = [
+      {
+         image: sign,
+         fit: [260, 100],
+         relativePosition: {x: 84, y: -272}
+      },
+      {
+         canvas: [{
+            type: 'line',
+            x1: 64, y1: 0,
+            x2: 324, y2: 0,
+            lineHeight: 1
+         }],
+         relativePosition: {x: 0, y: -164}
+      },
+      {text: 'SIGNATURE', style: 'lastFooterTextStyle', relativePosition: {x: 150, y: -160}},
+      {text: `Print Name: \t\t${vName}`, style: 'lastFooterTextStyle', relativePosition: {x: 64, y: -112}},
+      company && {text: `Company:\t\t\t${company}`, style: 'lastFooterTextStyle', relativePosition: {x: 64, y: -80}},
+      {text: `Date:\t\t${date}`, style: 'dateStyle', relativePosition: {x: -64, y: -80}},
+   ];
+   const pdfDef = {
+      pageMargins: [64, 128, 64, 128],
+      content: [
+         {
+            text: messages.ndaTitle,
+            style: 'header'
+         },
+         {
+            text: messages.ndaBody,
+            style: 'body'
+         },
+      ],
+      header: [{
+         image: messages.yibealImage,
+         fit: [64, 64],
+         relativePosition: {x: 64, y: 32}
+      }, {
+         image: messages.hxImage,
+         fit: [144, 84],
+         relativePosition: {x: 384, y: 40}
+      }],
+      footer: (currentPage, pageCount) => [
+         {
+            text: messages.footerText,
+            style: 'footerTextStyle'
+         },
+         currentPage === pageCount ? lastPageFooter : ''],
+      styles: {
+         header: {
+            fontSize: 22,
+            bold: true,
+            alignment: 'center',
+         },
+         body: {
+            fontSize: 14,
+            alignment: 'justify',
+            marginTop: 16,
+         },
+         lastFooterTextStyle: {
+            fontSize: 14,
+            bold: true
+         },
+         footerTextStyle: {
+            alignment: 'center',
+            marginLeft: 64,
+            marginRight: 64,
+            marginTop: 16
+         },
+         dateStyle: {
+            fontSize: 14,
+            bold: true,
+            alignment: 'right'
+         }
+      }
+   };
+   var pdf = pdfmake.createPdf(pdfDef);
+   pdf.write('pdfs/basics.pdf');
+};
+ */
 /**
  * Method to compare two objects based on their properties.
  * @param a: first object
@@ -1002,6 +1084,10 @@ helpers.isEquivalent = (a, b) => {
       }
    }
    return true;
+};
+
+helpers.validateEmail = email => {
+   return messages.emailRegex.test(String(email).toLowerCase());
 };
 /**
  * Exporting the module.

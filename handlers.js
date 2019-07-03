@@ -578,13 +578,15 @@ handlers.addVisitor = function (dataObject, callback) {
             firstName = typeof (firstName) === 'string' ? firstName : false;
             lastName = typeof (lastName) === 'string' ? lastName : false;
             mobileNumber = typeof (mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
+            const emailAddress = typeof (dataObject.postData.email_address) === 'string' &&
+            helpers.validateEmail(dataObject.postData.email_address) ? dataObject.postData.email_address : false;
             if (firstName && lastName && mobileNumber) {
                const values = "'','" + firstName + "','" + lastName + "','" +
-                  mobileNumber + "'," + isParking;
+                  mobileNumber + "'," + emailAddress + "'," + isParking;
                database.insert("visitor_details", values, function (err, data) {
                   if (err) {
                      const query = "UPDATE visitor_details SET first_name='" +
-                        firstName + "', last_name='" + lastName + "', is_parking= " + isParking +
+                        firstName + "', last_name='" + lastName + "', email_address='" + emailAddress + "', is_parking= " + isParking +
                         " WHERE mobile_number LIKE '" + mobileNumber + "'";
                      database.query(query, function (err, data) {
                         if (err) {
@@ -4451,6 +4453,38 @@ handlers.serviceRequest = (dataObject, callback) => {
          }
       } else {
          callback(false, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+
+/**
+ * Handler for sending email.
+ * @param dataObject: The request Object.
+ * @param callback: The method callback.
+ */
+handlers.ndaEmail = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, (isValid) => {
+      if (isValid) {
+         if (dataObject.method === 'post') {
+            const target = typeof (dataObject.postData.email) === 'string' ? dataObject.postData.email : false;
+            const vName = typeof (dataObject.postData.name) === 'string' ? dataObject.postData.name : false;
+            const company = typeof (dataObject.postData.company) === 'string' ? dataObject.postData.company : false;
+            const sign = typeof (dataObject.postData.sign) === 'string' ? dataObject.postData.sign : false;
+
+            if (target && vName && company) {
+               helpers.sendEmail(target, subject, body).then(() => { // todo subject and body here (i will do the attachments later)
+                  callback(false, 200, {'res': true});
+               }).catch(err => {
+                  callback(true, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(true, 403, {'res': messages.tokenExpiredMessage});
       }
    });
 };
