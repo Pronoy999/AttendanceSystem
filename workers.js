@@ -2,6 +2,7 @@ const AWS = require("aws-sdk");
 const messages = require('./Constants');
 const database = require('./databaseHandler');
 const moment = require('moment');
+const schedule = require('node-schedule');
 const sns = require('./snsLib');
 const helpers = require('./helpers');
 const workers = {};
@@ -11,7 +12,7 @@ const workers = {};
  * Method to escalate Video not uploaded status.
  */
 workers.checkVideoUploadStatus = function () {
-   setInterval(function () {
+   schedule('0 0 * * *', function () {
       const query = "Select channel_order_id as name from order_details where is_video_taken = 1  and order_status = 5" +
          " union select product_imei_1 as name from inventory where is_video_taken = 1 and service_stock = 1";
 
@@ -46,59 +47,57 @@ workers.checkVideoUploadStatus = function () {
             }
          }
       })
-   }, 86400 * 1000 * 2);
+   });
 };
 
 workers.generateStockServiceCSVforOperations = () => {
-   setInterval(() => {
-      if (moment().day('Friday').day() === moment().day()) {
-         const generateCSV = (service_stock, filename) => new Promise((resolve, reject) => {
-            const query =
-               "select model_name as Model, " +
-               "product_color as Color, " +
-               "storage as Stroage, " +
-               "product_imei_1 as IMEI, " +
-               "product_price as `Procurement Price` " +
-               "from inventory where service_stock = " + service_stock;
+   schedule('0 0 * * 5', () => {
+      const generateCSV = (service_stock, filename) => new Promise((resolve, reject) => {
+         const query =
+            "select model_name as Model, " +
+            "product_color as Color, " +
+            "storage as Stroage, " +
+            "product_imei_1 as IMEI, " +
+            "product_price as `Procurement Price` " +
+            "from inventory where service_stock = " + service_stock;
 
-            database.query(query, (err, data) => {
-               if (err) {
-                  reject(err);
-               } else {
-                  const replacer = (key, value) => value === null ? '' : value;
-                  const header = Object.keys(data[0]);
-                  let csv = data.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','));
-                  csv.unshift(header.join(','));
-                  csv = csv.join('\r\n');
+         database.query(query, (err, data) => {
+            if (err) {
+               reject(err);
+            } else {
+               const replacer = (key, value) => value === null ? '' : value;
+               const header = Object.keys(data[0]);
+               let csv = data.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','));
+               csv.unshift(header.join(','));
+               csv = csv.join('\r\n');
 
-                  resolve({
-                     filename,
-                     content: csv
-                  });
-               }
-            });
+               resolve({
+                  filename,
+                  content: csv
+               });
+            }
          });
+      });
 
-         Promise.all([generateCSV(2, 'STOCK.csv'),
-            generateCSV(3, 'SERVICE.csv')]).then(datas => {
-            // console.log(datas);
-            const date = moment().tz('Asia/Kolkata').format('DD/MM/YYYY');
-            /* helpers.sendEmail(`writwick.das@hyperxchange.com`,
-               `STOCK and SERVICE status ${date}`,
-               `Please find attached the stock and service details for ${date}`,
-               datas);
-               */
-            helpers.sendEmail(`operations@hyperxchange.com`,
-               `STOCK and SERVICE status ${date}`,
-               `Please find attached the stock and service details for ${date}`,
-               "", datas);
-         }).catch(err => console.log(err));
-      }
-   }, 1000 * 60 * 60 * 24);
+      Promise.all([generateCSV(2, 'STOCK.csv'),
+         generateCSV(3, 'SERVICE.csv')]).then(datas => {
+         // console.log(datas);
+         const date = moment().tz('Asia/Kolkata').format('DD/MM/YYYY');
+         /* helpers.sendEmail(`writwick.das@hyperxchange.com`,
+            `STOCK and SERVICE status ${date}`,
+            `Please find attached the stock and service details for ${date}`,
+            datas);
+            */
+         helpers.sendEmail(`operations@hyperxchange.com`,
+            `STOCK and SERVICE status ${date}`,
+            `Please find attached the stock and service details for ${date}`,
+            "", datas);
+      }).catch(err => console.log(err));
+   });
 };
 
 workers.generateStockServiceCSVforAccounts = () => {
-   setInterval(() => {
+   schedule('0 0 * * *', () => {
       const generateCSV = (service_stock, filename) => new Promise((resolve, reject) => {
          const query = `select model_name                        as Model,
                                product_color                     as Color,
@@ -142,7 +141,7 @@ workers.generateStockServiceCSVforAccounts = () => {
             `Please find attached the stock and service details for ${date}`,
             "", datas);
       }).catch(err => console.log(err));
-   }, 1000 * 60 * 60 * 24);
+   });
 };
 
 workers._ifPresent = function (fileName) {
