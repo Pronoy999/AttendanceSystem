@@ -1756,6 +1756,8 @@ handlers.visit = function (dataObject, callback) {
             if (visitorPhone) {
                let query = "SELECT * FROM visitor_details WHERE mobile_number LIKE '" + visitorPhone + "'";
                database.query(query, function (err, visitorData) {
+
+                  console.log(visitorData);
                   console.log(visitorPhone);
                   if (!err) {
                      visitorID = visitorData[0].id;

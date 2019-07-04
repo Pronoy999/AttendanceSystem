@@ -43,7 +43,7 @@ messages.NDA_SUBJECT = "NDA From HyperXchange";
 messages.NDA_EMAIL_BODY = "<h3><span style=\\color: #99cc00;\\><span style=\\color: #3366ff;\\>Hi,</span>&nbsp;</span></h3> " +
    "<h4><span style=\\color: #000000;\\>Welcome to HyperXchange. We are glad to have you. Wish you have a great visit.&nbsp;</span></h4> " +
    "<h4><span style=\\color: #000000;\\>Please download the NDA form if required from this <a href=\\https://www.hyperxchange.com\\>link</a>.&nbsp;</span></h4> " +
-   "<p><span style=\\color: #000000;\\>Visit our <a href=\\https://www.hyperxchange.com\\>webiste</a> for exiting deals on mobiles.&nbsp;</span></p> " +
+
    "<h4>Contact us:&nbsp;</h4> " +
    "<ul class=\\contact-info\\> " +
    "<li> " +
