@@ -581,7 +581,7 @@ handlers.addVisitor = function (dataObject, callback) {
             mobileNumber = typeof (mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
             const emailAddress = typeof (dataObject.postData.email_address) === 'string' &&
             helpers.validateEmail(dataObject.postData.email_address) ? dataObject.postData.email_address : false;
-            if (firstName && lastName && mobileNumber) {
+            if (firstName && lastName && mobileNumber && emailAddress && company) {
                const values = "'','" + firstName + "','" + lastName + "','" +
                   mobileNumber + "'," + emailAddress + "'," + company + "'," + isParking;
                database.insert("visitor_details", values, function (err, data) {
@@ -4479,8 +4479,8 @@ handlers.ndaEmail = (dataObject, callback) => {
                helpers.sendEmail(target,
                   messages.NDA_SUBJECT,
                   messages.NDA_EMAIL_BODY,
-                  'dipanjan@hyperxchange.com',
-                  [{
+                  // 'dipanjan@hyperxchange.com',
+                  '',[{
                      filename: `NDA_${vName.replace(' ', '_')}_${moment().tz('Asia/Kolkata').format("DD_MM_YYYY")}.pdf`,
                      content: pdf,
                   }]
