@@ -22,10 +22,7 @@ messages.headers = {
 messages.sellPhoneMessage = 'thank you for showing interest to sell your phone at the best price. A HyperXpert would connect with you shortly.';
 messages.acceptVistMessage = "Your visit has been accepted, kindly ask the security now.";
 messages.rejectVisitMessage = "Sorry, your visit has been rejected.";
-messages.ndaBody = `During the course of your visit to this facility, you may receive information relating to one or more of
- the following entities: Yibeal Tradex Private Limited (hereinafter individually or collectively (as the context may require) 
- referred to as "HyperXchange") that is not known to the general public ("Confidential Information").
-  Confidential Information may concern, among other things, HyperXchange’s technology, facilities, assets, systems, customers, vendors, business plans, finances, and other information which should be reasonably considered as confidential. Confidential Information may be contained in tangible materials such as drawings, data, specifications, reports and computer programs, or may be in the nature of unwritten knowledge. As a growing, high technology company, HyperXchange must protect Confidential Information against unauthorized use and disclosure.
+messages.ndaBody = `During the course of your visit to this facility, you may receive information relating to one or more of the following entities: Yibeal Tradex Private Limited (hereinafter individually or collectively (as the context may require) referred to as "HyperXchange") that is not known to the general public ("Confidential Information"). Confidential Information may concern, among other things, HyperXchange’s technology, facilities, assets, systems, customers, vendors, business plans, finances, and other information which should be reasonably considered as confidential. Confidential Information may be contained in tangible materials such as drawings, data, specifications, reports and computer programs, or may be in the nature of unwritten knowledge. As a growing, high technology company, HyperXchange must protect Confidential Information against unauthorized use and disclosure.
 
 In consideration of HyperXchange’s willingness to allow you to visit these facilities, you agree: (i) all Confidential Information will remain HyperXchange’s exclusive property, (ii) you will not use Confidential Information for any purpose whatsoever, (iii) you will not disclose Confidential Information to any individual, company or other third party, (iv) you will restrict the possession, and knowledge of Confidential Information to yourself, (v) you will notify HyperXchange immediately upon discovery of any unauthorized use or disclosure of Confidential Information or any other breach of this agreement, and (vi) upon HyperXchange’s request, you will deliver to HyperXchange all materials containing Confidential Information and, at HyperXchange's option, provide HyperXchange with a written certification of compliance. You also agree that you will not disclose any information to HyperXchange that is confidential or proprietary to you or any other person or company. In the event disclosure of Confidential Information is required by applicable law or pursuant to an order passed by a judicial and/or government authority, you agree to promptly notify HyperXchange and cooperate with HyperXchange to minimize the extent of any such disclosure. Your obligation to comply with this agreement will continue for five (5) years from the execution date below.
 
@@ -64,6 +61,33 @@ messages.NDA_EMAIL_BODY = "<h3><span style=\\color: #99cc00;\\><span style=\\col
    "<p>&nbsp;</p> " +
    "<p style=\\text-align: left;\\><span style=\\color: #000000;\\>Copyright &copy; 2016-present HyperXchange. All rights reserved.</span></p> " +
    "</div>";
+
+messages.pdfMakeFonts = {
+   Courier: {
+      normal: 'Courier',
+      bold: 'Courier-Bold',
+      italics: 'Courier-Oblique',
+      bolditalics: 'Courier-BoldOblique'
+   },
+   Roboto: {
+      normal: 'Helvetica',
+      bold: 'Helvetica-Bold',
+      italics: 'Helvetica-Oblique',
+      bolditalics: 'Helvetica-BoldOblique'
+   },
+   Helvetica: {
+      normal: 'Helvetica',
+      bold: 'Helvetica-Bold',
+      italics: 'Helvetica-Oblique',
+      bolditalics: 'Helvetica-BoldOblique'
+   },
+   Times: {
+      normal: 'Times-Roman',
+      bold: 'Times-Bold',
+      italics: 'Times-Italic',
+      bolditalics: 'Times-BoldItalic'
+   }
+};
 /**
  * Exporting the Message Module.
  */

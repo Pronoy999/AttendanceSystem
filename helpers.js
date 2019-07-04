@@ -6,7 +6,8 @@ const messages = require('./Constants');
 const snsLib = require('./snsLib');
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
-const pdfmake = require('pdfmake');
+const PDFPrinter = require('pdfmake');
+const printer = new PDFPrinter(messages.pdfMakeFonts);
 /**
  * Method to parse JSON to Objects.
  * @param data
@@ -984,10 +985,10 @@ helpers.sendEmail = (targetAddress, subject, body, cc, attachments) => {
    });
 };
 
-helpers.generatePDF = (name, company, sign, date) => new Promise((resolve, reject) => {
+helpers.generatePDF = (name, company, sign, date) => {
    const lastPageFooter = [
       {
-         svg: sign,
+         image: sign,
          fit: [100, 100],
          relativePosition: {x: 96, y: -212}
       },
@@ -1043,32 +1044,34 @@ helpers.generatePDF = (name, company, sign, date) => new Promise((resolve, rejec
             alignment: 'center',
          },
          body: {
-            fontSize: 12,
+            fontSize: 14,
             alignment: 'justify',
             marginTop: 16,
+            lineHeight: 1.1,
          },
          lastFooterTextStyle: {
             fontSize: 14,
-            bold: true
+            bold: true,
          },
          footerTextStyle: {
             alignment: 'center',
             marginLeft: 64,
             marginRight: 64,
-            marginTop: 16
+            marginTop: 16,
+            lineHeight: 1.1,
          },
          dateStyle: {
             fontSize: 14,
             bold: true,
             alignment: 'right'
-         }
+         },
       }
    };
-   const pdf = pdfmake.createPdf(pdfDef);
-   pdf.getBuffer(buffer => {
-      resolve(buffer);
-   })
-});
+
+   const pdf = printer.createPdfKitDocument(pdfDef);
+   pdf.end();
+   return pdf;
+};
 
 /**
  * Method to compare two objects based on their properties.

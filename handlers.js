@@ -577,16 +577,17 @@ handlers.addVisitor = function (dataObject, callback) {
             const isParking = dataObject.postData.is_parking;
             firstName = typeof (firstName) === 'string' ? firstName : false;
             lastName = typeof (lastName) === 'string' ? lastName : false;
+            const company = typeof (dataObject.postData.company) === 'string' ? dataObject.postData.company : false;
             mobileNumber = typeof (mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
             const emailAddress = typeof (dataObject.postData.email_address) === 'string' &&
             helpers.validateEmail(dataObject.postData.email_address) ? dataObject.postData.email_address : false;
             if (firstName && lastName && mobileNumber) {
                const values = "'','" + firstName + "','" + lastName + "','" +
-                  mobileNumber + "'," + emailAddress + "'," + isParking;
+                  mobileNumber + "'," + emailAddress + "'," + company + "'," + isParking;
                database.insert("visitor_details", values, function (err, data) {
                   if (err) {
                      const query = "UPDATE visitor_details SET first_name='" +
-                        firstName + "', last_name='" + lastName + "', email_address='" + emailAddress + "', is_parking= " + isParking +
+                        firstName + "', last_name='" + lastName + "', email_address='" + emailAddress + "', company='" + company + "', is_parking= " + isParking +
                         " WHERE mobile_number LIKE '" + mobileNumber + "'";
                      database.query(query, function (err, data) {
                         if (err) {
@@ -669,7 +670,8 @@ handlers.visitLog = function (dataObject, callback) {
       if (employeeID > 0) {
          helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-               const query = "SELECT v.first_name as v_fName, v.last_name as v_lName, v.mobile_number as v_mobile_number," +
+               const query = "SELECT v.first_name as v_fName, v.last_name as v_lName, v.mobile_number as v_mobile_number" +
+                  ", v.company as v_company, v.email_address as v_email_address," +
                   "v.is_parking, vi.time_stamp ,vi.status,vi.purpose, e.* FROM visitor_details v , " +
                   "employee_details e, visit_details vi, visit_status_details s " +
                   "WHERE vi.employee_id=8 AND s.id=vi.status AND v.id in" +
@@ -690,7 +692,9 @@ handlers.visitLog = function (dataObject, callback) {
       } else if (employeeID === 0) {
          helpers.validateToken(dataObject.queryString.key, function (isValid) {
             if (isValid) {
-               const query = "SELECT v.first_name as v_fName, v.last_name as v_lName, v.mobile_number as v_mobile_number,v.is_parking, vi.time_stamp ,vi.status,vi.purpose, e.* FROM " +
+               const query = "SELECT v.first_name as v_fName, v.last_name as v_lName, v.mobile_number as v_mobile_number" +
+                  ", v.company as v_company, v.email_address as v_email_address," +
+                  ",v.is_parking, vi.time_stamp ,vi.status,vi.purpose, e.* FROM " +
                   "visitor_details v , employee_details e," +
                   " visit_details vi, visit_status_details s WHERE  s.id=vi.status AND" +
                   " v.id in (SELECT visitor_id FROM visit_details) AND " +
@@ -4471,17 +4475,29 @@ handlers.ndaEmail = (dataObject, callback) => {
             const company = typeof (dataObject.postData.company) === 'string' ? dataObject.postData.company : false;
             const sign = typeof (dataObject.postData.sign) === 'string' ? dataObject.postData.sign : false;
             if (target && vName && company) {
-               helpers.generatePDF(vName, company, sign, moment().tz('Asia/Kolkata').format("DD/MM/YYYY")).then(pdf => {
-                  helpers.sendEmail(target, messages.NDA_SUBJECT, messages.NDA_EMAIL_BODY, /*'dipanjan@hyperxchange.com'*/ null, [{   // binary buffer as an attachment
-                     filename: `NDA_${vName.replace(' ', '_')}_${moment().tz('Asia/Kolkata').format("DD_MM_YYYY")}.pdf`,
-                     content: pdf,
-                     contentType: 'application/pdf'
-                  }]).then(() => {
-                     callback(false, 200, {'res': true});
-                  }).catch(err => {
-                     callback(true, 500, {'res': messages.errorMessage});
-                  });
-               }).catch(err => callback(err, 500, {'res': messages.errorMessage}));
+               const pdf = helpers.generatePDF(vName, company, sign, moment().tz('Asia/Kolkata').format("DD/MM/YYYY"));
+
+               const str = fs.createWriteStream('some_file.pdf');
+               pdf.pipe(str);
+               callback(false, 200, {'res': true});
+
+               /*
+                              helpers.sendEmail(target,
+                                 messages.NDA_SUBJECT,
+                                 messages.NDA_EMAIL_BODY,
+                                 'dipanjan@hyperxchange.com',
+                                 [{
+                                    filename: `NDA_${vName.replace(' ', '_')}_${moment().tz('Asia/Kolkata').format("DD_MM_YYYY")}.pdf`,
+                                    content: pdf,
+                                 }]
+                              ).then(done => {
+                                 if (done) {
+                                    callback(false, 200, {'res': true});
+                                 }
+                              }).catch(err => {
+                                 callback(true, 500, {'res': messages.errorMessage});
+                              });
+               */
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }

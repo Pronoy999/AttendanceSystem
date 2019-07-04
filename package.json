@@ -8,7 +8,7 @@
     "moment-timezone": "latest",
     "mysql": "latest",
     "nodemailer": "^6.2.1",
-    "pdfmake": "^0.1.57",
+    "pdfmake": "bpampuch/pdfmake#0.1",
     "sqlite3": "^4.0.6"
   }
 }
