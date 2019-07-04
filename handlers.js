@@ -583,7 +583,7 @@ handlers.addVisitor = function (dataObject, callback) {
             helpers.validateEmail(dataObject.postData.email_address) ? dataObject.postData.email_address : false;
             if (firstName && lastName && mobileNumber && emailAddress && company) {
                const values = "'','" + firstName + "','" + lastName + "','" +
-                  mobileNumber + "'," + emailAddress + "'," + company + "'," + isParking;
+                  mobileNumber + "','" + emailAddress + "','" + company + "'," + isParking;
                database.insert("visitor_details", values, function (err, data) {
                   if (err) {
                      const query = "UPDATE visitor_details SET first_name='" +
@@ -4474,13 +4474,13 @@ handlers.ndaEmail = (dataObject, callback) => {
             const vName = typeof (dataObject.postData.name) === 'string' ? dataObject.postData.name : false;
             const company = typeof (dataObject.postData.company) === 'string' ? dataObject.postData.company : false;
             const sign = typeof (dataObject.postData.sign) === 'string' ? dataObject.postData.sign : false;
-            if (target && vName && company) {
+            if (target && vName && company && sign) {
                const pdf = helpers.generatePDF(vName, company, sign, moment().tz('Asia/Kolkata').format("DD/MM/YYYY"));
                helpers.sendEmail(target,
                   messages.NDA_SUBJECT,
                   messages.NDA_EMAIL_BODY,
                   // 'dipanjan@hyperxchange.com',
-                  '',[{
+                  '', [{
                      filename: `NDA_${vName.replace(' ', '_')}_${moment().tz('Asia/Kolkata').format("DD_MM_YYYY")}.pdf`,
                      content: pdf,
                   }]
