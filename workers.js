@@ -12,7 +12,7 @@ const workers = {};
  * Method to escalate Video not uploaded status.
  */
 workers.checkVideoUploadStatus = function () {
-   schedule('0 0 * * *', function () {
+   schedule.scheduleJob('0 0 * * *', function () {
       const query = "Select channel_order_id as name from order_details where is_video_taken = 1  and order_status = 5" +
          " union select product_imei_1 as name from inventory where is_video_taken = 1 and service_stock = 1";
 
@@ -51,7 +51,7 @@ workers.checkVideoUploadStatus = function () {
 };
 
 workers.generateStockServiceCSVforOperations = () => {
-   schedule('0 0 * * 5', () => {
+   schedule.scheduleJob('0 0 * * 5', () => {
       const generateCSV = (service_stock, filename) => new Promise((resolve, reject) => {
          const query =
             "select model_name as Model, " +
@@ -97,7 +97,7 @@ workers.generateStockServiceCSVforOperations = () => {
 };
 
 workers.generateStockServiceCSVforAccounts = () => {
-   schedule('0 0 * * *', () => {
+   schedule.scheduleJob('0 0 * * *', () => {
       const generateCSV = (service_stock, filename) => new Promise((resolve, reject) => {
          const query = `select model_name                        as Model,
                                product_color                     as Color,
