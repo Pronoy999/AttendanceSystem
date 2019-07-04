@@ -4476,28 +4476,21 @@ handlers.ndaEmail = (dataObject, callback) => {
             const sign = typeof (dataObject.postData.sign) === 'string' ? dataObject.postData.sign : false;
             if (target && vName && company) {
                const pdf = helpers.generatePDF(vName, company, sign, moment().tz('Asia/Kolkata').format("DD/MM/YYYY"));
-
-               const str = fs.createWriteStream('some_file.pdf');
-               pdf.pipe(str);
-               callback(false, 200, {'res': true});
-
-               /*
-                              helpers.sendEmail(target,
-                                 messages.NDA_SUBJECT,
-                                 messages.NDA_EMAIL_BODY,
-                                 'dipanjan@hyperxchange.com',
-                                 [{
-                                    filename: `NDA_${vName.replace(' ', '_')}_${moment().tz('Asia/Kolkata').format("DD_MM_YYYY")}.pdf`,
-                                    content: pdf,
-                                 }]
-                              ).then(done => {
-                                 if (done) {
-                                    callback(false, 200, {'res': true});
-                                 }
-                              }).catch(err => {
-                                 callback(true, 500, {'res': messages.errorMessage});
-                              });
-               */
+               helpers.sendEmail(target,
+                  messages.NDA_SUBJECT,
+                  messages.NDA_EMAIL_BODY,
+                  'dipanjan@hyperxchange.com',
+                  [{
+                     filename: `NDA_${vName.replace(' ', '_')}_${moment().tz('Asia/Kolkata').format("DD_MM_YYYY")}.pdf`,
+                     content: pdf,
+                  }]
+               ).then(done => {
+                  if (done) {
+                     callback(false, 200, {'res': true});
+                  }
+               }).catch(err => {
+                  callback(true, 500, {'res': messages.errorMessage});
+               });
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }
