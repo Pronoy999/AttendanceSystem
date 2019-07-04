@@ -581,6 +581,7 @@ handlers.addVisitor = function (dataObject, callback) {
             mobileNumber = typeof (mobileNumber) === 'string' && mobileNumber.length === 13 ? mobileNumber : false;
             const emailAddress = typeof (dataObject.postData.email_address) === 'string' &&
             helpers.validateEmail(dataObject.postData.email_address) ? dataObject.postData.email_address : false;
+            console.log(dataObject.postData);
             if (firstName && lastName && mobileNumber && emailAddress && company) {
                const values = "'','" + firstName + "','" + lastName + "','" +
                   mobileNumber + "','" + emailAddress + "','" + company + "'," + isParking;
