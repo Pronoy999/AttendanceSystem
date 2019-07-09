@@ -330,7 +330,7 @@ workers.updateiOSDeviceNames = () => {
  * Worker to escalate the Leave status pending for HRMS.
  */
 workers.leaveStatusUpdate = () => {
-   schedule.scheduleJob("47 17 * * *", () => {
+   schedule.scheduleJob("0 0 * * *", () => {
       const query = "select lv.user_id," +
          "usr.userfullname as self_name," +
          "usr.emailaddress as employee_email," +
@@ -381,12 +381,12 @@ workers.leaveStatusUpdate = () => {
                   const fromDate = oneData.from_date;
                   const toDate = oneData.to_date;
                   const reason = oneData.reason;
-                  emailBody.replace("%m", reportingManager);
-                  emailBody.replace("%n", name);
-                  emailBody.replace("%l", leaveType);
-                  emailBody.replace("%f", fromDate);
-                  emailBody.replace("%t", toDate);
-                  emailBody.replace("%r", reason);
+                  emailBody = emailBody.replace("%m", reportingManager);
+                  emailBody = emailBody.replace("%n", name);
+                  emailBody = emailBody.replace("%l", leaveType);
+                  emailBody = emailBody.replace("%f", fromDate);
+                  emailBody = emailBody.replace("%t", toDate);
+                  emailBody = emailBody.replace("%r", reason);
                   helpers.sendEmail(reportingManagerEmail, "Pending Task for Approval", emailBody,
                      "asish@hyperxchange.com").then(() => {
                      console.log("Email Send.");
@@ -397,7 +397,8 @@ workers.leaveStatusUpdate = () => {
                   const hrName = oneData.hr_name;
                   const hrEmail = oneData.hr_email;
                   console.log(hrEmail);
-                  let emailBody = messages.LEAVE_PENDING_MESSAGE;
+                  const reportingManagerEmail = oneData.manager_email;
+                  let emailBody = messages.LEAVE_HR_PENDING;
                   const name = oneData.self_name;
                   const reportingManager = oneData.reporting_manager_name;
                   const leaveType = oneData.leavetype;
@@ -405,13 +406,14 @@ workers.leaveStatusUpdate = () => {
                   const toDate = oneData.to_date;
                   const reason = oneData.reason;
                   emailBody = emailBody.replace("%m", hrName);
+                  emailBody = emailBody.replace("%rm", reportingManager);
                   emailBody = emailBody.replace("%n", name);
                   emailBody = emailBody.replace("%l", leaveType);
                   emailBody = emailBody.replace("%f", fromDate);
                   emailBody = emailBody.replace("%t", toDate);
                   emailBody = emailBody.replace("%r", reason);
                   helpers.sendEmail(hrEmail, "Pending Task for Approval", emailBody,
-                     "asish@hyperxchange.com").then(() => {
+                     "asish@hyperxchange.com," + reportingManagerEmail).then(() => {
                      console.log("Email Send.");
                   }).catch(err => {
                      console.error(err);
