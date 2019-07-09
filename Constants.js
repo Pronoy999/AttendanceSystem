@@ -62,6 +62,16 @@ messages.NDA_EMAIL_BODY = "<h3><span style=\\color: #99cc00;\\><span style=\\col
    "<p style=\\text-align: left;\\><span style=\\color: #000000;\\>Copyright &copy; 2016-present HyperXchange. All rights reserved.</span></p> " +
    "</div>";
 
+messages.LEAVE_PENDING_MESSAGE = "<p>Hi %m,</p>\n" +
+   "<p>You have the following leave request pending for your approval.</p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Name: %n</strong></p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Leave Type: %l</strong></p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>From Date: %f</strong></p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>To Date: %t</strong></p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Reason: %r</strong></p>\n" +
+   "<p>Regards,</p>\n" +
+   "<p>HyperXchange ELVIS Team</p>";
+
 messages.pdfMakeFonts = {
    Courier: {
       normal: 'Courier',

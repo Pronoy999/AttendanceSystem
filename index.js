@@ -144,7 +144,7 @@ httpServer.listen(7009, function () {
 
 // workers.updateAndroidDeviceNames();
 // workers.updateiOSDeviceNames();
-
+workers.leaveStatusUpdate();
 workers.checkVideoUploadStatus();
 workers.generateStockServiceCSVforAccounts();
 workers.generateStockServiceCSVforOperations();

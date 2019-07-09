@@ -23,7 +23,7 @@ workers.checkVideoUploadStatus = function () {
             const fileData = await workers._ifPresent('');
             const vidNames = fileData.Contents.map(y => y.Key);
             const updateData = videoUpdated.filter(x => !vidNames.includes("hx_" + x.name + ".mp4"));
-            // const updateData = fileData.Contents.filter(x=> !vidNames.includes(x.Key));
+// const updateData = fileData.Contents.filter(x=> !vidNames.includes(x.Key));
             for (let i = 0; i < updateData.length; i++) {
 
                fileName = updateData[i].name;
@@ -84,10 +84,10 @@ workers.generateStockServiceCSVforOperations = () => {
          // console.log(datas);
          const date = moment().tz('Asia/Kolkata').format('DD/MM/YYYY');
          /* helpers.sendEmail(`writwick.das@hyperxchange.com`,
-            `STOCK and SERVICE status ${date}`,
-            `Please find attached the stock and service details for ${date}`,
-            datas);
-            */
+       `STOCK and SERVICE status ${date}`,
+       `Please find attached the stock and service details for ${date}`,
+       datas);
+       */
          helpers.sendEmail(`operations@hyperxchange.com`,
             `STOCK and SERVICE status ${date}`,
             `Please find attached the stock and service details for ${date}`,
@@ -99,15 +99,15 @@ workers.generateStockServiceCSVforOperations = () => {
 workers.generateStockServiceCSVforAccounts = () => {
    schedule.scheduleJob('0 0 * * *', () => {
       const generateCSV = (service_stock, filename) => new Promise((resolve, reject) => {
-         const query = `select model_name                        as Model,
-                               product_color                     as Color,
-                               storage                           as Storage,
-                               count(model_name)                 as Quantity,
-                               product_price                     as 'Unit Procurement Price',
-                               count(model_name) * product_price as 'Total Procurement Price'
-                               from diagnostic_app.inventory
-                               where service_stock = ${service_stock}
-                               group by model_name, product_color, storage;`;
+         const query = `select model_name   as Model,
+   product_coloras Color,
+   storage as Storage,
+   count(model_name)   as Quantity,
+   product_priceas 'Unit Procurement Price',
+   count(model_name) * product_price as 'Total Procurement Price'
+   from diagnostic_app.inventory
+   where service_stock = ${service_stock}
+   group by model_name, product_color, storage;`;
 
          database.query(query, (err, data) => {
             if (err) {
@@ -132,10 +132,10 @@ workers.generateStockServiceCSVforAccounts = () => {
          // console.log(datas);
          const date = moment().tz('Asia/Kolkata').format('DD/MM/YYYY');
          /* helpers.sendEmail(`writwick.das@hyperxchange.com`,
-            `STOCK and SERVICE status ${date}`,
-            `Please find attached the stock and service details for ${date}`,
-            datas);
-            */
+       `STOCK and SERVICE status ${date}`,
+       `Please find attached the stock and service details for ${date}`,
+       datas);
+       */
          helpers.sendEmail(`accounts@hyperxchange.com`,
             `STOCK and SERVICE status ${date}`,
             `Please find attached the stock and service details for ${date}`,
@@ -189,7 +189,7 @@ workers._loopCheck = function () {
             var eachOrder = pendingData[0];
             var dateTime = eachOrder.order_date + ' 10:00:00';
             var epochTime = moment(dateTime).valueOf();
-            //var currentTime = Math.floor((new Date().getTime()));
+//var currentTime = Math.floor((new Date().getTime()));
             var currentTime = moment.now();
             var difference = currentTime - epochTime;
             var hoursDifference = Math.floor(difference / (1000 * 60 * 60));
@@ -324,6 +324,102 @@ workers.updateiOSDeviceNames = () => {
             }
          })
       }
+   });
+};
+/**
+ * Worker to escalate the Leave status pending for HRMS.
+ */
+workers.leaveStatusUpdate = () => {
+   schedule.scheduleJob("47 17 * * *", () => {
+      const query = "select lv.user_id," +
+         "usr.userfullname as self_name," +
+         "usr.emailaddress as employee_email," +
+         "usr.contactnumber as self_number," +
+         "lv_type.leavetype," +
+         "lv.from_date," +
+         "lv.to_date," +
+         "lv.reason," +
+         "lv.rep_mang_id," +
+         "usr1.userfullname as reporting_manager_name," +
+         "usr1.emailaddress as manager_email," +
+         "usr1.contactnumber as manager_number," +
+         "lv.hr_id," +
+         "usr2.userfullname as hr_name," +
+         "usr2.emailaddress as hr_email," +
+         "usr2.contactnumber as hr_number, " +
+         "DATEDIFF" +
+         "   (now()," +
+         "    lv.createddate) as day " +
+         "from hrms.main_leaverequest lv," +
+         "hrms.main_employeeleavetypes lv_type," +
+         "hrms.main_users usr," +
+         "hrms.main_users usr1," +
+         "hrms.main_users usr2 " +
+         "where lv.leavestatus =" +
+         " 'Pending for approval'" +
+         "  and DATEDIFF" +
+         "   (now()," +
+         "    lv.createddate) > 1" +
+         "  and lv.leavetypeid = lv_type.id" +
+         "  and usr.id = lv.user_id" +
+         "  and lv.rep_mang_id = usr1.id" +
+         "  and lv.hr_id = usr2.id";
+      database.query(query, (err, data) => {
+         if (err) {
+            console.log(err);
+         } else {
+            for (let i = 0; i < data.length; i++) {
+               const oneData = data[i];
+               const time = oneData.day;
+               if (time === 1) {
+                  const reportingManagerEmail = oneData.manager_email;
+                  console.log(reportingManagerEmail);
+                  let emailBody = messages.LEAVE_PENDING_MESSAGE;
+                  const name = oneData.self_name;
+                  const reportingManager = oneData.reporting_manager_name;
+                  const leaveType = oneData.leavetype;
+                  const fromDate = oneData.from_date;
+                  const toDate = oneData.to_date;
+                  const reason = oneData.reason;
+                  emailBody.replace("%m", reportingManager);
+                  emailBody.replace("%n", name);
+                  emailBody.replace("%l", leaveType);
+                  emailBody.replace("%f", fromDate);
+                  emailBody.replace("%t", toDate);
+                  emailBody.replace("%r", reason);
+                  helpers.sendEmail(reportingManagerEmail, "Pending Task for Approval", emailBody,
+                     "asish@hyperxchange.com").then(() => {
+                     console.log("Email Send.");
+                  }).catch(err => {
+                     console.error(err);
+                  });
+               } else if (time > 1) {
+                  const hrName = oneData.hr_name;
+                  const hrEmail = oneData.hr_email;
+                  console.log(hrEmail);
+                  let emailBody = messages.LEAVE_PENDING_MESSAGE;
+                  const name = oneData.self_name;
+                  const reportingManager = oneData.reporting_manager_name;
+                  const leaveType = oneData.leavetype;
+                  const fromDate = oneData.from_date;
+                  const toDate = oneData.to_date;
+                  const reason = oneData.reason;
+                  emailBody = emailBody.replace("%m", hrName);
+                  emailBody = emailBody.replace("%n", name);
+                  emailBody = emailBody.replace("%l", leaveType);
+                  emailBody = emailBody.replace("%f", fromDate);
+                  emailBody = emailBody.replace("%t", toDate);
+                  emailBody = emailBody.replace("%r", reason);
+                  helpers.sendEmail(hrEmail, "Pending Task for Approval", emailBody,
+                     "asish@hyperxchange.com").then(() => {
+                     console.log("Email Send.");
+                  }).catch(err => {
+                     console.error(err);
+                  });
+               }
+            }
+         }
+      });
    });
 };
 
