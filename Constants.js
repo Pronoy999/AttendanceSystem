@@ -94,7 +94,7 @@ messages.EXPENSE_PENDING_MESSAGE = "<p>Hi %rm,</p>\n" +
 messages.ORDER_STATUS_MESSAGE = "<p>Hi %rm,</p>\n" +
    "<p>The following Order(s) are pending for fulfillment.</p>\n" +
 
-   ` <table>
+   ` <table border=1px>
    <thead>
    <tr>
    <th>Order ID</th>
