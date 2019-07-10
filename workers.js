@@ -487,7 +487,7 @@ workers.expenseStatusUpdate = () => {
  * Method to send remainders for Order status.
  */
 workers.orderStatusRemainder = () => {
-   schedule.scheduleJob("0 */2,4,8 * * *", () => {
+   schedule.scheduleJob("0 */2 * * *", () => {
       const query = "select od.channel_order_id," +
          "od.channel_name," +
          "od.product_details," +
