@@ -387,8 +387,7 @@ workers.leaveStatusUpdate = () => {
                   emailBody = emailBody.replace("%f", fromDate);
                   emailBody = emailBody.replace("%t", toDate);
                   emailBody = emailBody.replace("%r", reason);
-                  helpers.sendEmail(reportingManagerEmail, "Pending Task for Approval", emailBody,
-                     "asish@hyperxchange.com").then(() => {
+                  helpers.sendEmail(reportingManagerEmail, "Pending Task for Approval", emailBody).then(() => {
                      console.log("Email Send.");
                   }).catch(err => {
                      console.error(err);
@@ -413,7 +412,7 @@ workers.leaveStatusUpdate = () => {
                   emailBody = emailBody.replace("%t", toDate);
                   emailBody = emailBody.replace("%r", reason);
                   helpers.sendEmail(hrEmail, "Pending Task for Approval", emailBody,
-                     "asish@hyperxchange.com," + reportingManagerEmail).then(() => {
+                     "" + reportingManagerEmail).then(() => {
                      console.log("Email Send.");
                   }).catch(err => {
                      console.error(err);
@@ -471,8 +470,7 @@ workers.expenseStatusUpdate = () => {
                   expenseMessage = expenseMessage.replace("%l", expenseName);
                   expenseMessage = expenseMessage.replace("%f", expenseAmount);
                   expenseMessage = expenseMessage.replace("%d", desc);
-                  helpers.sendEmail(managerEmail, "Pending Task For Approval", expenseMessage,
-                     "asish@hyperxchange.com,admin@hyperxchange.com").then(() => {
+                  helpers.sendEmail(managerEmail, "Pending Task For Approval", expenseMessage).then(() => {
                      console.log("Email sent.");
                   }).catch(err => {
                      console.error(err);
@@ -507,7 +505,7 @@ workers.orderStatusRemainder = () => {
          } else {
             let emailMessage = messages.ORDER_STATUS_MESSAGE;
             let emailBody = "";
-            const ccEmail = "asish@hyperxchange.com,admin@hyperxchange.com,operations@hyperxchange.com";
+            const ccEmail = "operations@hyperxchange.com";
             const managerEmail = "shipra@hyperxchange.com";
             const managerName = "Shipra";
             for (let i = 0; i < data.length; i++) {
