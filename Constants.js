@@ -91,6 +91,17 @@ messages.EXPENSE_PENDING_MESSAGE = "<p>Hi %rm,</p>\n" +
    "<p>Regards,</p>\n" +
    "<p>HyperXchange ELVIS Team</p>";
 
+messages.ORDER_STATUS_MESSAGE = "<p>Hi %rm,</p>\n" +
+   "<p>The following Order(s) are pending.</p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>OrderId: %n</strong></p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>ChannelName: %l</strong></p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Order Status: %f</strong></p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Customer Name: %cn</strong></p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Product Details: %p</strong></p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Duration (days): %d</strong></p>\n" +
+   "<p>Regards,</p>\n" +
+   "<p>HyperXchange ELVIS Team</p>";
+
 messages.pdfMakeFonts = {
    Courier: {
       normal: 'Courier',

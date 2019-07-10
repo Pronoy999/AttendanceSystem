@@ -142,9 +142,18 @@ httpServer.listen(7009, function () {
    console.log("Server Listening on Port 7009");
 });
 
-// workers.updateAndroidDeviceNames();
-// workers.updateiOSDeviceNames();
-workers.leaveStatusUpdate();
-workers.checkVideoUploadStatus();
-workers.generateStockServiceCSVforAccounts();
-workers.generateStockServiceCSVforOperations();
+/**
+ * Method to initialize the Workers.
+ */
+function initWorkers() {
+   // workers.updateAndroidDeviceNames();
+   // workers.updateiOSDeviceNames();
+   workers.expenseStatusUpdate();
+   workers.orderStatusRemainder();
+   workers.leaveStatusUpdate();
+   workers.checkVideoUploadStatus();
+   workers.generateStockServiceCSVforAccounts();
+   workers.generateStockServiceCSVforOperations();
+}
+
+initWorkers();

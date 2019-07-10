@@ -484,6 +484,59 @@ workers.expenseStatusUpdate = () => {
    });
 };
 /**
+ * Method to send remainders for Order status.
+ */
+workers.orderStatusRemainder = () => {
+   schedule.scheduleJob("0 0 * * *", () => {
+      const query = "select od.channel_order_id," +
+         "od.channel_name," +
+         "od.product_details," +
+         "od.customer_name," +
+         "od.shipping_address," +
+         "status.status," +
+         "order_status," +
+         "datediff(now(), od.order_date) as day " +
+         "from diagnostic_app.order_details od," +
+         "     diagnostic_app.order_status_details status " +
+         "where od.order_status not in (4, 8," +
+         "  5, 12)" +
+         "  and status.id = od.order_status";
+      database.query(query, (err, data) => {
+         if (err) {
+            console.error(err.stack);
+         } else {
+            for (let i = 0; i < data.length; i++) {
+               const oneData = data[i];
+               const managerName = "Shipra";
+               const managerEmail = "shipra@hyperxchange.com";
+               const ccEmail = "asish@hyperxchange.com,admin@hyperxchange.com,operations@hyperxchange.com";
+               const orderId = oneData.channel_order_id;
+               const channelName = oneData.channel_name;
+               const product = oneData.product_details;
+               const customername = oneData.customer_name;
+               const orderStatus = oneData.status;
+               const time = oneData.day;
+               let emailBody = messages.ORDER_STATUS_MESSAGE;
+               if (time > 1) {
+                  emailBody = emailBody.replace("%rm", managerName);
+                  emailBody = emailBody.replace("%n", orderId);
+                  emailBody = emailBody.replace("%l", channelName);
+                  emailBody = emailBody.replace("%f", orderStatus);
+                  emailBody = emailBody.replace("%cn", customername);
+                  emailBody = emailBody.replace("%p", product);
+                  emailBody = emailBody.replace("%d", time);
+                  helpers.sendEmail(managerEmail, "Orders Pending for Action", emailBody, ccEmail).then(() => {
+                     console.log("Order Email sent.");
+                  }).catch(err => {
+                     console.error(err.stack);
+                  });
+               }
+            }
+         }
+      });
+   });
+};
+/**
  * Exporting the Worker module.
  */
 module.exports = workers;
