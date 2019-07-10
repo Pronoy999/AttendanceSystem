@@ -82,6 +82,15 @@ messages.LEAVE_HR_PENDING = "<p>Hi %m,</p>\n" +
    "<p style=\"text-align: left; padding-left: 30px;\"><strong>Reason: %r</strong></p>\n" +
    "<p>Regards,</p>\n" +
    "<p>HyperXchange ELVIS Team</p>";
+messages.EXPENSE_PENDING_MESSAGE = "<p>Hi %rm,</p>\n" +
+   "<p>The following expense request is pending for your approval.</p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Name: %n</strong></p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Expense Name: %l</strong></p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Expense Amount: %f</strong></p>\n" +
+   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Description: %d</strong></p>\n" +
+   "<p>Regards,</p>\n" +
+   "<p>HyperXchange ELVIS Team</p>";
+
 messages.pdfMakeFonts = {
    Courier: {
       normal: 'Courier',

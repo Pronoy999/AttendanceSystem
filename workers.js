@@ -424,5 +424,66 @@ workers.leaveStatusUpdate = () => {
       });
    });
 };
-
+/**
+ * Worker to send remainder for pending expenses.
+ */
+workers.expenseStatusUpdate = () => {
+   schedule.scheduleJob("0 0 * * *", () => {
+      const query = "select ex.createdby as user_id," +
+         "usr.userfullname user_name," +
+         "usr.emailaddress user_email," +
+         "usr.contactnumber user_contact," +
+         "ex.expense_name," +
+         "ex.expense_amount," +
+         "ex.manager_id manager_id," +
+         "usr1.userfullname manager_name," +
+         "usr1.emailaddress manager_address," +
+         "usr1.contactnumber manager_contact," +
+         "ex.description," +
+         "DATEDIFF" +
+         "    (now()," +
+         "     ex.createddate) as day" +
+         "" +
+         "from hrms.expenses ex," +
+         "     hrms.main_users usr," +
+         "     hrms.main_users usr1" +
+         "where status" +
+         "     in" +
+         "      ('saved', 'approved', 'rejected')" +
+         "  and ex.createdby = usr.id and usr1.id = ex.manager_id";
+      database.query(query, (err, data) => {
+         if (err) {
+            console.error(err.stack);
+         } else {
+            for (let i = 0; i < data.length; i++) {
+               const oneData = data[i];
+               const userName = oneData.user_name;
+               const time = oneData.day;
+               const manager = oneData.manager_name;
+               const expenseName = oneData.expense_name;
+               const managerEmail = oneData.manager_address;
+               const expenseAmount = oneData.expense_amount;
+               const desc = oneData.description;
+               let expenseMessage = messages.EXPENSE_PENDING_MESSAGE;
+               if (time > 1) {
+                  expenseMessage = expenseMessage.replace("%rm", manager);
+                  expenseMessage = expenseMessage.replace("%n", userName);
+                  expenseMessage = expenseMessage.replace("%l", expenseName);
+                  expenseMessage = expenseMessage.replace("%f", expenseAmount);
+                  expenseMessage = expenseMessage.replace("%d", desc);
+                  helpers.sendEmail(managerEmail, "Pending Task For Approval", expenseMessage,
+                     "asish@hyperxchange.com,admin@hyperxchange.com").then(() => {
+                     console.log("Email sent.");
+                  }).catch(err => {
+                     console.error(err);
+                  });
+               }
+            }
+         }
+      });
+   });
+};
+/**
+ * Exporting the Worker module.
+ */
 module.exports = workers;
