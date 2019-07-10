@@ -505,33 +505,37 @@ workers.orderStatusRemainder = () => {
          if (err) {
             console.error(err.stack);
          } else {
+            let emailMessage = messages.ORDER_STATUS_MESSAGE;
+            let emailBody = "";
+            const ccEmail = "asish@hyperxchange.com,admin@hyperxchange.com,operations@hyperxchange.com";
+            const managerEmail = "shipra@hyperxchange.com";
+            const managerName = "Shipra";
             for (let i = 0; i < data.length; i++) {
                const oneData = data[i];
-               const managerName = "Shipra";
-               const managerEmail = "shipra@hyperxchange.com";
-               const ccEmail = "asish@hyperxchange.com,admin@hyperxchange.com,operations@hyperxchange.com";
                const orderId = oneData.channel_order_id;
                const channelName = oneData.channel_name;
                const product = oneData.product_details;
                const customername = oneData.customer_name;
                const orderStatus = oneData.status;
                const time = oneData.day;
-               let emailBody = messages.ORDER_STATUS_MESSAGE;
+               emailBody = messages.ORDER_STATUS_MESSAGE_1;
                if (time > 1) {
-                  emailBody = emailBody.replace("%rm", managerName);
                   emailBody = emailBody.replace("%n", orderId);
                   emailBody = emailBody.replace("%l", channelName);
                   emailBody = emailBody.replace("%f", orderStatus);
                   emailBody = emailBody.replace("%cn", customername);
                   emailBody = emailBody.replace("%p", product);
                   emailBody = emailBody.replace("%d", time);
-                  helpers.sendEmail(managerEmail, "Orders Pending for Action", emailBody, ccEmail).then(() => {
-                     console.log("Order Email sent.");
-                  }).catch(err => {
-                     console.error(err.stack);
-                  });
+                  emailMessage += emailBody;
                }
             }
+            emailMessage += messages.ORDER_STATUS_MESSAGE_2;
+            emailMessage = emailMessage.replace("%rm", managerName);
+            helpers.sendEmail(managerEmail, "Orders Pending for Action", emailMessage, ccEmail).then(() => {
+               console.log("Order Email sent.");
+            }).catch(err => {
+               console.error(err.stack);
+            });
          }
       });
    });

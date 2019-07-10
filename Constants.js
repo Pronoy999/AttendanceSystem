@@ -92,15 +92,36 @@ messages.EXPENSE_PENDING_MESSAGE = "<p>Hi %rm,</p>\n" +
    "<p>HyperXchange ELVIS Team</p>";
 
 messages.ORDER_STATUS_MESSAGE = "<p>Hi %rm,</p>\n" +
-   "<p>The following Order(s) are pending.</p>\n" +
-   "<p style=\"text-align: left; padding-left: 30px;\"><strong>OrderId: %n</strong></p>\n" +
-   "<p style=\"text-align: left; padding-left: 30px;\"><strong>ChannelName: %l</strong></p>\n" +
-   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Order Status: %f</strong></p>\n" +
-   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Customer Name: %cn</strong></p>\n" +
-   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Product Details: %p</strong></p>\n" +
-   "<p style=\"text-align: left; padding-left: 30px;\"><strong>Duration (days): %d</strong></p>\n" +
-   "<p>Regards,</p>\n" +
-   "<p>HyperXchange ELVIS Team</p>";
+   "<p>The following Order(s) are pending for fulfillment.</p>\n" +
+
+   ` <table>
+   <thead>
+   <tr>
+   <th>Order ID</th>
+<th>Channel Name</th>
+<th>Order Status</th>
+<th>Customer Name</th>
+<th>Product Details</th>
+<th>Duration(Days)</th>
+</tr>
+
+</thead>
+<tbody>`;
+messages.ORDER_STATUS_MESSAGE_1 =
+   `<tr>
+<td>%n</td>
+<td>%l</td>
+<td>%f</td>
+<td>%cn</td>
+<td>%p</td>
+<td>%d</td>
+</tr>`;
+
+messages.ORDER_STATUS_MESSAGE_2 =
+   `</tbody>
+</table>
+<p>Regards,</p>\n
+<p>HyperXchange ELVIS Team</p>`;
 
 messages.pdfMakeFonts = {
    Courier: {
