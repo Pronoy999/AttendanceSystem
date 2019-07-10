@@ -2827,20 +2827,22 @@ handlers.orderStatus = function (dataObject, callback) {
     */
    function sendOrderStatusSMSAndEmail(hxOrderId, status) {
       const query = "SELECT * FROM order_details WHERE hx_order_id=" + hxOrderId;
-      database.query(query, (err, data) => {
+      database.query(query, (err, result) => {
          if (err) {
             console.error(err.stack);
          } else {
+            const data = result[0];
             const customerName = data.customer_name;
             const orderId = data.channel_order_id;
             const phoneNumber = data.customer_phone;
             const email = data.customer_email;
             const subject = "Order Confirmation for HyperXchange Order :" + orderId;
-            const message = "Hi " + customerName + ", Item in your order with order Id " + orderId +
-               " has been " + status + ".";
+            const textMessage = "Hi " + customerName + ", Item in your order with order Id " + orderId +
+               " has been " + status + ".Regards HyperXchange.";
+            console.log(phoneNumber);
             if (phoneNumber.length > 11) {
-               snsLib.sendMessage(phoneNumber, message, (isSent) => {
-                  if (isSent) {
+               snsLib.sendMessage(phoneNumber, textMessage, (isSent) => {
+                  if (!isSent) {
                      console.log("Order Status SMS sent to Customer.");
                   } else {
                      console.log("Could not send the SMS for Order status update.");
@@ -2848,11 +2850,11 @@ handlers.orderStatus = function (dataObject, callback) {
                });
             }
             if (typeof (email) === 'string' && email.length > 1) {
-               let emailMessage = message.ORDER_STATUS_EMAIL;
+               let emailMessage = messages.ORDER_STATUS_EMAIL;
                emailMessage = emailMessage.replace("%c", customerName);
-               emailMessage = emailMessage.replace("%id", orderId);
+               emailMessage = emailMessage.replace("%i", orderId);
                emailMessage = emailMessage.replace("%s", status);
-               helpers.sendEmail(email, "Order Status Update", emailMessage, "admin@hyperxchange.com").then(() => {
+               helpers.sendEmail(email, subject, emailMessage, "admin@hyperxchange.com").then(() => {
                   console.log("Order status Email sent.");
                }).catch(err => {
                   console.error(err.stack);
