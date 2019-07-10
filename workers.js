@@ -444,11 +444,11 @@ workers.expenseStatusUpdate = () => {
          "    (now()," +
          "     ex.createddate) as day" +
          "" +
-         "from hrms.expenses ex," +
+         " from hrms.expenses ex," +
          "     hrms.main_users usr," +
          "     hrms.main_users usr1" +
-         "where status" +
-         "     in" +
+         " where status" +
+         "    not in" +
          "      ('saved', 'approved', 'rejected')" +
          "  and ex.createdby = usr.id and usr1.id = ex.manager_id";
       database.query(query, (err, data) => {
