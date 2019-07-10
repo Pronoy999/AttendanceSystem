@@ -487,7 +487,7 @@ workers.expenseStatusUpdate = () => {
  * Method to send remainders for Order status.
  */
 workers.orderStatusRemainder = () => {
-   schedule.scheduleJob("0 0 * * *", () => {
+   schedule.scheduleJob("0 */2,4,8 * * *", () => {
       const query = "select od.channel_order_id," +
          "od.channel_name," +
          "od.product_details," +
@@ -495,7 +495,7 @@ workers.orderStatusRemainder = () => {
          "od.shipping_address," +
          "status.status," +
          "order_status," +
-         "datediff(now(), od.order_date) as day " +
+         "TIME_FORMAT(timediff(now(), od.order_date), \"%H\") as day " +
          "from diagnostic_app.order_details od," +
          "     diagnostic_app.order_status_details status " +
          "where od.order_status not in (4, 8," +
@@ -519,7 +519,7 @@ workers.orderStatusRemainder = () => {
                const orderStatus = oneData.status;
                const time = oneData.day;
                emailBody = messages.ORDER_STATUS_MESSAGE_1;
-               if (time > 1) {
+               if (time > 2) {
                   emailBody = emailBody.replace("%n", orderId);
                   emailBody = emailBody.replace("%l", channelName);
                   emailBody = emailBody.replace("%f", orderStatus);

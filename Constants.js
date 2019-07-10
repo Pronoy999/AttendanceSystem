@@ -102,7 +102,7 @@ messages.ORDER_STATUS_MESSAGE = "<p>Hi %rm,</p>\n" +
 <th>Order Status</th>
 <th>Customer Name</th>
 <th>Product Details</th>
-<th>Duration(Days)</th>
+<th>Duration(hours)</th>
 </tr>
 
 </thead>
