@@ -123,6 +123,13 @@ messages.ORDER_STATUS_MESSAGE_2 =
 <p>Regards,</p>\n
 <p>HyperXchange ELVIS Team</p>`;
 
+
+messages.ORDER_STATUS_EMAIL = "<p>Hi %c,</p>\n" +
+   "<p>Item in order with order id %i has been %s !&nbsp;Hope you liked our service.</p>\n" +
+   "<p>&nbsp;<a title=\"Manage Order\" href=\"https://www.hyperxchange.com/sales/order/history/\">Manage Order</a></p>\n" +
+   "<p>Regards,</p>\n" +
+   "<p>HyperXpert</p>";
+
 messages.pdfMakeFonts = {
    Courier: {
       normal: 'Courier',

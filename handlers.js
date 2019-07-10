@@ -2640,6 +2640,7 @@ handlers.orderStatus = function (dataObject, callback) {
                      " SET o.battery_before_ship='" + value + "', " +
                      "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid +
                      " AND s.status='Ready-to-Ship' AND o.is_video_taken=1";
+                  sendOrderStatusSMSAndEmail(hxorderid, "Packed");
                   database.query(query, function (err, updateData) {
                      if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -2661,6 +2662,7 @@ handlers.orderStatus = function (dataObject, callback) {
                      "o.order_status=s.id WHERE o.hx_order_id= " + hxorderid +
                      " AND s.status='Shipped' AND o.order_status=4";
                   updateQRTable(hxorderid, 5);
+                  sendOrderStatusSMSAndEmail(hxorderid, "Shipped");
                   database.query(query, function (err, updateData) {
                      if (err) {
                         callback(err, 500, {'res': messages.errorMessage});
@@ -2813,6 +2815,48 @@ handlers.orderStatus = function (dataObject, callback) {
                });
             } else {
                console.log("Not in Inventory ", imei);
+            }
+         }
+      });
+   }
+
+   /**
+    * Method to send and SMS to the Customer based on the Order status Update.
+    * @param hxOrderId: The Order id.
+    * @param status: The status that it has been changed to.
+    */
+   function sendOrderStatusSMSAndEmail(hxOrderId, status) {
+      const query = "SELECT * FROM order_details WHERE hx_order_id=" + hxOrderId;
+      database.query(query, (err, data) => {
+         if (err) {
+            console.error(err.stack);
+         } else {
+            const customerName = data.customer_name;
+            const orderId = data.channel_order_id;
+            const phoneNumber = data.customer_phone;
+            const email = data.customer_email;
+            const subject = "Order Confirmation for HyperXchange Order :" + orderId;
+            const message = "Hi " + customerName + ", Item in your order with order Id " + orderId +
+               " has been " + status + ".";
+            if (phoneNumber.length > 11) {
+               snsLib.sendMessage(phoneNumber, message, (isSent) => {
+                  if (isSent) {
+                     console.log("Order Status SMS sent to Customer.");
+                  } else {
+                     console.log("Could not send the SMS for Order status update.");
+                  }
+               });
+            }
+            if (typeof (email) === 'string' && email.length > 1) {
+               let emailMessage = message.ORDER_STATUS_EMAIL;
+               emailMessage = emailMessage.replace("%c", customerName);
+               emailMessage = emailMessage.replace("%id", orderId);
+               emailMessage = emailMessage.replace("%s", status);
+               helpers.sendEmail(email, "Order Status Update", emailMessage, "admin@hyperxchange.com").then(() => {
+                  console.log("Order status Email sent.");
+               }).catch(err => {
+                  console.error(err.stack);
+               });
             }
          }
       });
