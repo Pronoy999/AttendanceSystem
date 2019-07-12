@@ -2833,7 +2833,7 @@ handlers.orderStatus = function (dataObject, callback) {
          } else {
             const data = result[0];
             const customerName = data.customer_name;
-            const orderId = data.channel_order_id.substring(0, data.channel_order_id.lastIndexOf('-'));
+            const orderId = data.channel_order_id.substring(0, data.channel_order_id.lastIndexOf('-') || data.channel_order_id);
             const phoneNumber = data.customer_phone;
             const email = data.customer_email;
             const subject = "Order Confirmation for HyperXchange Order :" + orderId;

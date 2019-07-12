@@ -486,7 +486,7 @@ workers.expenseStatusUpdate = () => {
  */
 workers.orderStatusRemainder = () => {
    schedule.scheduleJob("0 */5 * * *", () => {
-      const query = "select SUBSTRING_INDEX(od.channel_order_id, " - ", 3) as channel_order_id," +
+      const query = "select od.channel_order_id," +
          "od.channel_name," +
          "od.product_details," +
          "od.customer_name," +
@@ -510,7 +510,7 @@ workers.orderStatusRemainder = () => {
             const managerName = "Shipra";
             for (let i = 0; i < data.length; i++) {
                const oneData = data[i];
-               const orderId = oneData.channel_order_id;
+               const orderId = oneData.channel_order_id.substring(0, oneData.channel_order_id.lastIndexOf('-')) || oneData.channel_order_id;
                const channelName = oneData.channel_name;
                const product = oneData.product_details;
                const customername = oneData.customer_name;
