@@ -486,7 +486,7 @@ workers.expenseStatusUpdate = () => {
  */
 workers.orderStatusRemainder = () => {
    schedule.scheduleJob("0 */5 * * *", () => {
-      const query = "select od.channel_order_id," +
+      const query = "select SUBSTRING_INDEX(od.channel_order_id, " - ", 3) as channel_order_id," +
          "od.channel_name," +
          "od.product_details," +
          "od.customer_name," +
