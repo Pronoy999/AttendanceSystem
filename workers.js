@@ -505,6 +505,7 @@ workers.orderStatusRemainder = () => {
          } else {
             let emailMessage = messages.ORDER_STATUS_MESSAGE;
             let emailBody = "";
+            let shouldSentEmail = false;
             const ccEmail = "operations@hyperxchange.com";
             const managerEmail = "shipra@hyperxchange.com";
             const managerName = "Shipra";
@@ -518,6 +519,7 @@ workers.orderStatusRemainder = () => {
                const time = oneData.day;
                emailBody = messages.ORDER_STATUS_MESSAGE_1;
                if (time > 2) {
+                  shouldSentEmail = true;
                   emailBody = emailBody.replace("%n", orderId);
                   emailBody = emailBody.replace("%l", channelName);
                   emailBody = emailBody.replace("%f", orderStatus);
@@ -529,11 +531,13 @@ workers.orderStatusRemainder = () => {
             }
             emailMessage += messages.ORDER_STATUS_MESSAGE_2;
             emailMessage = emailMessage.replace("%rm", managerName);
-            helpers.sendEmail(managerEmail, "Orders Pending for Action", emailMessage, ccEmail).then(() => {
-               console.log("Order Email sent.");
-            }).catch(err => {
-               console.error(err.stack);
-            });
+            if (shouldSentEmail) {
+               helpers.sendEmail(managerEmail, "Orders Pending for Action", emailMessage, ccEmail).then(() => {
+                  console.log("Order Email sent.");
+               }).catch(err => {
+                  console.error(err.stack);
+               });
+            }
          }
       });
    });
