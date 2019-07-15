@@ -99,11 +99,11 @@ workers.generateStockServiceCSVforOperations = () => {
 workers.generateStockServiceCSVforAccounts = () => {
    schedule.scheduleJob('0 0 * * *', () => {
       const generateCSV = (service_stock, filename) => new Promise((resolve, reject) => {
-         const query = `select model_name   as Model,
-   product_coloras Color,
+         const query = `select model_name as Model,
+   product_color as Color,
    storage as Storage,
    count(model_name)   as Quantity,
-   product_priceas 'Unit Procurement Price',
+   product_price as 'Unit Procurement Price',
    count(model_name) * product_price as 'Total Procurement Price'
    from diagnostic_app.inventory
    where service_stock = ${service_stock}
