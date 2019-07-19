@@ -99,11 +99,11 @@ workers.generateStockServiceCSVforOperations = () => {
 workers.generateStockServiceCSVforAccounts = () => {
    schedule.scheduleJob('0 0 * * *', () => {
       const generateCSV = (service_stock, filename) => new Promise((resolve, reject) => {
-         const query = `select model_name   as Model,
-   product_coloras Color,
+         const query = `select model_name as Model,
+   product_color as Color,
    storage as Storage,
    count(model_name)   as Quantity,
-   product_priceas 'Unit Procurement Price',
+   product_price as 'Unit Procurement Price',
    count(model_name) * product_price as 'Total Procurement Price'
    from diagnostic_app.inventory
    where service_stock = ${service_stock}
@@ -505,6 +505,7 @@ workers.orderStatusRemainder = () => {
          } else {
             let emailMessage = messages.ORDER_STATUS_MESSAGE;
             let emailBody = "";
+            let shouldSentEmail = false;
             const ccEmail = "operations@hyperxchange.com";
             const managerEmail = "shipra@hyperxchange.com";
             const managerName = "Shipra";
@@ -518,6 +519,7 @@ workers.orderStatusRemainder = () => {
                const time = oneData.day;
                emailBody = messages.ORDER_STATUS_MESSAGE_1;
                if (time > 2) {
+                  shouldSentEmail = true;
                   emailBody = emailBody.replace("%n", orderId);
                   emailBody = emailBody.replace("%l", channelName);
                   emailBody = emailBody.replace("%f", orderStatus);
@@ -529,11 +531,13 @@ workers.orderStatusRemainder = () => {
             }
             emailMessage += messages.ORDER_STATUS_MESSAGE_2;
             emailMessage = emailMessage.replace("%rm", managerName);
-            helpers.sendEmail(managerEmail, "Orders Pending for Action", emailMessage, ccEmail).then(() => {
-               console.log("Order Email sent.");
-            }).catch(err => {
-               console.error(err.stack);
-            });
+            if (shouldSentEmail) {
+               helpers.sendEmail(managerEmail, "Orders Pending for Action", emailMessage, ccEmail).then(() => {
+                  console.log("Order Email sent.");
+               }).catch(err => {
+                  console.error(err.stack);
+               });
+            }
          }
       });
    });
