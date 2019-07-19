@@ -2349,14 +2349,20 @@ handlers.sellPhone = function (dataObject, callback) {
  */
 handlers.phonePrice = function (dataObject, callback) {
    if (dataObject.method === 'post') {
-      helpers.validateToken(dataObject.queryString.key, function (isValid) {
+      helpers.validateToken(dataObject.queryString.key, async function (isValid) {
          if (isValid) {
             const postData = dataObject.postData;
             const brand = typeof (postData.brand) === 'string' && postData.brand.trim().length > 0 ? postData.brand.trim() : false;
             const model = typeof (postData.model) === 'string' && postData.model.trim().length > 0 ? postData.model.trim() : false;
             const storage = postData.storage > 0 ? postData.storage : false;
+            let modelPromise;
             if (brand && model && storage) {
-               let query = "SELECT * FROM buy_back_phone WHERE brand LIKE '" + brand + "' AND model LIKE '" + model + "'";
+               try {
+                  modelPromise = await helpers.getAndroidDeviceName(model);
+               } catch (e) {
+                  console.error(e);
+               }
+               let query = "SELECT * FROM buy_back_phone WHERE brand LIKE '" + brand + "' AND model LIKE '" + modelPromise.name + "'";
                database.query(query, function (err, phoneData) {
                   if (err) {
                      callback(err, 500, {'res': messages.errorMessage});
