@@ -4340,6 +4340,34 @@ handlers.serviceRequest = (dataObject, callback) => {
             const model_name = typeof (dataObject.queryString.model_name) === 'string' &&
             dataObject.queryString.model_name.length > 0 ? dataObject.queryString.model_name : false;
 
+            const fetchIssues = r_id => new Promise((resolve, reject) => {
+               query = `SELECT * from service_issues WHERE request_id = '${x.id}'`;
+               database.query(query, (err, data) => {
+                  if (err) {
+                     reject(err);
+                  } else {
+                     resolve(data);
+                  }
+               });
+            });
+
+            const fetchRequests = query => database.query(query, (err, data) => {
+               if (err) {
+                  callback(err, 500, {'res': messages.errorMessage});
+               } else {
+                  const requests = data;
+                  Promise.all(data.map(x => fetchIssues(x.id))).then(datas => {
+                     for (let i = 0; i < datas.length; i++) {
+                        requests[i].issues = datas[i];
+                     }
+
+                     callback(false, 200, requests);
+                  }).catch(err => {
+                     callback(err, 500, {'res': messages.errorMessage});
+                  });
+               }
+            });
+
             if (id) {
                query = "SELECT * FROM service_requester_details WHERE id = " + id + " LIMIT 1";
                database.query(query, (err, data) => {
@@ -4348,36 +4376,13 @@ handlers.serviceRequest = (dataObject, callback) => {
                   } else {
                      const requester = data[0];
                      query = `SELECT * from service_request${id || model_name ? ` WHERE ` : ''}${!requester.employee_id ? `service_center_id = ${id}${model_name ? ` AND ` : ''}` : ''}${model_name ? `imei IN (SELECT product_imei_1 FROM inventory WHERE model_name like '${model_name}')` : ''}`;
-                     database.query(query, (err, data) => {
-                        const fetchIssues = r_id => new Promise((resolve, reject) => {
-                           query = `SELECT * from service_issues WHERE request_id = '${x.id}'`;
-                           database.query(query, (err, data) => {
-                              if (err) {
-                                 reject(err);
-                              } else {
-                                 resolve(data);
-                              }
-                           });
-                        });
-                        if (err) {
-                           callback(err, 500, {'res': messages.errorMessage});
-                        } else {
-                           const requests = data;
-                           Promise.all(data.map(x => fetchIssues(x.id))).then(datas => {
-                              for (let i = 0; i < datas.length; i++) {
-                                 requests[i].issues = datas[i];
-                              }
 
-                              callback(false, 200, requests);
-                           }).catch(err => {
-                              callback(err, 500, {'res': messages.errorMessage});
-                           });
-                        }
-                     });
+                     fetchRequests(query);
                   }
                });
             } else {
-               callback(true, 400, {'res': messages.insufficientData});
+               query = `SELECT * from service_request`;
+               fetchRequests(query);
             }
          } else if (dataObject.method === 'post') {
             const timestamp = (moment.unix(new Date().getTime() / 1000).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
