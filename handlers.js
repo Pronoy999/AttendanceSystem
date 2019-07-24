@@ -4340,8 +4340,8 @@ handlers.serviceRequest = (dataObject, callback) => {
             const model_name = typeof (dataObject.queryString.model_name) === 'string' &&
             dataObject.queryString.model_name.length > 0 ? dataObject.queryString.model_name : false;
 
-            const fetchIssues = r_id => new Promise((resolve, reject) => {
-               query = `SELECT * from service_issues WHERE request_id = '${x.id}'`;
+            const fetchIssues = (r_id) => new Promise((resolve, reject) => {
+               query = `SELECT * from service_issues WHERE request_id = '${r_id}'`;
                database.query(query, (err, data) => {
                   if (err) {
                      reject(err);
