@@ -4484,6 +4484,16 @@ handlers.serviceRequest = (dataObject, callback) => {
                   updateIssues(issues, request.id);
                }
             };
+            const updateInventory = (imei, serviceCenterId) => {
+               const query = "UPDATE inventory SET service_center=" + serviceCenterId + " WHERE product_imei_1 = '" + imei + "'";
+               database.query(query, (err, data) => {
+                  if (err) {
+                     console.error(err);
+                  } else {
+                     console.log('Inventory  Updated.');
+                  }
+               });
+            };
 
             if (imei && requester_id && request_status && service_center_id && issues && issues.length) {
                if (id) {
@@ -4498,11 +4508,14 @@ handlers.serviceRequest = (dataObject, callback) => {
                            updateRequest(request);
                         } else {
                            createRequest();
+                           updateInventory(imei, service_center_id);
                         }
                      }
                   });
                } else {
                   createRequest();
+                  console.log(imei);
+                  updateInventory(imei, service_center_id);
                }
             } else {
                callback(true, 400, {'res': messages.insufficientData});
