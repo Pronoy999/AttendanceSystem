@@ -4380,7 +4380,7 @@ handlers.serviceRequest = (dataObject, callback) => {
                callback(true, 400, {'res': messages.insufficientData});
             }
          } else if (dataObject.method === 'post') {
-            const timestamp = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
+            const timestamp = (moment.unix(new Date().getTime() / 1000).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
             const {id, imei, requester_id, service_center_id, request_status, issues} = dataObject.postData;
 
             const updateIssue = issue => new Promise((resolve, reject) => {
@@ -4438,8 +4438,9 @@ handlers.serviceRequest = (dataObject, callback) => {
             };
 
             const createIssues = (iss, r_id) => {
-               query = `INSERT INTO service_issues(id,request_id,issue_details,repair_cost,issue_status,requester_id,timestamp)
-                VALUES ${iss.map(i => `('','${r_id}','${i.issue_details}','${i.repair_cost}','${i.issue_status}','${i.requester_id}','${timestamp}')`).join(',')}`;
+               query = `INSERT INTO service_issues(id,request_id,issue_details,repair_cost,issue_status,requester_id)
+                VALUES ${iss.map(i => `('','${r_id}','${i.issue_details}','${i.repair_cost}','${i.issue_status}','${i.requester_id}')`).join(',')}`;
+               console.log(query);
                database.query(query, (err, data) => {
                   if (err) {
                      callback(err, 500, {'res': messages.errorMessage});
@@ -4450,8 +4451,8 @@ handlers.serviceRequest = (dataObject, callback) => {
             };
 
             const createRequest = () => {
-               query = `INSERT INTO service_request(id,imei,requester_id,timestamp,request_status,service_center_id)
-                VALUES('','${imei}','${requester_id}','${timestamp}','${request_status}','${service_center_id}')`;
+               query = `INSERT INTO service_request(id,imei,requester_id,request_status,service_center_id)
+                VALUES('','${imei}','${requester_id}','${request_status}','${service_center_id}')`;
                database.query(query, (err, data) => {
                   if (err) {
                      callback(err, 500, {'res': messages.errorMessage});
@@ -4506,6 +4507,8 @@ handlers.serviceRequest = (dataObject, callback) => {
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }
+         } else if (dataObject.method === 'options') {
+            callback(true, 200, {});
          } else {
             callback(true, 400, {'res': messages.invalidRequestMessage});
          }
