@@ -4324,6 +4324,40 @@ handlers.serviceRequester = (dataObject, callback) => {
    });
 };
 
+handlers.serviceIssue = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, isValid => {
+      if (isValid) {
+         if (dataObject.method === 'post') {
+            const {id, issue_details, repair_cost, requester_id, issue_status} = dataObject.postData;
+            const set_string = `${typeof issue_details !== 'undefined' ? `issue_details=${issue_details},` : ''}
+                  ${typeof repair_cost !== 'undefined' ? `repair_cost=${repair_cost},` : ''}
+                  ${typeof issue_status !== 'undefined' ? `issue_status=${issue_status},` : ''}
+                  ${typeof requester_id !== 'undefined' ? `requester_id=${requester_id},` : ''}`;
+
+            if (id && set_string.length) {
+               const query = `UPDATE service_issues SET ${set_string.substring(0, set_string.length - 1)} WHERE id=${id}`;
+               database.query(query, (err, data) => {
+                  if (err) {
+                     console.log(err);
+                     reject(err);
+                  } else {
+                     resolve(data);
+                  }
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else if (dataObject.method === 'options') {
+            callback(true, 200, {});
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(false, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+
 /**
  * Method to get the service request details for specific id.
  * @param dataObject: The Request Object.
@@ -4396,7 +4430,8 @@ handlers.serviceRequest = (dataObject, callback) => {
                   repair_cost=${issue.repair_cost},
                   issue_status=${issue.issue_status},
                   requester_id=${issue.requester_id},
-                  timestamp=${timestamp}`;
+                  timestamp=${timestamp}
+                  WHERE id=${issue.id}`;
                database.query(query, (err, data) => {
                   if (err) {
                      console.log(err);

@@ -57,6 +57,7 @@ const router = {
    'franchise': handlers.franchise,
    'service-requester': handlers.serviceRequester,
    'service-request': handlers.serviceRequest,
+   'service-issue': handlers.serviceIssueStatus,
    'email': handlers.email,
    'nda': handlers.ndaEmail
 };
