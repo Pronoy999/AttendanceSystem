@@ -4329,11 +4329,12 @@ handlers.serviceIssue = (dataObject, callback) => {
       if (isValid) {
          if (dataObject.method === 'post') {
             const {id, issue_details, repair_cost, requester_id, issue_status} = dataObject.postData;
-            const set_string = `${typeof issue_details !== 'undefined' ? `issue_details=${issue_details},` : ''}
+            let set_string = `${typeof issue_details !== 'undefined' ? `issue_details=${issue_details},` : ''}
                   ${typeof repair_cost !== 'undefined' ? `repair_cost=${repair_cost},` : ''}
                   ${typeof issue_status !== 'undefined' ? `issue_status=${issue_status},` : ''}
                   ${typeof requester_id !== 'undefined' ? `requester_id=${requester_id},` : ''}`;
 
+            set_string = set_string.trim()
             if (id && set_string.length) {
                const query = `UPDATE service_issues SET ${set_string.substring(0, set_string.length - 1)} WHERE id=${id}`;
                database.query(query, (err, data) => {
