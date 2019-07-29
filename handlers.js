@@ -4340,9 +4340,9 @@ handlers.serviceIssue = (dataObject, callback) => {
                database.query(query, (err, data) => {
                   if (err) {
                      console.log(err);
-                     reject(err);
+                     callback(true, 500, {'res': messages.errorMessage});
                   } else {
-                     resolve(data);
+                     callback(false, 200, {res: true});
                   }
                });
             } else {
