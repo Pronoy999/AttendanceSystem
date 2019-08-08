@@ -4578,6 +4578,40 @@ handlers.ndaEmail = (dataObject, callback) => {
    });
 };
 /**
+ * Handlers to put the attendance for the HRMS.
+ * @param dataObject: The request object.
+ */
+handlers.hrmsAttendance = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, (isValid) => {
+      if (isValid) {
+         if (dataObject.method === 'put') {
+            const employeeId = typeof (dataObject.postData.emp_id) === 'string' && dataObject.postData.emp_id.length > 0 ?
+               dataObject.postData.emp_id : false;
+            const event = typeof (dataObject.postData.event) === 'string' && dataObject.postData.event.length > 0 ?
+               dataObject.postData.event : false;
+            if (employeeId && event) {
+               const query = "INSERT INTO elvis_attendance_record (employee_id, event_type) " +
+                  "VALUES ((SELECT id FROM employee_details WHERE new_employee_id = '" + employeeId + "' ), '"
+                  + event + "')";
+               database.query(query, (err, result) => {
+                  if (err) {
+                     callback(true, 500, {'res': messages.errorMessage});
+                  } else {
+                     callback(false, 200, {'res': true});
+                  }
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(true, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;

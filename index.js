@@ -58,7 +58,8 @@ const router = {
    'service-requester': handlers.serviceRequester,
    'service-request': handlers.serviceRequest,
    'email': handlers.email,
-   'nda': handlers.ndaEmail
+   'nda': handlers.ndaEmail,
+   'hrms': handlers.hrmsAttendance
 };
 /**
  * Method which controls the Server.
