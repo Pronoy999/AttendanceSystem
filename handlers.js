@@ -4561,6 +4561,25 @@ handlers.serviceRequest = (dataObject, callback) => {
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }
+         } else if (dataObject.method === 'put') {
+            const {id, request_status, service_center_id} = dataObject.postData;
+            let set_string = `${typeof request_status !== 'undefined' ? `request_status=${request_status},` : ''}
+                  ${typeof service_center_id !== 'undefined' ? `service_center_id=${service_center_id},` : ''}`;
+
+            set_string = set_string.trim();
+            if (id && set_string.length) {
+               const query = `UPDATE service_request SET ${set_string.substring(0, set_string.length - 1)} WHERE id=${id}`;
+               database.query(query, (err, data) => {
+                  if (err) {
+                     console.log(err);
+                     callback(true, 500, {'res': messages.errorMessage});
+                  } else {
+                     callback(false, 200, {res: true});
+                  }
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
          } else if (dataObject.method === 'options') {
             callback(true, 200, {});
          } else {
