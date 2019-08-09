@@ -4647,13 +4647,14 @@ handlers.hrmsAttendance = (dataObject, callback) => {
             const event = typeof (dataObject.postData.event) === 'string' && dataObject.postData.event.length > 0 ?
                dataObject.postData.event : false;
             if (userId && event) {
-               const query = "INSERT INTO elvis_attendance_record (employee_id, event)" +
+               const query = "INSERT INTO elvis_attendance_record (employee_id, event_type)" +
                   " VALUES ((SELECT id " +
                   "FROM employee_details " +
                   "WHERE new_employee_id = " +
                   "(SELECT employeeId" +
-                  "FROM hrms.main_users" +
-                  "WHERE id = '" + userId + "')), '" + event + "')";
+                  " FROM hrms.main_users" +
+                  " WHERE id = '" + userId + "')), '" + event + "')";
+               console.log(query);
                database.query(query, (err, result) => {
                   if (err) {
                      callback(true, 500, {'res': messages.errorMessage});
