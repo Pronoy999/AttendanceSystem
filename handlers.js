@@ -4616,19 +4616,25 @@ handlers.ndaEmail = (dataObject, callback) => {
 /**
  * Handlers to put the attendance for the HRMS.
  * @param dataObject: The request object.
+ * @param callback
  */
 handlers.hrmsAttendance = (dataObject, callback) => {
    helpers.validateToken(dataObject.queryString.key, (isValid) => {
       if (isValid) {
          if (dataObject.method === 'put') {
-            const employeeId = typeof (dataObject.postData.emp_id) === 'string' && dataObject.postData.emp_id.length > 0 ?
-               dataObject.postData.emp_id : false;
+            console.log(dataObject.postData);
+            const userId = typeof (dataObject.postData.user_id) === 'string' && dataObject.postData.user_id.length > 0 ?
+               dataObject.postData.user_id : false;
             const event = typeof (dataObject.postData.event) === 'string' && dataObject.postData.event.length > 0 ?
                dataObject.postData.event : false;
-            if (employeeId && event) {
-               const query = "INSERT INTO elvis_attendance_record (employee_id, event_type) " +
-                  "VALUES ((SELECT id FROM employee_details WHERE new_employee_id = '" + employeeId + "' ), '"
-                  + event + "')";
+            if (userId && event) {
+               const query = "INSERT INTO elvis_attendance_record (employee_id, event)" +
+                  " VALUES ((SELECT id " +
+                  "FROM employee_details " +
+                  "WHERE new_employee_id = " +
+                  "(SELECT employeeId" +
+                  "FROM hrms.main_users" +
+                  "WHERE id = '" + userId + "')), '" + event + "')";
                database.query(query, (err, result) => {
                   if (err) {
                      callback(true, 500, {'res': messages.errorMessage});
