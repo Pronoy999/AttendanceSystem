@@ -156,6 +156,7 @@ function initWorkers() {
    workers.checkVideoUploadStatus();
    workers.generateStockServiceCSVforAccounts();
    workers.generateStockServiceCSVforOperations();
+   workers.callConfirmationNotification();
 }
 
 initWorkers();

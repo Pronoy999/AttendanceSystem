@@ -543,6 +543,75 @@ workers.orderStatusRemainder = () => {
    });
 };
 /**
+ * Method to send the Email notification for Call Confirmation Order.
+ */
+workers.callConfirmationNotification = () => {
+   schedule.scheduleJob("* */4 * * *", () => {
+      const query = "select od.channel_order_id," +
+         "od.channel_name," +
+         "od.product_details," +
+         "od.customer_name," +
+         "od.shipping_address," +
+         "status.status," +
+         "order_status," +
+         "TIME_FORMAT(timediff(now(), od.order_date), \"%H\") as day " +
+         "from diagnostic_app.order_details od," +
+         "     diagnostic_app.order_status_details status " +
+         "where od.order_status in (1)" +
+         "  and status.id = od.order_status";
+      database.query(query, (err, results) => {
+         if (err) {
+            console.error(err);
+         } else {
+            if (results.length > 0) {
+               let mainEmail = messages.ORDER_STATUS_MESSAGE;
+               let emailBody = "";
+               for (let i = 0; i < results.length; i++) {
+                  let shouldEscalate = false;
+                  let email = messages.ORDER_STATUS_MESSAGE_1;
+                  const oneData = results[i];
+                  const orderId = oneData.channel_order_id.substring(0, oneData.channel_order_id.lastIndexOf('-')) || oneData.channel_order_id;
+                  const channelName = oneData.channel_name;
+                  const product = oneData.product_details;
+                  const customername = oneData.customer_name;
+                  const orderStatus = oneData.status;
+                  const time = oneData.day;
+                  email = email.replace("%n", orderId);
+                  email = email.replace("%l", channelName);
+                  email = email.replace("%f", orderStatus);
+                  email = email.replace("%cn", customername);
+                  email = email.replace("%p", product);
+                  email = email.replace("%d", time);
+                  emailBody += email;
+                  if (time < 2) {
+                     mainEmail.replace("%rm", "Monalisa");
+                  } else if (time > 2) {
+                     shouldEscalate = true;
+                     mainEmail.replace("%rm", "Satanik");
+                  }
+                  mainEmail += emailBody + messages.ORDER_STATUS_MESSAGE_2;
+                  if (shouldEscalate) {
+                     helpers.sendEmail("satanik@hyperxchange.com", "Call Confirmation needed",
+                        mainEmail, "admin@hyperxchange.com", null).then(() => {
+                        console.log("CALL Confirmation Email sent.");
+                     }).catch(err => {
+                        console.error(err);
+                     });
+                  } else {
+                     helpers.sendEmail("sales@hyperxchange.com", "Call Confirmation needed",
+                        mainEmail, "admin@hyperxchange.com", null).then(() => {
+                        console.log("CALL Confirmation Email sent.");
+                     }).catch(err => {
+                        console.error(err);
+                     });
+                  }
+               }
+            }
+         }
+      });
+   });
+};
+/**
  * Exporting the Worker module.
  */
 module.exports = workers;
