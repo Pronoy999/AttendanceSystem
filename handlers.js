@@ -4057,7 +4057,7 @@ handlers.devNames = function (dataObject, callback) {
 
                      if (code) {
                         // insert into ios_device_codes
-                        let query = `INSERT INTO ios_device_codes VALUES (null,'${name}','${code}')`
+                        let query = `INSERT INTO ios_device_codes VALUES (null,'${name}','${code}')`;
                         database.query(query, (err, insertData) => {
                            if (err) {
                               console.error(err.stack);
@@ -4097,7 +4097,7 @@ handlers.devNames = function (dataObject, callback) {
                      }
 
                      // insert into android_device_names
-                     let query = `INSERT INTO android_device_names VALUES (null,'${name}','${model}','${code}')`
+                     let query = `INSERT INTO android_device_names VALUES (null,'${name}','${model}','${code}')`;
 
                      database.query(query, (err, insertData) => {
                         if (err) {
@@ -4334,7 +4334,7 @@ handlers.serviceIssue = (dataObject, callback) => {
                   ${typeof issue_status !== 'undefined' ? `issue_status=${issue_status},` : ''}
                   ${typeof requester_id !== 'undefined' ? `requester_id=${requester_id},` : ''}`;
 
-            set_string = set_string.trim()
+            set_string = set_string.trim();
             if (id && set_string.length) {
                const query = `UPDATE service_issues SET ${set_string.substring(0, set_string.length - 1)} WHERE id=${id}`;
                database.query(query, (err, data) => {
@@ -4343,6 +4343,31 @@ handlers.serviceIssue = (dataObject, callback) => {
                      callback(true, 500, {'res': messages.errorMessage});
                   } else {
                      callback(false, 200, {res: true});
+                  }
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else if (dataObject.method === 'get') {
+            const requestId = 1;/*typeof (dataObject.postData.request_id) === 'number' && dataObject.postData.request_id > 0 ?
+               dataObject.postData.request_id : false;*/
+            const acceptedIssues = (dataObject.postData.accepted_issues) instanceof Array ?
+               dataObject.postData.accepted_issues : false;
+            if (requestId && !acceptedIssues) {
+               const issuesQuery = `SELECT id FROM service_issues WHERE request_id=${requestId}`;
+               database.query(issuesQuery, (err, results) => {
+                  console.log(results);
+                  if (err) {
+                     console.error(err);
+                  } else {
+                     const unsolvedIssues = results.filter((x) => {
+                        return acceptedIssues.indexOf(x.id) < 0;
+                     });
+                     if (unsolvedIssues.length > 0) {
+
+                     } else {
+                        //TODO: All Issues are solved.
+                     }
                   }
                });
             } else {

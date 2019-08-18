@@ -584,10 +584,10 @@ workers.callConfirmationNotification = () => {
                   email = email.replace("%d", time);
                   emailBody += email;
                   if (time < 2) {
-                     mainEmail.replace("%rm", "Monalisa");
+                     mainEmail = mainEmail.replace("%rm", "Monalisa");
                   } else if (time > 2) {
                      shouldEscalate = true;
-                     mainEmail.replace("%rm", "Satanik");
+                     mainEmail = mainEmail.replace("%rm", "Satanik");
                   }
                   mainEmail += emailBody + messages.ORDER_STATUS_MESSAGE_2;
                   if (shouldEscalate) {
