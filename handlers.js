@@ -4414,7 +4414,8 @@ handlers.serviceIssue = (dataObject, callback) => {
                      } else {
                         const query = "UPDATE service_request SET request_status=4 WHERE id =" + requestId;
                         const issueQuery = "UPDATE service_issues SET issue_status=4 WHERE request_id = " + requestId;
-                        //TODO:Update the inventory.
+                        const inventoryQuery = "UPDATE inventory i,service_request r SET i.service_stock=2" +
+                           " WHERE r.id= " + requestId + " AND i.product_imei_1 = r.imei";
                         database.query(query, (err, results) => {
                            if (err) {
                               console.error(err);
@@ -4428,6 +4429,13 @@ handlers.serviceIssue = (dataObject, callback) => {
                               console.error(err);
                            } else {
                               console.log("Issues status changed to close.");
+                           }
+                        });
+                        database.query(inventoryQuery, (err, result) => {
+                           if (err) {
+                              console.error(err);
+                           } else {
+                              console.log("Device Put back to Stock.");
                            }
                         });
                      }
