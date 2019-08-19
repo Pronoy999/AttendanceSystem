@@ -4323,7 +4323,11 @@ handlers.serviceRequester = (dataObject, callback) => {
       }
    });
 };
-
+/**
+ * Handler for Service Issues.
+ * @param dataObject: The dataObject.
+ * @param callback: The method callback.
+ */
 handlers.serviceIssue = (dataObject, callback) => {
    helpers.validateToken(dataObject.queryString.key, isValid => {
       if (isValid) {
@@ -4445,7 +4449,22 @@ handlers.serviceIssue = (dataObject, callback) => {
                callback(true, 400, {'res': messages.insufficientData});
             }
          } else if (dataObject.method === 'get') {
-
+            console.log(typeof (dataObject.queryString.imei));
+            const imei = dataObject.queryString.imei > 0 ? dataObject.queryString.imei : false;
+            if (imei) {
+               const query = "SELECT i.* FROM service_request r,service_issues i WHERE r.imei='" + imei + "' " +
+                  "AND i.request_id=r.id AND i.issue_status=3";
+               database.query(query, (err, results) => {
+                  if (err) {
+                     console.error(err);
+                     callback(err, 500, {'res': messages.errorMessage});
+                  } else {
+                     callback(false, 200, {'res': results});
+                  }
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
          } else if (dataObject.method === 'options') {
             callback(true, 200, {});
          } else {
