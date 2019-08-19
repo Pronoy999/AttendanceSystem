@@ -4348,15 +4348,14 @@ handlers.serviceIssue = (dataObject, callback) => {
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }
-         } else if (dataObject.method === 'get') {
-            const requestId = 1;/*typeof (dataObject.postData.request_id) === 'number' && dataObject.postData.request_id > 0 ?
-               dataObject.postData.request_id : false;*/
+         } else if (dataObject.method === 'put') {
+            const requestId = typeof (dataObject.postData.request_id) === 'number' && dataObject.postData.request_id > 0 ?
+               dataObject.postData.request_id : false;
             const acceptedIssues = (dataObject.postData.accepted_issues) instanceof Array ?
                dataObject.postData.accepted_issues : false;
-            if (requestId && !acceptedIssues) {
+            if (requestId && acceptedIssues) {
                const issuesQuery = `SELECT id FROM service_issues WHERE request_id=${requestId}`;
                database.query(issuesQuery, (err, results) => {
-                  console.log(results);
                   if (err) {
                      console.error(err);
                   } else {
@@ -4364,9 +4363,70 @@ handlers.serviceIssue = (dataObject, callback) => {
                         return acceptedIssues.indexOf(x.id) < 0;
                      });
                      if (unsolvedIssues.length > 0) {
-
+                        let unsolvedIssuesId = "", solvedIssuesId = "";
+                        for (let i = 0; i < unsolvedIssues.length; i++) {
+                           unsolvedIssuesId += unsolvedIssues[i].id + ",";
+                        }
+                        unsolvedIssuesId = unsolvedIssuesId.substr(0, unsolvedIssuesId.length - 1);
+                        const query = "UPDATE service_issues SET issue_status=3 WHERE id IN (" + unsolvedIssuesId + ")";
+                        const requestQuery = "UPDATE service_request SET request_status=5 WHERE id=" + requestId;
+                        database.query(query, (err, result) => {
+                           if (err) {
+                              console.error(err);
+                           } else {
+                              console.log("Issue Status changed to NOT SOLVED.");
+                           }
+                        });
+                        if (acceptedIssues.length > 0) {
+                           for (let i = 0; i < acceptedIssues.length; i++) {
+                              solvedIssuesId += acceptedIssues[i] + ",";
+                           }
+                           solvedIssuesId = solvedIssuesId.substr(0, solvedIssuesId.length - 1);
+                           const solvedIssuesQuery = "UPDATE service_issues SET issue_status=4 WHERE id IN (" + solvedIssuesId + ")";
+                           database.query(solvedIssuesQuery, (err, results) => {
+                              if (err) {
+                                 console.error(err);
+                              } else {
+                                 console.log("Issue status changed to Solved for Solved issues.");
+                              }
+                           });
+                        }
+                        database.query(requestQuery, (err, result) => {
+                           if (err) {
+                              console.error(err);
+                           } else {
+                              console.log("Service Request Status changed to NOT COMPLETED.");
+                           }
+                        });
+                        //Sending Response After this Query only.
+                        const inventoryQuery = "UPDATE inventory i,service_request r SET i.service_center=2" +
+                           " WHERE r.id= " + requestId + " AND i.product_imei_1 = r.imei";
+                        database.query(inventoryQuery, (err, result) => {
+                           if (err) {
+                              console.error(err);
+                           } else {
+                              callback(false, 200, {'res': true});
+                              console.log("Inventory Service Center Updated to NOT ASSIGNED.");
+                           }
+                        });
                      } else {
-                        //TODO: All Issues are solved.
+                        const query = "UPDATE service_request SET request_status=4 WHERE id =" + requestId;
+                        const issueQuery = "UPDATE service_issues SET issue_status=4 WHERE request_id = " + requestId;
+                        database.query(query, (err, results) => {
+                           if (err) {
+                              console.error(err);
+                              callback(err, 500, {'res': messages.errorMessage});
+                           } else {
+                              callback(false, 200, {'res': true});
+                           }
+                        });
+                        database.query(issueQuery, (err, result) => {
+                           if (err) {
+                              console.error(err);
+                           } else {
+                              console.log("Issues status changed to close.");
+                           }
+                        });
                      }
                   }
                });
