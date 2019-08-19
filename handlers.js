@@ -4368,7 +4368,8 @@ handlers.serviceIssue = (dataObject, callback) => {
                            unsolvedIssuesId += unsolvedIssues[i].id + ",";
                         }
                         unsolvedIssuesId = unsolvedIssuesId.substr(0, unsolvedIssuesId.length - 1);
-                        const query = "UPDATE service_issues SET issue_status=3 WHERE id IN (" + unsolvedIssuesId + ")";
+                        const query = "UPDATE service_issues SET issue_status=3 WHERE id " +
+                           "IN (" + unsolvedIssuesId + ") AND issue_status=1";
                         const requestQuery = "UPDATE service_request SET request_status=5 WHERE id=" + requestId;
                         database.query(query, (err, result) => {
                            if (err) {
@@ -4382,7 +4383,8 @@ handlers.serviceIssue = (dataObject, callback) => {
                               solvedIssuesId += acceptedIssues[i] + ",";
                            }
                            solvedIssuesId = solvedIssuesId.substr(0, solvedIssuesId.length - 1);
-                           const solvedIssuesQuery = "UPDATE service_issues SET issue_status=4 WHERE id IN (" + solvedIssuesId + ")";
+                           const solvedIssuesQuery = "UPDATE service_issues SET issue_status=4 WHERE id " +
+                              "IN (" + solvedIssuesId + ") AND issue_status=1";
                            database.query(solvedIssuesQuery, (err, results) => {
                               if (err) {
                                  console.error(err);
@@ -4412,6 +4414,7 @@ handlers.serviceIssue = (dataObject, callback) => {
                      } else {
                         const query = "UPDATE service_request SET request_status=4 WHERE id =" + requestId;
                         const issueQuery = "UPDATE service_issues SET issue_status=4 WHERE request_id = " + requestId;
+                        //TODO:Update the inventory.
                         database.query(query, (err, results) => {
                            if (err) {
                               console.error(err);
@@ -4433,6 +4436,8 @@ handlers.serviceIssue = (dataObject, callback) => {
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }
+         } else if (dataObject.method === 'get') {
+
          } else if (dataObject.method === 'options') {
             callback(true, 200, {});
          } else {
