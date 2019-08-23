@@ -2356,13 +2356,21 @@ handlers.phonePrice = function (dataObject, callback) {
             const model = typeof (postData.model) === 'string' && postData.model.trim().length > 0 ? postData.model.trim() : false;
             const storage = postData.storage > 0 ? postData.storage : false;
             let modelPromise;
+            try {
+               if (model && storage && !brand) {
+                  modelPromise = await helpers.getiOSDeviceName(model);
+               }
+            } catch (e) {
+               console.error(e);
+            }
             if (brand && model && storage) {
                try {
                   modelPromise = await helpers.getAndroidDeviceName(model);
                } catch (e) {
                   console.error(e);
                }
-               let query = "SELECT * FROM buy_back_phone WHERE brand LIKE '" + brand + "' AND model LIKE '" + modelPromise.name + "'";
+               let modelName = typeof (modelPromise.name) !== 'undefined' ? modelPromise.name : model;
+               let query = "SELECT * FROM buy_back_phone WHERE brand LIKE '" + brand + "' AND model LIKE '" + modelName + "'";
                database.query(query, function (err, phoneData) {
                   if (err) {
                      callback(err, 500, {'res': messages.errorMessage});
@@ -4536,146 +4544,105 @@ handlers.serviceRequest = (dataObject, callback) => {
                fetchRequests(query);
             }
          } else if (dataObject.method === 'post') {
-            const timestamp = (moment.unix(new Date().getTime() / 1000).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ');
-            const {id, imei, requester_id, service_center_id, request_status, issues} = dataObject.postData;
+            const imei = dataObject.postData.imei.length > 0 ? dataObject.postData.imei : false;
+            const serviceCenterId = dataObject.postData.service_center_id > 0 ? dataObject.postData.service_center_id : false;
+            const requesterId = dataObject.postData.requester_id > 0 ? dataObject.postData.requester_id : false;
+            const issues = dataObject.postData.issues instanceof Array ? dataObject.postData.issues : false;
 
-            const updateIssue = issue => new Promise((resolve, reject) => {
-               query =
-                  `UPDATE service_issues SET
-                  request_id=${issue.request_id},
-                  issue_details=${issue.issue_details},
-                  repair_cost=${issue.repair_cost},
-                  issue_status=${issue.issue_status},
-                  requester_id=${issue.requester_id},
-                  timestamp=${timestamp}
-                  WHERE id=${issue.id}`;
-               database.query(query, (err, data) => {
-                  if (err) {
-                     console.log(err);
-                     reject(err);
-                  } else {
-                     resolve(data);
-                  }
-               });
-            });
-
-            const updateIssues = (issues, r_id) => {
-               query = "SELECT * from service_issues WHERE request_id = " + id;
-               database.query(query, (err, data) => {
-                  if (data && data.length) {
-                     const issuesToBeCreated = [];
-                     const issuesToBeUpdatedPromises = [];
-                     for (let i = 0; i < issues.length; i++) {
-                        const oldIssues = issues[i].id ? data.filter(x => x.id === issues[i].id) : [];
-                        if (oldIssues.length) {
-                           if (!helpers.isEquivalent(oldIssues[0], issues[i])) {
-                              issuesToBeUpdatedPromises.push(updateIssue(issues[i]));
-                           }
-                        } else {
-                           issuesToBeCreated.push(issues[i]);
-                        }
-                     }
-
-                     if (issuesToBeUpdatedPromises.length) {
-                        Promise.all(issuesToBeUpdatedPromises).then(x => {
-                        }).catch(err => {
-                           callback(err, 500, {'res': messages.errorMessage});
-                        })
-                     }
-
-                     if (issuesToBeCreated.length) {
-                        createIssues(issuesToBeCreated, r_id);
-                     } else {
-                        callback(false, 200, {res: true});
-                     }
-                  } else {
-                     createIssues(issues, r_id);
-                  }
-               });
-            };
-
-            const createIssues = (iss, r_id) => {
-               query = `INSERT INTO service_issues(id,request_id,issue_details,repair_cost,issue_status,requester_id)
-                VALUES ${iss.map(i => `('','${r_id}','${i.issue_details}','${i.repair_cost}','${i.issue_status}','${i.requester_id}')`).join(',')}`;
-               console.log(query);
-               database.query(query, (err, data) => {
-                  if (err) {
-                     callback(err, 500, {'res': messages.errorMessage});
-                  } else {
-                     callback(false, 200, {res: true});
-                  }
-               });
-            };
-
-            const createRequest = () => {
-               query = `INSERT INTO service_request(id,imei,requester_id,request_status,service_center_id)
-                VALUES('','${imei}','${requester_id}','${request_status}','${service_center_id}')`;
-               database.query(query, (err, data) => {
-                  if (err) {
-                     callback(err, 500, {'res': messages.errorMessage});
-                  } else {
-                     createIssues(issues, data.insertId);
-                  }
-               });
-            };
-
-            const updateRequest = request => {
-               if (!helpers.isEquivalent({...dataObject.postData, issues: null}, {...request, issues: null})) {
-                  // update the request actually
-                  query =
-                     `UPDATE service_request 
-                     SET imei=${imei},
-                     requester_id=${requester_id},
-                     timestamp=${request.timestamp || timestamp},
-                     request_status=${request_status},
-                     service_center_id=${service_center_id}
-                     WHERE id=${id}`;
-                  database.query(query, (err, data) => {
+            const getNotCompletedRequest = (imei) => {
+               return new Promise((resolve, reject) => {
+                  const requestQuery = "SELECT * FROM service_request WHERE imei = '" + imei + "' AND request_status=5";
+                  database.query(requestQuery, (err, result) => {
                      if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
+                        console.error(err);
+                        reject(err);
                      } else {
-                        updateIssues(issues, request.id);
-                     }
-                  });
-               } else {
-                  updateIssues(issues, request.id);
-               }
-            };
-            const updateInventory = (imei, serviceCenterId) => {
-               const query = "UPDATE inventory SET service_center=" + serviceCenterId + " WHERE product_imei_1 = '" + imei + "'";
-               database.query(query, (err, data) => {
-                  if (err) {
-                     console.error(err);
-                  } else {
-                     console.log('Inventory  Updated.');
-                  }
-               });
-            };
-
-            if (imei && requester_id && request_status && service_center_id && issues && issues.length) {
-               if (id) {
-                  // update table row
-                  query = "SELECT * from service_request WHERE id = " + id;
-                  database.query(query, (err, data) => {
-                     if (err) {
-                        callback(err, 500, {'res': messages.errorMessage});
-                     } else {
-                        if (data.length) {
-                           const request = data[0];
-                           updateRequest(request);
+                        if (result.length > 0) {
+                           resolve(result[0].id);
                         } else {
-                           createRequest();
-                           updateInventory(imei, service_center_id);
+                           resolve(false);
                         }
                      }
                   });
-               } else {
-                  createRequest();
-                  console.log(imei);
-                  updateInventory(imei, service_center_id);
-               }
+               });
+            };
+            const getNotSolvedIssues = (requestId) => {
+               return new Promise((resolve, reject) => {
+                  const issuesQuery = "SELECT issue_details,repair_cost" +
+                     " FROM service_issues WHERE request_id=" + requestId + " AND issue_status=3";
+                  database.query(issuesQuery, (err, result) => {
+                     if (err) {
+                        console.error(err);
+                        reject(err);
+                     } else {
+                        resolve(result);
+                     }
+                  });
+               });
+            };
+            const createRequest = (serviceCenterId, imei, requesterId) => {
+               return new Promise((resolve, reject) => {
+                  const query = "INSERT INTO service_request (imei, requester_id, timestamp, request_status, service_center_id) " +
+                     "VALUE ('" + imei + "','" + requesterId + "',NOW(),1," + serviceCenterId + ")";
+                  database.query(query, (err, result) => {
+                     if (err) {
+                        console.error(err);
+                        reject(err);
+                     } else {
+                        resolve(result.insertId);
+                     }
+                  })
+               });
+            };
+            const insertIssues = (requestId, requesterId, issues) => {
+               return new Promise((resolve, reject) => {
+                  const query = "INSERT INTO service_issues (request_id, issue_details, repair_cost, issue_status, requester_id," +
+                     " timestamp) " +
+                     "VALUES " + issues.map(i => "(" + requestId + ",'" + i.issue_details + "'," + i.repair_cost + ",1," +
+                        requesterId + ",NOW())").join(",");
+                  console.log(query);
+                  database.query(query, (err, result) => {
+                     if (err) {
+                        console.error(err);
+                        reject(err);
+                     } else {
+                        resolve(true);
+                     }
+                  });
+               });
+            };
+            const updateRequestStatus = (requestId, updatedStatus) => {
+               return new Promise((resolve, reject) => {
+                  const query = "UPDATE service_request SET request_status = " + updatedStatus + " WHERE id=" + requesterId;
+                  database.query(query, (err, result) => {
+                     if (err) {
+                        console.error(err);
+                        reject(err);
+                     } else {
+                        resolve(true);
+                     }
+                  });
+               });
+            };
+            if (imei && serviceCenterId && requesterId && issues) {
+               getNotCompletedRequest(imei).then(existingRequestId => {
+                  getNotSolvedIssues(existingRequestId).then(existingIssues => {
+                     existingIssues.map(e => issues.push(e));
+                     console.log(issues);
+                     createRequest(serviceCenterId, imei, requesterId).then(requestId => {
+                        insertIssues(requestId, requesterId, issues).then(() => {
+                           updateRequestStatus(existingRequestId, 6).then(() => {
+                              callback(false, 200, {'res': true});
+                           });
+                        });
+                     });
+                  });
+               }).catch(err => {
+                  console.error(err);
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
             } else {
-               callback(true, 400, {'res': messages.insufficientData});
+               callback(false, 400, {'res': messages.insufficientData});
             }
          } else if (dataObject.method === 'put') {
             const id = typeof (dataObject.postData.id) === 'number' && dataObject.postData.id > 0 ?
