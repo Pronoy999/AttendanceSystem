@@ -4613,7 +4613,7 @@ handlers.serviceRequest = (dataObject, callback) => {
             };
             const updateRequestStatus = (requestId, updatedStatus) => {
                return new Promise((resolve, reject) => {
-                  const query = "UPDATE service_request SET request_status = " + updatedStatus + " WHERE id=" + requesterId;
+                  const query = "UPDATE service_request SET request_status = " + updatedStatus + " WHERE id=" + requestId;
                   database.query(query, (err, result) => {
                      if (err) {
                         console.error(err);
@@ -4622,6 +4622,16 @@ handlers.serviceRequest = (dataObject, callback) => {
                         resolve(true);
                      }
                   });
+               });
+            };
+            const updateInventoryServiceCenter = (imei, serviceCenter) => {
+               const query = "UPDATE inventory SET service_center=" + serviceCenter + " WHERE product_imei_1 = '" + imei + "'";
+               database.query(query, (err, result) => {
+                  if (err) {
+                     console.error(err);
+                  } else {
+                     console.log("Inventory's service Center Assigned.");
+                  }
                });
             };
             if (imei && serviceCenterId && requesterId && issues) {
@@ -4633,6 +4643,7 @@ handlers.serviceRequest = (dataObject, callback) => {
                         insertIssues(requestId, requesterId, issues).then(() => {
                            updateRequestStatus(existingRequestId, 6).then(() => {
                               callback(false, 200, {'res': true});
+                              updateInventoryServiceCenter(imei, serviceCenterId);
                            });
                         });
                      });
