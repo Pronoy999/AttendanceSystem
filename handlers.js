@@ -2355,48 +2355,52 @@ handlers.phonePrice = function (dataObject, callback) {
             const brand = typeof (postData.brand) === 'string' && postData.brand.trim().length > 0 ? postData.brand.trim() : false;
             const model = typeof (postData.model) === 'string' && postData.model.trim().length > 0 ? postData.model.trim() : false;
             const storage = postData.storage > 0 ? postData.storage : false;
-            let modelPromise;
+            let modelName, pricePromise;
+            const getPhonePrice = (brand, modelName) => {
+               return new Promise((resolve, reject) => {
+                  let query = "SELECT * FROM buy_back_phone WHERE brand LIKE '" + brand + "' AND model LIKE '" + modelName + "'";
+                  database.query(query, function (err, phoneData) {
+                     if (err) {
+                        callback(err, 500, {'res': messages.errorMessage});
+                     } else {
+                        try {
+                           const id = phoneData[0].id;
+                           query = "SELECT * FROM buy_back_phone_price WHERE phoneId = " + id;
+                           database.query(query, function (err, priceData) {
+                              if (err) {
+                                 reject(err);
+                              } else {
+                                 const response = {
+                                    'storage': priceData[0].storage,
+                                    'ram': priceData[0].ram,
+                                    'price': priceData[0].price
+                                 };
+                                 resolve(response);
+                              }
+                           });
+                        } catch (e) {
+                           reject(e);
+                        }
+                     }
+                  });
+               });
+            };
             try {
-               if (model && storage && !brand) {
-                  modelPromise = await helpers.getiOSDeviceName(model);
+               if (brand && model && storage) {
+                  modelName = await helpers.getAndroidDeviceName(model);
+                  pricePromise = getPhonePrice(brand, modelName);
+               } else if (model && storage) {
+                  modelName = await helpers.getiOSDeviceName(model, model);
+                  pricePromise = getPhonePrice('Apple', modelName);
+               } else {
+                  callback(false, 400, {'res': messages.insufficientData});
                }
+               pricePromise.then(priceData => {
+                  callback(false, 200, {'res': priceData});
+               });
             } catch (e) {
                console.error(e);
-            }
-            if (brand && model && storage) {
-               try {
-                  modelPromise = await helpers.getAndroidDeviceName(model);
-               } catch (e) {
-                  console.error(e);
-               }
-               let modelName = typeof (modelPromise.name) !== 'undefined' ? modelPromise.name : model;
-               let query = "SELECT * FROM buy_back_phone WHERE brand LIKE '" + brand + "' AND model LIKE '" + modelName + "'";
-               database.query(query, function (err, phoneData) {
-                  if (err) {
-                     callback(err, 500, {'res': messages.errorMessage});
-                  } else {
-                     try {
-                        const id = phoneData[0].id;
-                        query = "SELECT * FROM buy_back_phone_price WHERE phoneId = " + id;
-                        database.query(query, function (err, priceData) {
-                           if (err) {
-                              callback(err, 500, {'res': messages.errorMessage});
-                           } else {
-                              const response = {
-                                 'storage': priceData[0].storage,
-                                 'ram': priceData[0].ram,
-                                 'price': priceData[0].price
-                              };
-                              callback(false, 200, {'res': response});
-                           }
-                        });
-                     } catch (e) {
-                        callback(true, 400, {'res': "Phone doesn't exists."});
-                     }
-                  }
-               });
-            } else {
-               callback(true, 400, {'res': messages.insufficientData});
+               callback(e, 500, {'res': messages.errorMessage});
             }
          } else {
             callback(true, 403, {'res': messages.tokenExpiredMessage});
