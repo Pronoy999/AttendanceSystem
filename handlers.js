@@ -4413,6 +4413,7 @@ handlers.serviceIssue = (dataObject, callback) => {
                            if (err) {
                               console.error(err);
                            } else {
+                              callback(false, 200, {'res': true});
                               console.log("Service Request Status changed to NOT COMPLETED.");
                            }
                         });
@@ -4423,7 +4424,7 @@ handlers.serviceIssue = (dataObject, callback) => {
                            if (err) {
                               console.error(err);
                            } else {
-                              callback(false, 200, {'res': true});
+
                               console.log("Inventory Service Center Updated to NOT ASSIGNED.");
                            }
                         });
@@ -4447,13 +4448,6 @@ handlers.serviceIssue = (dataObject, callback) => {
                               console.log("Issues status changed to close.");
                            }
                         });
-                        database.query(inventoryQuery, (err, result) => {
-                           if (err) {
-                              console.error(err);
-                           } else {
-                              console.log("Device Put back to Stock.");
-                           }
-                        });
                      }
                   }
                });
@@ -4462,7 +4456,8 @@ handlers.serviceIssue = (dataObject, callback) => {
             }
          } else if (dataObject.method === 'get') {
             const imei = dataObject.queryString.imei.length > 0 ? dataObject.queryString.imei : false;
-            if (imei) {
+            const updateInventoryFlag = typeof (dataObject.queryString.flag) !== 'undefined' ? dataObject.queryString.flag : false;
+            if (imei && !updateInventoryFlag) {
                const query = "SELECT i.* FROM service_request r,service_issues i WHERE r.imei='" + imei + "' " +
                   "AND i.request_id=r.id AND i.issue_status=3";
                database.query(query, (err, results) => {
@@ -4471,6 +4466,17 @@ handlers.serviceIssue = (dataObject, callback) => {
                      callback(err, 500, {'res': messages.errorMessage});
                   } else {
                      callback(false, 200, {'res': results});
+                  }
+               });
+            } else if (imei && updateInventoryFlag) {
+               const inventoryQuery = "UPDATE inventory  SET i.service_stock=2" +
+                  " WHERE product_imei_1 = '" + imei + "'";
+               database.query(inventoryQuery, (err, result) => {
+                  if (err) {
+                     console.error(err);
+                  } else {
+                     callback(false, 200, {'res': true});
+                     console.log("Device Put back to Stock.");
                   }
                });
             } else {
