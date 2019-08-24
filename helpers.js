@@ -780,15 +780,15 @@ helpers.getiOSDeviceName = (model, codename) => {
       }
 
       let query = `SELECT d_name as name,color,model FROM ios_device_names WHERE model like '%${model.slice(1)}' LIMIT 1`
-
+      console.log(query);
       database.query(query, (err, data) => {
          if (err || data.length < 1) {
             // reject(err)
             query = `SELECT d_name as name,codename FROM ios_device_codes WHERE codename LIKE '${codename}'`
-
+            console.log(query);
             database.query(query, (err, dataX) => {
                if (err || dataX.length < 1) {
-                  reject(err);
+                  resolve(model);
                } else {
                   resolve({color: '', model, ...dataX[0]});
                }
