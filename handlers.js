@@ -4456,8 +4456,8 @@ handlers.serviceIssue = (dataObject, callback) => {
             }
          } else if (dataObject.method === 'get') {
             const imei = dataObject.queryString.imei.length > 0 ? dataObject.queryString.imei : false;
-            const updateInventoryFlag = typeof (dataObject.queryString.flag) !== 'undefined' ? dataObject.queryString.flag : false;
-            if (imei && !updateInventoryFlag) {
+            const requestId = typeof (dataObject.queryString.request_id) !== 'undefined' ? dataObject.queryString.request_id : false;
+            if (imei && !requestId) {
                const query = "SELECT i.* FROM service_request r,service_issues i WHERE r.imei='" + imei + "' " +
                   "AND i.request_id=r.id AND i.issue_status=3";
                database.query(query, (err, results) => {
@@ -4468,8 +4468,8 @@ handlers.serviceIssue = (dataObject, callback) => {
                      callback(false, 200, {'res': results});
                   }
                });
-            } else if (imei && updateInventoryFlag) {
-               const inventoryQuery = "UPDATE inventory  SET i.service_stock=2" +
+            } else if (imei && requestId) {
+               const inventoryQuery = "UPDATE inventory  SET service_stock=2" +
                   " WHERE product_imei_1 = '" + imei + "'";
                database.query(inventoryQuery, (err, result) => {
                   if (err) {
@@ -4477,6 +4477,14 @@ handlers.serviceIssue = (dataObject, callback) => {
                   } else {
                      callback(false, 200, {'res': true});
                      console.log("Device Put back to Stock.");
+                  }
+               });
+               const serviceQuery = "UPDATE service_request SET request_status=7 WHERE id = " + requestId;
+               database.query(serviceQuery, (err, result) => {
+                  if (err) {
+                     console.error(err);
+                  } else {
+                     console.log("Service Request Expired.");
                   }
                });
             } else {
