@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 const http = require('http');
 const url = require('url');
+const https = require('https');
+const fs = require('fs');
 const StringDecoder = require('string_decoder').StringDecoder;
 const handlers = require('./handlers');
 const helpers = require('./helpers');
@@ -61,6 +63,10 @@ const router = {
    'email': handlers.email,
    'nda': handlers.ndaEmail,
    'hrms': handlers.hrmsAttendance
+};
+const httpsOptions = {
+   key: fs.readFileSync("/etc/apache2/ssl/keys/YibealTradexPvtKey.key"),
+   cert: fs.readFileSync("/etc/apache2/ssl/certs/4a27cdd3b35d1c11.crt")
 };
 /**
  * Method which controls the Server.
@@ -130,6 +136,9 @@ const unifiedServer = function (req, res) {
       });
    }
 };
+const httpsServer = https.createServer(httpsOptions, (req, res) => {
+   unifiedServer(req, res);
+});
 /**
  * Method to create the Server.
  */
@@ -142,6 +151,12 @@ const httpServer = http.createServer(function (req, res) {
  */
 httpServer.listen(7009, function () {
    console.log("Server Listening on Port 7009");
+});
+/**
+ * Method to listen on HTTPS Port.
+ */
+httpsServer.listen(7011, () => {
+   console.log("HTTPS Server Listening on Port 7011");
 });
 
 /**

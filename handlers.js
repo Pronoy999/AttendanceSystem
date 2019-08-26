@@ -4566,6 +4566,8 @@ handlers.serviceRequest = (dataObject, callback) => {
             const serviceCenterId = dataObject.postData.service_center_id > 0 ? dataObject.postData.service_center_id : false;
             const requesterId = dataObject.postData.requester_id > 0 ? dataObject.postData.requester_id : false;
             const issues = dataObject.postData.issues instanceof Array ? dataObject.postData.issues : false;
+            const requestId = dataObject.postData.request_id > 0 ? dataObject.postData.request_id : false;
+
 
             const getNotCompletedRequest = (imei) => {
                return new Promise((resolve, reject) => {
@@ -4665,6 +4667,15 @@ handlers.serviceRequest = (dataObject, callback) => {
                            });
                         });
                      });
+                  });
+               }).catch(err => {
+                  console.error(err);
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else if (requestId && issues && requesterId) {
+               updateRequestStatus(requestId, 1).then(() => {
+                  insertIssues(requestId, requesterId, issues).then(() => {
+                     callback(false, 200, {'res': true});
                   });
                }).catch(err => {
                   console.error(err);
