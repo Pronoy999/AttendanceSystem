@@ -4457,9 +4457,11 @@ handlers.serviceIssue = (dataObject, callback) => {
          } else if (dataObject.method === 'get') {
             const imei = dataObject.queryString.imei.length > 0 ? dataObject.queryString.imei : false;
             const requestId = typeof (dataObject.queryString.request_id) !== 'undefined' ? dataObject.queryString.request_id : false;
+            const issueStatus = dataObject.queryString.issue_status > 0 ? dataObject.queryString.issue_status : 3;
             if (imei && !requestId) {
                const query = "SELECT i.* FROM service_request r,service_issues i WHERE r.imei='" + imei + "' " +
-                  "AND i.request_id=r.id AND i.issue_status=3";
+                  "AND i.request_id=r.id AND i.issue_status=" + issueStatus;
+               console.log(query);
                database.query(query, (err, results) => {
                   if (err) {
                      console.error(err);
