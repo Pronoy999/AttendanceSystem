@@ -50,6 +50,7 @@ const router = {
    'qr': handlers.qr,
    'qr/deactivate': handlers.qrDeactivate,
    'qr/security': handlers.qrSecurity,
+   'qr/lot': handlers.qrLot,
    'meeting': handlers.meeting,
    'prokotags': handlers.prokotags,
    'device-name': handlers.devNames,
@@ -64,10 +65,10 @@ const router = {
    'nda': handlers.ndaEmail,
    'hrms': handlers.hrmsAttendance
 };
-const httpsOptions = {
+/*const httpsOptions = {
    key: fs.readFileSync("/etc/apache2/ssl/keys/YibealTradexPvtKey.key"),
    cert: fs.readFileSync("/etc/apache2/ssl/certs/4a27cdd3b35d1c11.crt")
-};
+};*/
 /**
  * Method which controls the Server.
  * @param req: The REQUEST.
@@ -136,9 +137,9 @@ const unifiedServer = function (req, res) {
       });
    }
 };
-const httpsServer = https.createServer(httpsOptions, (req, res) => {
+/*const httpsServer = https.createServer(httpsOptions, (req, res) => {
    unifiedServer(req, res);
-});
+});*/
 /**
  * Method to create the Server.
  */
@@ -155,9 +156,10 @@ httpServer.listen(7009, function () {
 /**
  * Method to listen on HTTPS Port.
  */
-httpsServer.listen(7011, () => {
+
+/*httpsServer.listen(7011, () => {
    console.log("HTTPS Server Listening on Port 7011");
-});
+});*/
 
 /**
  * Method to initialize the Workers.

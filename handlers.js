@@ -5,6 +5,7 @@ const messages = require('./Constants');
 const moment = require('moment');
 const tz = require('moment-timezone');
 const fs = require('fs');
+const async = require('async');
 /*const {exec} = require('child_process');
 const java = require('./initJava');
 const aws = require('./aws');
@@ -3314,12 +3315,12 @@ handlers.qr = function (dataObject, callback) {
                      callback(err, 500, {'res': messages.errorMessage});
                   } else {
                      let start = maxData[0].id;
-                     query = "INSERT INTO phone_details_qr VALUES (" + Number(start + 1) + ",'','7','14')";
+                     query = "INSERT INTO phone_details_qr VALUES (" + Number(start + 1) + ",'','7','14',0)";
                      console.log(start);
                      console.log(num);
                      for (let i = start + 2; i <= (start + num); i++) {
                         query += ",";
-                        query += "(" + i + ",'','7','14')";
+                        query += "(" + i + ",'','7','14',0)";
                      }
                      query += ";";
                      console.log(query);
@@ -4370,7 +4371,7 @@ handlers.serviceIssue = (dataObject, callback) => {
             const acceptedIssues = (dataObject.postData.accepted_issues) instanceof Array ?
                dataObject.postData.accepted_issues : false;
             if (requestId && acceptedIssues) {
-               const issuesQuery = `SELECT id FROM service_issues WHERE request_id=${requestId}`;
+               const issuesQuery = "SELECT id FROM service_issues WHERE request_id= " + requestId + " AND issue_status <> 2";
                database.query(issuesQuery, (err, results) => {
                   if (err) {
                      console.error(err);
@@ -4409,30 +4410,44 @@ handlers.serviceIssue = (dataObject, callback) => {
                               }
                            });
                         }
-                        database.query(requestQuery, (err, result) => {
-                           if (err) {
-                              console.error(err);
-                           } else {
-                              callback(false, 200, {'res': true});
-                              console.log("Service Request Status changed to NOT COMPLETED.");
-                           }
-                        });
+                        const requestMethod = (callback) => {
+                           database.query(requestQuery, (err, result) => {
+                              if (err) {
+                                 console.error(err);
+                                 callback(err, false);
+                              } else {
+                                 //callback(false, 200, {'res': true});
+                                 callback(false, true);
+                                 console.log("Service Request Status changed to NOT COMPLETED.");
+                              }
+                           });
+                        };
                         //Sending Response After this Query only.
-                        const inventoryQuery = "UPDATE inventory i,service_request r SET i.service_center=2" +
-                           " WHERE r.id= " + requestId + " AND i.product_imei_1 = r.imei";
-                        database.query(inventoryQuery, (err, result) => {
-                           if (err) {
-                              console.error(err);
+                        const inventoryMethod = (callback) => {
+                           const inventoryQuery = "UPDATE inventory i,service_request r SET i.service_center=2" +
+                              " WHERE r.id= " + requestId + " AND i.product_imei_1 = r.imei";
+                           database.query(inventoryQuery, (err, result) => {
+                              if (err) {
+                                 console.error(err);
+                                 callback(err, false);
+                              } else {
+                                 console.log("Inventory Service Center Updated to NOT ASSIGNED.");
+                                 callback(false, true);
+                              }
+                           });
+                        };
+                        async.parallel([inventoryMethod, requestMethod], (err, res) => {
+                           if (err === null && res[0] && res[1]) {
+                              callback(false, 200, {'res': true});
                            } else {
-
-                              console.log("Inventory Service Center Updated to NOT ASSIGNED.");
+                              callback(err[1], 500, {'res': messages.errorMessage});
                            }
                         });
                      } else {
                         const query = "UPDATE service_request SET request_status=4 WHERE id =" + requestId;
-                        const issueQuery = "UPDATE service_issues SET issue_status=4 WHERE request_id = " + requestId;
-                        const inventoryQuery = "UPDATE inventory i,service_request r SET i.service_stock=2" +
-                           " WHERE r.id= " + requestId + " AND i.product_imei_1 = r.imei";
+                        const issueQuery = "UPDATE service_issues SET issue_status=4 WHERE request_id = " + requestId + " AND issue_status <> 2";
+                        /*const inventoryQuery = "UPDATE inventory i,service_request r SET i.service_stock=2" +
+                           " WHERE r.id= " + requestId + " AND i.product_imei_1 = r.imei";*/
                         database.query(query, (err, results) => {
                            if (err) {
                               console.error(err);
@@ -4618,11 +4633,12 @@ handlers.serviceRequest = (dataObject, callback) => {
                   })
                });
             };
-            const insertIssues = (requestId, requesterId, issues) => {
+            const insertIssues = (requestId, requesterId, issues, issueStatus) => {
                return new Promise((resolve, reject) => {
                   const query = "INSERT INTO service_issues (request_id, issue_details, repair_cost, issue_status, requester_id," +
                      " timestamp) " +
-                     "VALUES " + issues.map(i => "(" + requestId + ",'" + i.issue_details + "'," + i.repair_cost + ",1," +
+                     "VALUES " + issues.map(i => "(" + requestId + ",'" + i.issue_details + "'," + i.repair_cost +
+                        "," + issueStatus + "," +
                         requesterId + ",NOW())").join(",");
                   console.log(query);
                   database.query(query, (err, result) => {
@@ -4664,7 +4680,7 @@ handlers.serviceRequest = (dataObject, callback) => {
                      existingIssues.map(e => issues.push(e));
                      console.log(issues);
                      createRequest(serviceCenterId, imei, requesterId).then(requestId => {
-                        insertIssues(requestId, requesterId, issues).then(() => {
+                        insertIssues(requestId, requesterId, issues, 1).then(() => {
                            updateRequestStatus(existingRequestId, 6).then(() => {
                               callback(false, 200, {'res': true});
                               updateInventoryServiceCenter(imei, serviceCenterId);
@@ -4678,7 +4694,7 @@ handlers.serviceRequest = (dataObject, callback) => {
                });
             } else if (requestId && issues && requesterId) {
                updateRequestStatus(requestId, 8).then(() => {
-                  insertIssues(requestId, requesterId, issues).then(() => {
+                  insertIssues(requestId, requesterId, issues, 5).then(() => {
                      callback(false, 200, {'res': true});
                   });
                }).catch(err => {
@@ -4691,8 +4707,12 @@ handlers.serviceRequest = (dataObject, callback) => {
          } else if (dataObject.method === 'put') {
             const id = typeof (dataObject.postData.id) === 'number' && dataObject.postData.id > 0 ?
                dataObject.postData.id : false;
-
-            if (id) {
+            const requestStatus = typeof (dataObject.postData.request_status) !== 'undefined' &&
+            dataObject.postData.request_status > 0 ? dataObject.postData.request_status : false;
+            const isRequestStatus = typeof (dataObject.postData.is_status) !== 'undefined' &&
+            dataObject.postData.is_status > 0 ? dataObject.postData.is_status : false;
+            console.log(dataObject.postData);
+            if (id && !isRequestStatus) {
                const query = "UPDATE service_request SET request_status=request_status+1 WHERE id=" + id;
                database.query(query, (err, data) => {
                   if (err) {
@@ -4700,6 +4720,25 @@ handlers.serviceRequest = (dataObject, callback) => {
                      callback(true, 500, {'res': messages.errorMessage});
                   } else {
                      callback(false, 200, {res: true});
+                  }
+               });
+            } else if (id && requestStatus && isRequestStatus) {
+               const query = "UPDATE service_request SET request_status= " + requestStatus + " WHERE id=" + id;
+               console.log(query);
+               database.query(query, (err, data) => {
+                  if (err) {
+                     console.log(err);
+                     callback(true, 500, {'res': messages.errorMessage});
+                  } else {
+                     callback(false, 200, {res: true});
+                  }
+               });
+               const issueQuery = "UPDATE service_issues SET issue_status=1 WHERE request_id = " + id + " AND issue_status =5";
+               database.query(issueQuery, (err, result) => {
+                  if (err) {
+                     console.error(err);
+                  } else {
+                     console.log("Issues Updated.");
                   }
                });
             } else {
@@ -4787,6 +4826,28 @@ handlers.hrmsAttendance = (dataObject, callback) => {
                      callback(false, 200, {'res': true});
                   }
                });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(true, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+handlers.qrLot = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, (isValid) => {
+      if (isValid) {
+         if (dataObject.method === 'post') {
+            const masterQrId = typeof (dataObject.postData.qr) !== 'undefined' &&
+            dataObject.postData.qr > 0 ? dataObject.postData.qr : false;
+            const childQrs = dataObject.postData.child_qr instanceof Array ? dataObject.postData.child_qr : false;
+            if (masterQrId && childQrs) {
+               const updateMasterQr = (id) => {
+                  //TODO:
+               };
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }
