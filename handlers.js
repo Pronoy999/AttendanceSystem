@@ -4564,8 +4564,10 @@ handlers.serviceRequest = (dataObject, callback) => {
                fetchRequests(query);
             }
          } else if (dataObject.method === 'post') {
-            const imei = dataObject.postData.imei.length > 0 ? dataObject.postData.imei : false;
-            const serviceCenterId = dataObject.postData.service_center_id > 0 ? dataObject.postData.service_center_id : false;
+            const imei = typeof (dataObject.postData.imei) !== 'undefined' &&
+            dataObject.postData.imei.length > 0 ? dataObject.postData.imei : false;
+            const serviceCenterId = typeof (dataObject.postData.service_center_id) !== 'undefined' &&
+            dataObject.postData.service_center_id > 0 ? dataObject.postData.service_center_id : false;
             const requesterId = dataObject.postData.requester_id > 0 ? dataObject.postData.requester_id : false;
             const issues = dataObject.postData.issues instanceof Array ? dataObject.postData.issues : false;
             const requestId = dataObject.postData.request_id > 0 ? dataObject.postData.request_id : false;
