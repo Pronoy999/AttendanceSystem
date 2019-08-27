@@ -122,7 +122,7 @@ handlers.otp = function (dataObject, callback) {
                         };
                         callback(false, 200, response);
                      }
-                     //deleteOTP(otp);
+                     deleteOTP(otp);
                   } else {
                      callback(false, 400, {'res': false});
                   }
@@ -4675,7 +4675,7 @@ handlers.serviceRequest = (dataObject, callback) => {
                   callback(err, 500, {'res': messages.errorMessage});
                });
             } else if (requestId && issues && requesterId) {
-               updateRequestStatus(requestId, 1).then(() => {
+               updateRequestStatus(requestId, 8).then(() => {
                   insertIssues(requestId, requesterId, issues).then(() => {
                      callback(false, 200, {'res': true});
                   });
