@@ -4837,17 +4837,67 @@ handlers.hrmsAttendance = (dataObject, callback) => {
       }
    });
 };
+/**
+ * Handler for Lot.
+ * @param dataObject
+ * @param callback
+ */
 handlers.qrLot = (dataObject, callback) => {
    helpers.validateToken(dataObject.queryString.key, (isValid) => {
       if (isValid) {
+         /**
+          * Method to insert the child QRs.
+          * @param parentQr: The Parent QR.
+          * @param childQrs: The array containing the child QR codes.
+          * @returns {Promise<>}
+          */
+         const insertChildQuery = (parentQr, childQrs) => {
+            return new Promise((resolve, reject) => {
+               const query = "INSERT INTO qr_lot_mapping (parent_qr, child_qr, created) " +
+                  "VALUES " + childQrs.map(i => "(" + parentQr + "," + i + "," + "NOW())").join(",");
+               console.log(query);
+               database.query(query, (err, result) => {
+                  if (err) {
+                     console.error(err);
+                     reject(err);
+                  } else {
+                     resolve(true);
+                  }
+               });
+            });
+         };
          if (dataObject.method === 'post') {
             const masterQrId = typeof (dataObject.postData.qr) !== 'undefined' &&
             dataObject.postData.qr > 0 ? dataObject.postData.qr : false;
             const childQrs = dataObject.postData.child_qr instanceof Array ? dataObject.postData.child_qr : false;
             if (masterQrId && childQrs) {
+               /**
+                * Method to create the Parent QR Code.
+                * @param id: The parent id.
+                * @returns {Promise<>}
+                */
                const updateMasterQr = (id) => {
-                  //TODO:
+                  return new Promise((resolve, reject) => {
+                     const masterQuery = "UPDATE phone_details_qr SET is_lot=1 WHERE id= " + id;
+                     database.query(masterQuery, (err, result) => {
+                        if (err) {
+                           console.error(err);
+                           reject(err);
+                        } else {
+                           console.log("QR Master Initialized.");
+                           resolve(true);
+                        }
+                     });
+                  });
                };
+               Promise.all([updateMasterQr(masterQrId), insertChildQuery(masterQrId, childQrs)])
+                  .then((resultSet) => {
+                     console.log(resultSet);
+                     callback(false, 200, {'res': true});
+                  }).catch(err => {
+                  console.error(err);
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }
