@@ -3349,7 +3349,17 @@ handlers.qr = function (dataObject, callback) {
                            callback(false, 200, {'res': false, 'msg': messages.notAssigned});
                         } else if (qrData[0].phone_status === 4 && qrData[0].imei.length < 0) {
                            callback(false, 200, {'res': false, 'msg': messages.imeiNotLinked});
-                        } else if (qrData[0].imei.length > 0) {
+                        } else if (qrData[0].is_lot === 1) {
+                           const query = "SELECT * FROM qr_lot_mapping WHERE parent_qr= " + id;
+                           database.query(query, (err, result) => {
+                              if (err) {
+                                 console.error(err);
+                                 callback(err, 500, {'res': messages.errorMessage});
+                              } else {
+                                 callback(false, 200, {'res': result, 'msg': true});
+                              }
+                           });
+                        } else if (qrData[0].imei.length > 0 && qrData[0].is_lot === 0) {
                            //query = "SELECT * FROM inventory WHERE product_imei_1 LIKE '" + qrData[0].imei + "'";
                            query = "SELECT * FROM inventory i, phone_details p WHERE i.product_imei_1 LIKE '" +
                               qrData[0].imei + "' AND p.imei=i.product_imei_1";
@@ -3378,46 +3388,58 @@ handlers.qr = function (dataObject, callback) {
                            });
                         }
                      } else {
-                        query = "SELECT * FROM order_details WHERE imei_number LIKE '" + qrData[0].imei +
-                           "' AND order_status = 4";
-                        database.query(query, (err, orderData) => {
-                           if (err) {
-                              console.error(err.stack);
-                              callback(err, 500, {'res': messages.errorMessage});
-                           } else {
-                              if (orderData.length > 0) {
-                                 callback(false, 200, {'res': true, 'msg': orderData, 'isPos': false});
-                                 updateOrderStatus(orderData[0].hx_order_id);
-                                 helpers.logOrder(orderData[0].channel_order_id, orderData[0].order_status,
-                                    orderData[0].imei_number, "AUTH");
+                        if (qrData[0].is_lot === 0) {
+                           query = "SELECT * FROM order_details WHERE imei_number LIKE '" + qrData[0].imei +
+                              "' AND order_status = 4";
+                           database.query(query, (err, orderData) => {
+                              if (err) {
+                                 console.error(err.stack);
+                                 callback(err, 500, {'res': messages.errorMessage});
                               } else {
-                                 //callback(false, 200, {'res': false, 'msg': orderData,'isPos':false});
-                                 query = "SELECT * FROM inventory WHERE is_video_taken = 1 and product_imei_1 LIKE '" + qrData[0].imei + "'";
-                                 database.query(query, (err, inventoryData) => {
-                                    if (err) {
-                                       console.error(err.stack);
-                                       callback(err, 500, {'res': messages.errorMessage});
-                                    } else {
-                                       if (inventoryData.length > 0) {
-                                          if (inventoryData[0].service_stock === 12 || inventoryData[0].service_stock === 17
-                                             || inventoryData[0].service_stock === 19 || inventoryData[0].service_stock === 21
-                                             || inventoryData[0].service_stock === 23) {
-                                             callback(false, 200, {'res': true, 'isPos': true});
-                                             updateInventory(inventoryData[0].product_imei_1, ((inventoryData[0].service_stock) + 1));
-                                             helpers.logOrder("POS ORDER", 1,
-                                                qrData[0].imei, "AUTH");
+                                 if (orderData.length > 0) {
+                                    callback(false, 200, {'res': true, 'msg': orderData, 'isPos': false});
+                                    updateOrderStatus(orderData[0].hx_order_id);
+                                    helpers.logOrder(orderData[0].channel_order_id, orderData[0].order_status,
+                                       orderData[0].imei_number, "AUTH");
+                                 } else {
+                                    //callback(false, 200, {'res': false, 'msg': orderData,'isPos':false});
+                                    query = "SELECT * FROM inventory WHERE is_video_taken = 1 and product_imei_1 LIKE '" + qrData[0].imei + "'";
+                                    database.query(query, (err, inventoryData) => {
+                                       if (err) {
+                                          console.error(err.stack);
+                                          callback(err, 500, {'res': messages.errorMessage});
+                                       } else {
+                                          if (inventoryData.length > 0) {
+                                             if (inventoryData[0].service_stock === 12 || inventoryData[0].service_stock === 17
+                                                || inventoryData[0].service_stock === 19 || inventoryData[0].service_stock === 21
+                                                || inventoryData[0].service_stock === 23) {
+                                                callback(false, 200, {'res': true, 'isPos': true});
+                                                updateInventory(inventoryData[0].product_imei_1, ((inventoryData[0].service_stock) + 1));
+                                                helpers.logOrder("POS ORDER", 1,
+                                                   qrData[0].imei, "AUTH");
+                                             } else {
+                                                callback(false, 200, {'res': false, 'isPos': true});
+                                             }
                                           } else {
                                              callback(false, 200, {'res': false, 'isPos': true});
-                                          }
-                                       } else {
-                                          callback(false, 200, {'res': false, 'isPos': true});
 
+                                          }
                                        }
-                                    }
-                                 });
+                                    });
+                                 }
                               }
-                           }
-                        });
+                           });
+                        } else if (qrData[0].is_lot === 1) {
+                           const query = "SELECT * FROM qr_lot_mapping WHERE parent_qr= " + qrData[0].id;
+                           database.query(query, (err, result) => {
+                              if (err) {
+                                 console.error(err);
+                                 callback(err, 500, {'res': messages.errorMessage});
+                              } else {
+                                 callback(false, 200, {'res': result});
+                              }
+                           });
+                        }
                      }
                   }
                });
@@ -4878,7 +4900,7 @@ handlers.qrLot = (dataObject, callback) => {
                 */
                const updateMasterQr = (id) => {
                   return new Promise((resolve, reject) => {
-                     const masterQuery = "UPDATE phone_details_qr SET is_lot=1 WHERE id= " + id;
+                     const masterQuery = "UPDATE phone_details_qr SET is_lot=1 WHERE id= " + id + " AND is_lot=0";
                      database.query(masterQuery, (err, result) => {
                         if (err) {
                            console.error(err);
