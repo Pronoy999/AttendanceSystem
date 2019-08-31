@@ -2365,20 +2365,29 @@ handlers.phonePrice = function (dataObject, callback) {
                         callback(err, 500, {'res': messages.errorMessage});
                      } else {
                         try {
-                           const id = phoneData[0].id;
-                           query = "SELECT * FROM buy_back_phone_price WHERE phoneId = " + id;
-                           database.query(query, function (err, priceData) {
-                              if (err) {
-                                 reject(err);
-                              } else {
-                                 const response = {
-                                    'storage': priceData[0].storage,
-                                    'ram': priceData[0].ram,
-                                    'price': priceData[0].price
-                                 };
-                                 resolve(response);
-                              }
-                           });
+                           if (phoneData.length > 0) {
+                              const id = phoneData[0].id;
+                              query = "SELECT * FROM buy_back_phone_price WHERE phoneId = " + id;
+                              database.query(query, function (err, priceData) {
+                                 if (err) {
+                                    reject(err);
+                                 } else {
+                                    const response = {
+                                       'storage': priceData[0].storage,
+                                       'ram': priceData[0].ram,
+                                       'price': priceData[0].price
+                                    };
+                                    resolve(response);
+                                 }
+                              });
+                           } else {
+                              const response = {
+                                 'storage': 0,
+                                 'ram': 0,
+                                 'price': 4000
+                              };
+                              resolve(response);
+                           }
                         } catch (e) {
                            reject(e);
                         }
@@ -3345,18 +3354,25 @@ handlers.qr = function (dataObject, callback) {
                      callback(err, 500, {'res': messages.errorMessage});
                   } else {
                      if (!security) {
-                        if (qrData[0].phone_status === 7) {
+                        console.log(qrData[0]);
+                        if (qrData[0].phone_status === 7 && qrData[0].is_lot === 0) {
                            callback(false, 200, {'res': false, 'msg': messages.notAssigned});
                         } else if (qrData[0].phone_status === 4 && qrData[0].imei.length < 0) {
                            callback(false, 200, {'res': false, 'msg': messages.imeiNotLinked});
                         } else if (qrData[0].is_lot === 1) {
-                           const query = "SELECT * FROM qr_lot_mapping WHERE parent_qr= " + id;
+                           const query = "SELECT i.model_name, i.product_imei_1 as imei_number, m.child_qr" +
+                              " FROM inventory i," +
+                              " phone_details_qr q," +
+                              " qr_lot_mapping m" +
+                              " WHERE m.parent_qr = " + id +
+                              " AND q.id = m.child_qr" +
+                              " AND i.product_imei_1 = q.imei";
                            database.query(query, (err, result) => {
                               if (err) {
                                  console.error(err);
                                  callback(err, 500, {'res': messages.errorMessage});
                               } else {
-                                 callback(false, 200, {'res': result, 'msg': true});
+                                 callback(false, 200, {'res': result, 'is_lot': true});
                               }
                            });
                         } else if (qrData[0].imei.length > 0 && qrData[0].is_lot === 0) {
@@ -3430,20 +3446,25 @@ handlers.qr = function (dataObject, callback) {
                               }
                            });
                         } else if (qrData[0].is_lot === 1) {
-                           const query = "SELECT * FROM qr_lot_mapping WHERE parent_qr= " + qrData[0].id;
+                           const query = "SELECT i.model_name, i.product_imei_1 as imei_number, m.child_qr" +
+                              " FROM inventory i," +
+                              " phone_details_qr q," +
+                              " qr_lot_mapping m" +
+                              " WHERE m.parent_qr = " + qrData[0].id +
+                              " AND q.id = m.child_qr" +
+                              " AND i.product_imei_1 = q.imei";
                            database.query(query, (err, result) => {
                               if (err) {
                                  console.error(err);
                                  callback(err, 500, {'res': messages.errorMessage});
                               } else {
-                                 callback(false, 200, {'res': result});
+                                 callback(false, 200, {'res': result, 'is_lot': true});
                               }
                            });
                         }
                      }
                   }
                });
-
             }
          } else if (dataObject.method === 'put') {
             let query = "";
@@ -4892,6 +4913,8 @@ handlers.qrLot = (dataObject, callback) => {
             const masterQrId = typeof (dataObject.postData.qr) !== 'undefined' &&
             dataObject.postData.qr > 0 ? dataObject.postData.qr : false;
             const childQrs = dataObject.postData.child_qr instanceof Array ? dataObject.postData.child_qr : false;
+            console.log(masterQrId);
+            console.log(childQrs);
             if (masterQrId && childQrs) {
                /**
                 * Method to create the Parent QR Code.
