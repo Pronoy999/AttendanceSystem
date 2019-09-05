@@ -3,7 +3,7 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="9ffe1d9e-c14e-408f-96a3-32fe3edbd497" name="AWS Production" url="http://ec2-13-127-202-203.ap-south-1.compute.amazonaws.com/">
-        <fileTransfer host="ec2-13-233-55-56.ap-south-1.compute.amazonaws.com" port="22" privateKey="$USER_HOME$/hx_data/hx-mumbai.pem" accessType="SFTP" keyPair="true">
+        <fileTransfer host="ec2-13-233-55-56.ap-south-1.compute.amazonaws.com" port="22" privateKey="$USER_HOME$/Documents/Work Station/AWS Private key/hx-mumbai.pem" accessType="SFTP" keyPair="true">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" shareSSLContext="true" />
           </advancedOptions>
@@ -11,7 +11,7 @@
         </fileTransfer>
       </webServer>
       <webServer id="d9fc49e8-0aa5-44df-8646-910901317270" name="AWS Staging" url="http://ec2-13-127-208-122.ap-south-1.compute.amazonaws.com">
-        <fileTransfer host="ec2-13-127-208-122.ap-south-1.compute.amazonaws.com" port="22" privateKey="$USER_HOME$/hx_data/hx-mumbai.pem" accessType="SFTP" keyPair="true">
+        <fileTransfer host="ec2-13-127-208-122.ap-south-1.compute.amazonaws.com" port="22" privateKey="$USER_HOME$/Documents/Work Station/AWS Private key/hx-mumbai.pem" accessType="SFTP" keyPair="true">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
