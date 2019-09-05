@@ -50,7 +50,7 @@ const router = {
    'qr': handlers.qr,
    'qr/deactivate': handlers.qrDeactivate,
    'qr/security': handlers.qrSecurity,
-   'qr/lot': handlers.qrLot,
+   'qr/Lot': handlers.qrLot,
    'meeting': handlers.meeting,
    'prokotags': handlers.prokotags,
    'device-name': handlers.devNames,
