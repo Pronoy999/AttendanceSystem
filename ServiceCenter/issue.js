@@ -18,7 +18,7 @@ class Issue {
     * @param issueType: Either 'Operational' OR 'Cosmetic'
     * @returns {Promise<>}
     */
-   createIssue(issueDetails, issueType) {
+   createIssueMaster(issueDetails, issueType) {
       return new Promise((resolve, reject) => {
          const query = "INSERT INTO service_issue_master (issue_details, issue_type, created) " +
             "VALUES ('" + issueDetails + "','" + issueType + "','NOW()')";
@@ -67,6 +67,30 @@ class Issue {
             query += ", issue_type='" + issueType + "'";
          }
          query += " WHERE id= " + this._issueId;
+         database.query(query, (err, result) => {
+            if (err) {
+               console.error(err);
+               reject(err);
+            } else {
+               resolve(true);
+            }
+         });
+      });
+   }
+
+   /**
+    * Method to insert the issues for the Request.
+    * @param issueDetails: The array containing the issue details.
+    * @param requestId: The request id.
+    * @param requesterId: The person creating the request.
+    * @returns {Promise<>}
+    */
+   insertRequestIssues(issueDetails, requestId, requesterId) {
+      return new Promise((resolve, reject) => {
+         let query = "INSERT INTO service_issues " +
+            "(request_id, issue_id, solution_id, issue_status, requester_id, hx_remarks, created)" +
+            " VALUES (" + issueDetails.map(issue => "'" + requestId + "','" + issue.id + "','" + issue.solution_id + "',5," +
+               requesterId + ",'" + issue.hx_remarks + "',NOW()").join(",") + ")";
          database.query(query, (err, result) => {
             if (err) {
                console.error(err);
