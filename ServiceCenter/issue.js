@@ -101,6 +101,12 @@ class Issue {
          });
       });
    }
+
+   getIssuesForRequest(requestId) {
+      return new Promise((resolve, reject) => {
+         //TODO:
+      });
+   }
 }
 
 /**

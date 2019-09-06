@@ -2,6 +2,8 @@ const database = require('./databaseHandler');
 const snsLib = require('./snsLib');
 const helpers = require('./helpers');
 const messages = require('./Constants');
+const Issue = require('./ServiceCenter/issue');
+const Solution = require('./ServiceCenter/solutions');
 const moment = require('moment');
 const tz = require('moment-timezone');
 const fs = require('fs');
@@ -4342,7 +4344,6 @@ handlers.email = (dataObject, callback) => {
    });
 };
 
-
 /**
  * Handler for sending email FOR NDA.
  * @param dataObject: The request Object.
@@ -4486,6 +4487,69 @@ handlers.qrLot = (dataObject, callback) => {
                      callback(false, 200, {'res': true});
                   }).catch(err => {
                   console.error(err);
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(true, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+/**
+ * Handler for Service Issues.
+ * @param dataObject: The request object
+ * @param callback: The method callback.
+ */
+handlers.issue = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, (isValid) => {
+      if (isValid) {
+         if (dataObject.method === 'post') {
+            const issueDetails = typeof (dataObject.postData.issue_details) === 'string' && dataObject.postData.issue_details.length() > 0 ?
+               dataObject.postData.issue_details : false;
+            const issueType = (dataObject.postData.issue_type) === "Cosmetic" || "Operational" ? dataObject.postData.issue_type : false;
+            if (issueDetails && issueType) {
+               const issue = new Issue();
+               issue.createIssueMaster(issueDetails, issueType).then(() => {
+                  callback(false, 200, {'res': true});
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(true, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+/**
+ * Handler for Solution.
+ * @param dataObject: The request object.
+ * @param callback: The method callback.
+ */
+handlers.solution = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, (isValid) => {
+      if (isValid) {
+         if (dataObject.method === 'post') {
+            const solutionDetails = typeof (dataObject.postData.solution_details) === 'string' &&
+            dataObject.postData.solution_details.length() > 0 ? dataObject.postData.solution_details : false;
+            const issueId = (dataObject.postData.issue_id) > 0 ? dataObject.postData.issue_id : false;
+            const isReturn = (dataObject.postData.spare_part_return_required) === 'Yes' || 'No' ?
+               dataObject.postData.service_solution_master : false;
+            const costDetails = (dataObject.postData.cost_details) instanceof Array ? dataObject.postData.cost_details : false;
+            if (solutionDetails && issueId && isReturn && costDetails) {
+               const solution = new Solution();
+               solution.createSolution(solutionDetails, issueId, isReturn, costDetails).then(() => {
+                  callback(false, 200, {'res': true});
+               }).catch(err => {
                   callback(err, 500, {'res': messages.errorMessage});
                });
             } else {

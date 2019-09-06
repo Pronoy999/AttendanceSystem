@@ -84,6 +84,26 @@ class Request {
          });
       });
    }
+
+   /**
+    * Method to update the status of a service request.
+    * @param updatedStatus: The status to be updated.
+    */
+   updateRequestStatus(updatedStatus) {
+      return new Promise((resolve, reject) => {
+         let query = "UPDATE service_request SET request_status = ";
+         query += typeof (updatedStatus) !== 'undefined' && updatedStatus > 0 ? updatedStatus : "(request_status+1)";
+         query += " WHERE id= " + this._requestId;
+         database.query(query, (err, result) => {
+            if (err) {
+               console.error(err);
+               reject(err);
+            } else {
+               resolve(true);
+            }
+         });
+      });
+   }
 }
 
 /**

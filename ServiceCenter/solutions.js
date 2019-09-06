@@ -35,7 +35,7 @@ class Solutions {
       return new Promise((resolve, reject) => {
          let spareReturn = isReturnRequired ? "Yes" : "No";
          const query = "INSERT INTO service_solution_master (solution_details, issue_id, spare_part_return_required, created) " +
-            "VALUES ('" + solutionDetails + "','" + issueId + "','" + spareReturn + "','NOW()')";
+            "VALUES ('" + solutionDetails + "','" + issueId + "','" + spareReturn + "',NOW())";
          database.query(query, (err, result) => {
             if (err) {
                console.error(err);
