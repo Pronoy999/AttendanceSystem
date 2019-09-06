@@ -4508,8 +4508,9 @@ handlers.qrLot = (dataObject, callback) => {
 handlers.issue = (dataObject, callback) => {
    helpers.validateToken(dataObject.queryString.key, (isValid) => {
       if (isValid) {
+         console.log(dataObject);
          if (dataObject.method === 'post') {
-            const issueDetails = typeof (dataObject.postData.issue_details) === 'string' && dataObject.postData.issue_details.length() > 0 ?
+            const issueDetails = typeof (dataObject.postData.issue_details) === 'string' && dataObject.postData.issue_details.length > 0 ?
                dataObject.postData.issue_details : false;
             const issueType = (dataObject.postData.issue_type) === "Cosmetic" || "Operational" ? dataObject.postData.issue_type : false;
             if (issueDetails && issueType) {
@@ -4522,6 +4523,16 @@ handlers.issue = (dataObject, callback) => {
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }
+         } else if (dataObject.method === 'get') {
+            const issueId = (dataObject.postData.issue_id) > 0 ? dataObject.postData.issue_id : false;
+            const issue = new Issue(issueId);
+            issue.getIssues().then((result) => {
+
+            }).catch(err => {
+
+            });
+         } else if (dataObject.method === 'options') {
+            callback(false, 200, {});
          } else {
             callback(true, 400, {'res': messages.invalidRequestMessage});
          }
@@ -4540,7 +4551,7 @@ handlers.solution = (dataObject, callback) => {
       if (isValid) {
          if (dataObject.method === 'post') {
             const solutionDetails = typeof (dataObject.postData.solution_details) === 'string' &&
-            dataObject.postData.solution_details.length() > 0 ? dataObject.postData.solution_details : false;
+            dataObject.postData.solution_details.length > 0 ? dataObject.postData.solution_details : false;
             const issueId = (dataObject.postData.issue_id) > 0 ? dataObject.postData.issue_id : false;
             const isReturn = (dataObject.postData.spare_part_return_required) === 'Yes' || 'No' ?
                dataObject.postData.service_solution_master : false;

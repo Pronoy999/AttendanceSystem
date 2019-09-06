@@ -21,7 +21,7 @@ class Issue {
    createIssueMaster(issueDetails, issueType) {
       return new Promise((resolve, reject) => {
          const query = "INSERT INTO service_issue_master (issue_details, issue_type, created) " +
-            "VALUES ('" + issueDetails + "','" + issueType + "','NOW()')";
+            "VALUES ('" + issueDetails + "','" + issueType + "',NOW())";
          database.query(query, (err, result) => {
             if (err) {
                console.error(err);
