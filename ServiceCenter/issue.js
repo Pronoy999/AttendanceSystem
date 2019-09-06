@@ -1,14 +1,21 @@
 const database = require('./../databaseHandler');
+const message = require('./../Constants');
 
 class Issue {
    /**
     * _issueId
+    * _issueDetailsId
     * @param issueId
+    * @param issueDetailsId
     */
-   constructor(issueId) {
+   constructor(issueId, issueDetailsId) {
       issueId = typeof (issueId) !== 'undefined' && issueId > 0 ? issueId : false;
+      issueDetailsId = typeof (issueDetailsId) !== 'undefined' && issueDetailsId > 0 ? issueDetailsId : false;
       if (issueId) {
          this._issueId = issueId;
+      }
+      if (issueDetailsId) {
+         this._issueDetailsId = issueDetailsId;
       }
    }
 
@@ -83,14 +90,16 @@ class Issue {
     * @param issueDetails: The array containing the issue details.
     * @param requestId: The request id.
     * @param requesterId: The person creating the request.
+    * @param status: The issue status.
     * @returns {Promise<>}
     */
-   insertRequestIssues(issueDetails, requestId, requesterId) {
+   insertRequestIssues(issueDetails, requestId, requesterId, status) {
       return new Promise((resolve, reject) => {
+         const issueStatus = (status) ? status : 5;
          let query = "INSERT INTO service_issues " +
             "(request_id, issue_id, solution_id, issue_status, requester_id, hx_remarks, created)" +
-            " VALUES (" + issueDetails.map(issue => "'" + requestId + "','" + issue.id + "','" + issue.solution_id + "',5," +
-               requesterId + ",'" + issue.hx_remarks + "',NOW()").join(",") + ")";
+            " VALUES (" + issueDetails.map(issue => "'" + requestId + "','" + issue.id + "','" + issue.solution_id +
+               "'," + issueStatus + "," + requesterId + ",'" + issue.hx_remarks + "',NOW()").join(",") + ")";
          database.query(query, (err, result) => {
             if (err) {
                console.error(err);
@@ -102,9 +111,57 @@ class Issue {
       });
    }
 
-   getIssuesForRequest(requestId) {
+   /**
+    * Method to get the issues for a IMEI or Request id.
+    * @param requestId: The Request Id.
+    * @param imei: The imei of the device.
+    * @returns {Promise<unknown>}
+    */
+   getIssuesForRequest(requestId, imei) {
       return new Promise((resolve, reject) => {
-         //TODO:
+         let query = "";
+         if (imei) {
+            query = "SELECT * FROM service_request r,service_issues i WHERE r.imei='" + imei + "' AND i.request_id=r.id " +
+               "AND i.issue_status <> 6";
+         } else if (requestId) {
+            query = "SELECT * FROM service_issues WHERE request_id= " + requestId;
+         }
+         if (query.length > 0) {
+            database.query(query, (err, result) => {
+               if (err) {
+                  console.error(err);
+                  reject(err);
+               } else {
+                  resolve(result);
+               }
+            });
+         } else {
+            reject(message.insufficientData);
+         }
+      });
+   }
+
+   /**
+    * Method to update the status of the existing Issue id with remarks.
+    * @param updatedStatus: The Status to be updated to.
+    * @param hxRemarks: The HX remarks to be set.
+    * @param serviceRemarks: The service Remarks to be set.
+    * @returns {Promise<unknown>}
+    */
+   updateIssueStatus(updatedStatus, hxRemarks, serviceRemarks) {
+      return new Promise((resolve, reject) => {
+         let query = "UPDATE service_issues SET issue_status= " + updatedStatus;
+         query += (hxRemarks) ? " ,hx_remarks = " + hxRemarks : "";
+         query += (serviceRemarks) ? " ,service_center_remarks=" + serviceRemarks : "";
+         query += " WHERE id= " + this._issueDetailsId;
+         database.query(query, (err, result) => {
+            if (err) {
+               console.error(err);
+               reject(err);
+            } else {
+               resolve(true);
+            }
+         });
       });
    }
 }

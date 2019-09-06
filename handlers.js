@@ -4527,9 +4527,9 @@ handlers.issue = (dataObject, callback) => {
             const issueId = (dataObject.postData.issue_id) > 0 ? dataObject.postData.issue_id : false;
             const issue = new Issue(issueId);
             issue.getIssues().then((result) => {
-
+               callback(false, 200, {'res': result});
             }).catch(err => {
-
+               callback(err, 500, {'res': messages.errorMessage});
             });
          } else if (dataObject.method === 'options') {
             callback(false, 200, {});
