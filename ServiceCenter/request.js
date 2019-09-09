@@ -87,6 +87,8 @@ class Request {
 
    /**
     * Method to update the status of a service request.
+    * It will update the request status if it is specified,
+    * else it will increment the value by 1.
     * @param updatedStatus: The status to be updated.
     */
    updateRequestStatus(updatedStatus) {

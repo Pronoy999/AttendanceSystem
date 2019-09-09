@@ -43,8 +43,9 @@ class Solutions {
             } else {
                this._solutionId = result.insertId;
                let query = "INSERT INTO service_solution_cost_master (solution_id, vendor_id, cost, created) " +
-                  "VALUES (" + costDetails.map(i => this._solutionId + "," + i.vendor_id + ",'" + i.cost + "',NOW()")
-                     .join(',') + ")";
+                  "VALUES " + costDetails.map(i => "(" + this._solutionId + "," + i.vendor_id + ",'" + i.cost + "',NOW())")
+                     .join(',');
+               console.log(query);
                database.query(query, (err, result) => {
                   if (err) {
                      console.error(err);

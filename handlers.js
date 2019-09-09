@@ -4551,11 +4551,12 @@ handlers.solution = (dataObject, callback) => {
    helpers.validateToken(dataObject.queryString.key, (isValid) => {
       if (isValid) {
          if (dataObject.method === 'post') {
+            console.log(dataObject.postData.spare_part_return_required);
             const solutionDetails = typeof (dataObject.postData.solution_details) === 'string' &&
             dataObject.postData.solution_details.length > 0 ? dataObject.postData.solution_details : false;
             const issueId = (dataObject.postData.issue_id) > 0 ? dataObject.postData.issue_id : false;
-            const isReturn = (dataObject.postData.spare_part_return_required) === 'Yes' || 'No' ?
-               dataObject.postData.service_solution_master : false;
+            const isReturn = (dataObject.postData.spare_part_return_required) === "Yes" || "No" ?
+               dataObject.postData.spare_part_return_required : false;
             const costDetails = (dataObject.postData.cost_details) instanceof Array ? dataObject.postData.cost_details : false;
             if (solutionDetails && issueId && isReturn && costDetails) {
                const solution = new Solution();
@@ -4624,6 +4625,22 @@ handlers.serviceRequest = (dataObject, callback) => {
                request.getRequestDetails().then(result => {
                   callback(false, 200, {'res': result});
                }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else if (dataObject.method === 'put') {
+            const requestId = typeof (dataObject.postData.request_id) !== 'undefined' && dataObject.postData.request_id > 0 ?
+               dataObject.postData.request_id : false;
+            const status = typeof (dataObject.postData.status) !== 'undefined' && dataObject.postData.status > 0 ?
+               dataObject.postData.status : false;
+            if (requestId) {
+               const request = new Request(requestId);
+               request.updateRequestStatus(status).then(() => {
+                  callback(false, 200, {'res': true});
+               }).catch(err => {
+                  console.error(err);
                   callback(err, 500, {'res': messages.errorMessage});
                });
             } else {
