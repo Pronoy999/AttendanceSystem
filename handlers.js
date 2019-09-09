@@ -4580,6 +4580,8 @@ handlers.solution = (dataObject, callback) => {
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }
+         } else if (dataObject.method === 'options') {
+            callback(false, 200, {});
          } else {
             callback(true, 400, {'res': messages.invalidRequestMessage});
          }
@@ -4627,6 +4629,8 @@ handlers.serviceRequest = (dataObject, callback) => {
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }
+         } else if (dataObject.method === 'options') {
+            callback(false, 200, {});
          } else {
             callback(true, 400, {'res': messages.invalidRequestMessage});
          }
