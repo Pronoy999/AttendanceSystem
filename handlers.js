@@ -4612,6 +4612,21 @@ handlers.serviceRequest = (dataObject, callback) => {
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }
+         } else if (dataObject.method === 'get') {
+            const imei = typeof (dataObject.postData.imei) !== 'undefined' && dataObject.postData.imei.length > 0 ?
+               dataObject.postData.imei : false;
+            const requestId = typeof (dataObject.postData.request_id) === 'number' && dataObject.postData.request_id > 0 ?
+               dataObject.postData.request_id : false;
+            if (imei || requestId) {
+               const request = new Request(requestId, imei);
+               request.getRequestDetails().then(result => {
+                  callback(false, 200, {'res': result});
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
          } else {
             callback(true, 400, {'res': messages.invalidRequestMessage});
          }

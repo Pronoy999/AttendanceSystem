@@ -58,7 +58,6 @@ const router = {
    'fuck-ops': handlers.fuckops,
    'board-meeting': handlers.boardMeeting,
    'franchise': handlers.franchise,
-   'service-requester': handlers.serviceRequester,
    'service-request': handlers.serviceRequest,
    'issue': handlers.issue,
    'solution': handlers.solution,
