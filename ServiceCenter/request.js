@@ -10,7 +10,7 @@ class Request {
     */
    constructor(requestId, imeiNumber) {
       requestId = typeof (requestId) !== 'undefined' && requestId > 0 ? requestId : false;
-      imeiNumber = typeof (imeiNumber) !== 'undefined' && imeiNumber.length() > 0 ? imeiNumber : false;
+      imeiNumber = typeof (imeiNumber) !== 'undefined' && imeiNumber.length > 0 ? imeiNumber : false;
       if (requestId) {
          this._requestId = requestId;
       }
@@ -94,6 +94,25 @@ class Request {
          let query = "UPDATE service_request SET request_status = ";
          query += typeof (updatedStatus) !== 'undefined' && updatedStatus > 0 ? updatedStatus : "(request_status+1)";
          query += " WHERE id= " + this._requestId;
+         database.query(query, (err, result) => {
+            if (err) {
+               console.error(err);
+               reject(err);
+            } else {
+               resolve(true);
+            }
+         });
+      });
+   }
+
+   /**
+    * Method to update the status for the device.
+    * @param updatedStatus: The status to be updated to.
+    * @returns {Promise<>}
+    */
+   updateInventoryStatus(updatedStatus) {
+      return new Promise((resolve, reject) => {
+         const query = "UPDATE inventory SET service_stock= " + updatedStatus + " WHERE product_imei_1 ='" + this._imeiNumber + "'";
          database.query(query, (err, result) => {
             if (err) {
                console.error(err);

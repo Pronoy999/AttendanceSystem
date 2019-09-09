@@ -4,6 +4,7 @@ const helpers = require('./helpers');
 const messages = require('./Constants');
 const Issue = require('./ServiceCenter/issue');
 const Solution = require('./ServiceCenter/solutions');
+const Request = require('./ServiceCenter/request');
 const moment = require('moment');
 const tz = require('moment-timezone');
 const fs = require('fs');
@@ -4559,6 +4560,51 @@ handlers.solution = (dataObject, callback) => {
             if (solutionDetails && issueId && isReturn && costDetails) {
                const solution = new Solution();
                solution.createSolution(solutionDetails, issueId, isReturn, costDetails).then(() => {
+                  callback(false, 200, {'res': true});
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else if (dataObject.method === 'get') {
+            const issueId = typeof (dataObject.queryString.issue_id) === 'number' && dataObject.queryString.issue_id > 0 ?
+               dataObject.queryString.issue_id : false;
+            if (issueId) {
+               const solution = new Solution("", issueId);
+               solution.getSolutions().then((result) => {
+                  callback(false, 200, {'res': result});
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(true, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+/**
+ * Handler for Service Request.
+ * @param dataObject: The request object.
+ * @param callback: The Method callback.
+ */
+handlers.serviceRequest = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, (isValid) => {
+      if (isValid) {
+         if (dataObject.method === 'post') {
+            const imei = typeof (dataObject.postData.imei) !== 'undefined' && dataObject.postData.imei.length > 0 ?
+               dataObject.postData.imei : false;
+            const issueDetails = dataObject.postData.issue_details instanceof Array ? dataObject.postData.issue_details : false;
+            const requesterId = typeof (dataObject.postData.requester_id) === 'number' && dataObject.postData.requester_id > 0 ?
+               dataObject.postData.requester_id : false;
+            if (imei && issueDetails && requesterId) {
+               const request = new Request(false, imei);
+               request.createNewRequest(issueDetails, requesterId).then(() => {
                   callback(false, 200, {'res': true});
                }).catch(err => {
                   callback(err, 500, {'res': messages.errorMessage});
