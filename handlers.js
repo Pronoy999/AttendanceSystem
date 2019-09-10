@@ -4713,6 +4713,40 @@ handlers.serviceIssue = (dataObject, callback) => {
             } else {
                callback(true, 400, {'res': messages.insufficientData});
             }
+         } else if (dataObject.method === 'post') {
+            const issueDetails = (dataObject.postData.issue_details) instanceof Array ?
+               dataObject.postData.issue_details : false;
+            const requestId = typeof (dataObject.postData.request_id) !== 'undefined' && dataObject.postData.request_id > 0 ?
+               dataObject.postData.request_id : false;
+            const requesterId = typeof (dataObject.postData.requester_id) !== 'undefined' && dataObject.postData.requester_id > 0 ?
+               dataObject.postData.requester_id : false;
+            if (issueDetails && requestId && requesterId) {
+               const issue = new Issue();
+               issue.insertRequestIssues(issueDetails, requestId, requesterId, true).then(() => {
+                  callback(false, 200, {'res': true})
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else if (dataObject.method === 'put') {
+            const issueDetailsId = typeof (dataObject.postData.issue_details_id) !== 'undefined' && dataObject.postData.issue_details_id > 0 ?
+               dataObject.postData.issue_details_id : false;
+            const status = typeof (dataObject.postData.status) !== 'undefined' && dataObject.postData.status > 0 ?
+               dataObject.postData.status : false;
+            const hxRemarks = typeof (dataObject.postData.hx_remarks) === 'string' && dataObject.postData.hx_remarks.length > 0 ?
+               dataObject.postData.hx_remarks : "";
+            const serviceRemarks = typeof (dataObject.postData.service_remarks) === 'string' && dataObject.postData.service_remarks.length > 0 ?
+               dataObject.postData.service_remarks : "";
+            const issue = new Issue("", issueDetailsId);
+            issue.updateIssueStatus(status, hxRemarks, serviceRemarks).then(() => {
+               callback(false, 200, {'res': true});
+            }).catch(err => {
+               callback(err, 500, {'res': messages.errorMessage});
+            });
+         } else if (dataObject.method === 'options') {
+            callback(false, 200, {});
          } else {
             callback(true, 400, {'res': messages.invalidRequestMessage});
          }

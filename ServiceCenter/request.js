@@ -28,7 +28,7 @@ class Request {
    _insertRequestIssues(issueDetails, requesterId) {
       return new Promise((resolve, reject) => {
          const issue = new Issue();
-         issue.insertRequestIssues(issueDetails, this._requestId, requesterId).then(() => {
+         issue.insertRequestIssues(issueDetails, this._requestId, requesterId, false).then(() => {
             resolve(true);
          }).catch(err => {
             console.error(err);

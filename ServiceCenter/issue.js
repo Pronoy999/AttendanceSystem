@@ -98,16 +98,18 @@ class Issue {
     * @param issueDetails: The array containing the issue details.
     * @param requestId: The request id.
     * @param requesterId: The person creating the request.
+    * @param isServiceCenter: true for service Center else false.
     * @param status: The issue status.
     * @returns {Promise<>}
     */
-   insertRequestIssues(issueDetails, requestId, requesterId, status) {
+   insertRequestIssues(issueDetails, requestId, requesterId, isServiceCenter, status) {
       return new Promise((resolve, reject) => {
          const issueStatus = (status) ? status : 5;
+         let remarks = (isServiceCenter) ? "service_center_remarks" : "hx_remarks";
          let query = "INSERT INTO service_issues " +
-            "(request_id, issue_id, solution_id, issue_status, requester_id, hx_remarks, created)" +
+            "(request_id, issue_id, solution_id, issue_status, requester_id, " + remarks + ", created)" +
             " VALUES (" + issueDetails.map(issue => "'" + requestId + "','" + issue.id + "','" + issue.solution_id +
-               "'," + issueStatus + "," + requesterId + ",'" + issue.hx_remarks + "',NOW()").join(",") + ")";
+               "'," + issueStatus + "," + requesterId + ",'" + issue.remarks + "',NOW()").join(",") + ")";
          database.query(query, (err, result) => {
             if (err) {
                console.error(err);
@@ -186,7 +188,7 @@ class Issue {
     * @param updatedStatus: The Status to be updated to.
     * @param hxRemarks: The HX remarks to be set.
     * @param serviceRemarks: The service Remarks to be set.
-    * @returns {Promise<unknown>}
+    * @returns {Promise<>}
     */
    updateIssueStatus(updatedStatus, hxRemarks, serviceRemarks) {
       return new Promise((resolve, reject) => {
