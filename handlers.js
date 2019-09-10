@@ -4525,13 +4525,29 @@ handlers.issue = (dataObject, callback) => {
                callback(true, 400, {'res': messages.insufficientData});
             }
          } else if (dataObject.method === 'get') {
-            const issueId = (dataObject.postData.issue_id) > 0 ? dataObject.postData.issue_id : false;
+            const issueId = (dataObject.queryString.issue_id) > 0 ? dataObject.queryString.issue_id : false;
             const issue = new Issue(issueId);
             issue.getIssues().then((result) => {
                callback(false, 200, {'res': result});
             }).catch(err => {
                callback(err, 500, {'res': messages.errorMessage});
             });
+         } else if (dataObject.method === 'put') {
+            const issueId = (dataObject.postData.issue_id) > 0 ? dataObject.postData.issue_id : false;
+            const issueDetails = typeof (dataObject.postData.issue_details) === 'string' &&
+            dataObject.postData.issue_details.length > 0 ? dataObject.postData.issue_details : false;
+            const issueType = (dataObject.postData.issue_type) === "Cosmetic" || "Operational" ?
+               dataObject.postData.issue_type : false;
+            const issue = new Issue(issueId);
+            if (issueId && (issueDetails || issueType)) {
+               issue.updateIssue(issueDetails, issueType).then(() => {
+                  callback(false, 200, {'res': true});
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
          } else if (dataObject.method === 'options') {
             callback(false, 200, {});
          } else {
@@ -4575,6 +4591,23 @@ handlers.solution = (dataObject, callback) => {
                const solution = new Solution("", issueId);
                solution.getSolutions().then((result) => {
                   callback(false, 200, {'res': result});
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else if (dataObject.method === 'put') {
+            const solutionId = typeof (dataObject.postData.solution_id) !== 'undefined' && dataObject.postData.solution_id > 0 ?
+               dataObject.postData.solution_id : false;
+            const vendorId = typeof (dataObject.postData.vendor_id) !== 'undefined' && dataObject.postData.vendor_id > 0 ?
+               dataObject.postData.vendor_id : false;
+            const updatedCost = typeof (dataObject.postData.cost) !== 'undefined' && dataObject.postData.cost > 0 ?
+               dataObject.postData.cost : false;
+            if (solutionId && vendorId && updatedCost) {
+               const solution = new Solution(solutionId, "", vendorId);
+               solution.updateCostForSolution(updatedCost).then(() => {
+                  callback(false, 200, {'res': true});
                }).catch(err => {
                   callback(err, 500, {'res': messages.errorMessage});
                });

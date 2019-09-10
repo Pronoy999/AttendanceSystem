@@ -69,19 +69,27 @@ class Issue {
     */
    updateIssue(issueDetails, issueType) {
       return new Promise((resolve, reject) => {
-         let query = "UPDATE service_issue_master SET issue_details = '" + issueDetails + "'";
-         if (issueType) {
-            query += ", issue_type='" + issueType + "'";
-         }
-         query += " WHERE id= " + this._issueId;
-         database.query(query, (err, result) => {
-            if (err) {
-               console.error(err);
-               reject(err);
-            } else {
-               resolve(true);
+         let query = "UPDATE service_issue_master ";
+         if (issueType || issueDetails) {
+            if (issueDetails && issueType) {
+               query += " SET issue_details = '" + issueDetails + "', issue_type = '" + issueType + "'";
+            } else if (issueDetails && !issueType) {
+               query += " SET issue_details = '" + issueDetails + "'";
+            } else if (issueType && !issueDetails) {
+               query += " SET issue_type = '" + issueType + "'";
             }
-         });
+            query += " WHERE id= " + this._issueId;
+            database.query(query, (err, result) => {
+               if (err) {
+                  console.error(err);
+                  reject(err);
+               } else {
+                  resolve(true);
+               }
+            });
+         } else {
+            reject(false);
+         }
       });
    }
 
