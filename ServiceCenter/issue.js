@@ -123,17 +123,49 @@ class Issue {
     * Method to get the issues for a IMEI or Request id.
     * @param requestId: The Request Id.
     * @param imei: The imei of the device.
-    * @returns {Promise<unknown>}
+    * @returns {Promise<>}
     */
    getIssuesForRequest(requestId, imei) {
       return new Promise((resolve, reject) => {
          let query = "";
          if (imei) {
-            query = "SELECT * FROM service_request r,service_issues i WHERE r.imei='" + imei + "' AND i.request_id=r.id " +
-               "AND i.issue_status <> 6";
+            query = "SELECT i.id," +
+               " i.request_id," +
+               " i.issue_id," +
+               " i.solution_id," +
+               " i.issue_status," +
+               " i.requester_id," +
+               " i.is_spare_part_returned," +
+               " i.hx_remarks," +
+               " i.service_center_remarks," +
+               " m.issue_details," +
+               " m.issue_type" +
+               " FROM service_issues i," +
+               " service_issue_master m," +
+               " service_request r" +
+               " WHERE r.imei = '" + imei + "'" +
+               " AND i.request_id = r.id" +
+               " AND i.issue_status <> 6" +
+               " AND m.id = i.issue_id;";
          } else if (requestId) {
-            query = "SELECT * FROM service_issues WHERE request_id= " + requestId;
+            query = "SELECT i.id," +
+               " i.request_id," +
+               " i.issue_id," +
+               " i.solution_id," +
+               " i.issue_status," +
+               " i.requester_id," +
+               " i.is_spare_part_returned," +
+               " i.hx_remarks," +
+               " i.service_center_remarks," +
+               " m.issue_details," +
+               " m.issue_type" +
+               " FROM service_issues i," +
+               " service_issue_master m" +
+               " WHERE i.request_id = " + requestId +
+               " AND i.issue_status <> 6" +
+               " AND m.id = i.issue_id;";
          }
+         console.log(query);
          if (query.length > 0) {
             database.query(query, (err, result) => {
                if (err) {

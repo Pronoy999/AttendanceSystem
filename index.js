@@ -59,6 +59,7 @@ const router = {
    'board-meeting': handlers.boardMeeting,
    'franchise': handlers.franchise,
    'service-request': handlers.serviceRequest,
+   'service-issue': handlers.serviceIssue,
    'issue': handlers.issue,
    'solution': handlers.solution,
    'email': handlers.email,

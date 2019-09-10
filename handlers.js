@@ -4585,7 +4585,8 @@ handlers.solution = (dataObject, callback) => {
                callback(true, 400, {'res': messages.insufficientData});
             }
          } else if (dataObject.method === 'get') {
-            const issueId = typeof (dataObject.queryString.issue_id) === 'number' && dataObject.queryString.issue_id > 0 ?
+            console.log(dataObject.queryString);
+            const issueId = typeof (dataObject.queryString.issue_id) !== 'undefined' && dataObject.queryString.issue_id > 0 ?
                dataObject.queryString.issue_id : false;
             if (issueId) {
                const solution = new Solution("", issueId);
@@ -4681,6 +4682,37 @@ handlers.serviceRequest = (dataObject, callback) => {
             }
          } else if (dataObject.method === 'options') {
             callback(false, 200, {});
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(true, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+/**
+ * Handler for Service Issue.
+ * @param dataObject: The request object.
+ * @param callback: The Method callback.
+ */
+handlers.serviceIssue = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, (isValid) => {
+      if (isValid) {
+         if (dataObject.method === 'get') {
+            const imei = typeof (dataObject.queryString.imei) !== 'undefined' && dataObject.queryString.imei.length > 0 ?
+               dataObject.queryString.imei : false;
+            const requestId = typeof (dataObject.queryString.request_id) !== 'undefined' && dataObject.queryString.request_id.length > 0 ?
+               dataObject.queryString.request_id : false;
+            if (imei || requestId) {
+               const issue = new Issue();
+               issue.getIssuesForRequest(requestId, imei).then((result) => {
+                  callback(false, 200, {'res': result});
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
          } else {
             callback(true, 400, {'res': messages.invalidRequestMessage});
          }
