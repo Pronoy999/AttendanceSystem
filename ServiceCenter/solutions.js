@@ -100,6 +100,31 @@ class Solutions {
          });
       });
    }
+
+   /**
+    * Method to get the vendor details based on the solution details.
+    * @param solutionIds: The array containing the solution ids.
+    * @returns {Promise<>}:
+    */
+   getVendorsForSolutions(solutionIds) {
+      return new Promise((resolve, reject) => {
+         let query = "SELECT vendor_id" +
+            " FROM staging_diagnostic_app.service_solution_cost_master cost" +
+            " WHERE cost.solution_id IN (" + solutionIds.map(s => s.solution_id).join(",") + ") " +
+            " AND v.vendor_id=cost.vendor_id " +
+            " GROUP BY cost.vendor_id" +
+            " HAVING COUNT(distinct cost.solution_id) = " + solutionIds.length;
+         console.log(query);
+         database.query(query, (err, result) => {
+            if (err) {
+               console.error(err);
+               reject(err);
+            } else {
+               resolve(result);
+            }
+         });
+      });
+   }
 }
 
 /**

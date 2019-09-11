@@ -1403,7 +1403,6 @@ handlers.getVendor = function (dataObject, callback) {
          }
       });
    } else if (dataObject.method === 'get') {
-      console.log("VENDOR GET ", dataObject.queryString);
       const id = dataObject.queryString.vendor_id > 0 ? dataObject.queryString.vendor_id : false;
       const type = typeof (dataObject.queryString.type) === 'string' ? dataObject.queryString.type : false;
       if (id && type === 'spare') {
@@ -4567,14 +4566,21 @@ handlers.solution = (dataObject, callback) => {
    helpers.validateToken(dataObject.queryString.key, (isValid) => {
       if (isValid) {
          if (dataObject.method === 'post') {
-            console.log(dataObject.postData.spare_part_return_required);
+            const solutionIds = (dataObject.postData.solution_ids) instanceof Array ? dataObject.postData.solution_ids : false;
             const solutionDetails = typeof (dataObject.postData.solution_details) === 'string' &&
             dataObject.postData.solution_details.length > 0 ? dataObject.postData.solution_details : false;
             const issueId = (dataObject.postData.issue_id) > 0 ? dataObject.postData.issue_id : false;
             const isReturn = (dataObject.postData.spare_part_return_required) === "Yes" || "No" ?
                dataObject.postData.spare_part_return_required : false;
             const costDetails = (dataObject.postData.cost_details) instanceof Array ? dataObject.postData.cost_details : false;
-            if (solutionDetails && issueId && isReturn && costDetails) {
+            if (solutionIds) {
+               const solution = new Solution();
+               solution.getVendorsForSolutions(solutionIds).then(result => {
+                  callback(false, 200, {'res': result});
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else if (solutionDetails && issueId && isReturn && costDetails) {
                const solution = new Solution();
                solution.createSolution(solutionDetails, issueId, isReturn, costDetails).then(() => {
                   callback(false, 200, {'res': true});
