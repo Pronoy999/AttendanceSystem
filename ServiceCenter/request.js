@@ -63,8 +63,9 @@ class Request {
     * Method to create new Request.
     * @param issueDetails: The Issue details.
     * @param requesterId: The Person creating the request.
+    * @param serviceCenterId: The service Center selected for the request.
     */
-   createNewRequest(issueDetails, requesterId) {
+   createNewRequest(issueDetails, requesterId, serviceCenterId) {
       return new Promise((resolve, reject) => {
          const query = "INSERT INTO service_request (imei, requester_id, request_status, timestamp) " +
             "VALUES ('" + this._imeiNumber + "','" + requesterId + "'," + 1 + ",'NOW()')";

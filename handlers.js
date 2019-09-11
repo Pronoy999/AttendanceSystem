@@ -4645,9 +4645,11 @@ handlers.serviceRequest = (dataObject, callback) => {
             const issueDetails = dataObject.postData.issue_details instanceof Array ? dataObject.postData.issue_details : false;
             const requesterId = typeof (dataObject.postData.requester_id) === 'number' && dataObject.postData.requester_id > 0 ?
                dataObject.postData.requester_id : false;
-            if (imei && issueDetails && requesterId) {
+            const serviceCenterId = typeof (dataObject.postData.service_center_id) !== 'undefined' && dataObject.postData.service_center_id > 0 ?
+               dataObject.postData.service_center_id : false;
+            if (imei && issueDetails && requesterId && serviceCenterId) {
                const request = new Request(false, imei);
-               request.createNewRequest(issueDetails, requesterId).then(() => {
+               request.createNewRequest(issueDetails, requesterId, serviceCenterId).then(() => {
                   callback(false, 200, {'res': true});
                }).catch(err => {
                   callback(err, 500, {'res': messages.errorMessage});
