@@ -64,13 +64,7 @@ class Solutions {
     */
    getSolutions() {
       return new Promise((resolve, reject) => {
-         const query = "SELECT m.*, c.cost, c.vendor_id, v.first_name, v.last_name" +
-            " FROM service_solution_master m," +
-            " service_solution_cost_master c," +
-            " vendor_details v" +
-            " WHERE m.issue_id = " + this._issueId +
-            " AND c.solution_id = m.id" +
-            " AND v.vendor_id = c.vendor_id";
+         const query = "SELECT * FROM service_solution_master WHERE issue_id=" + this._issueId;
          database.query(query, (err, result) => {
             if (err) {
                console.error(err);
