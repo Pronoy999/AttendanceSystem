@@ -4764,6 +4764,66 @@ handlers.serviceIssue = (dataObject, callback) => {
    });
 };
 /**
+ * Handlers for QR Video.
+ * @param dataObject: The Request Object.
+ * @param callback: The method callback.
+ */
+handlers.qrVideo = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, (isValid) => {
+      if (isValid) {
+         if (dataObject.method === 'get') {
+            const qrId = typeof (dataObject.queryString.id) !== 'undefined' && dataObject.queryString.id > 0 ?
+               dataObject.queryString.id : false;
+            if (qrId) {
+               const updateVideoStatus = () => {
+                  return new Promise((resolve, reject) => {
+                     const query = "UPDATE order_details o, phone_details_qr q SET o.is_video_taken=1" +
+                        " WHERE q.is_lot=0 AND  q.id=" + qrId + " AND o.order_status =10 AND o.imei_number=q.imei";
+                     database.query(query, (err, result) => {
+                        if (err) {
+                           reject(err);
+                        } else {
+                           resolve(result.affectedRows > 0);
+                        }
+                     });
+                  });
+               };
+               const insertTime = () => {
+                  return new Promise((resolve, reject) => {
+                     const orderQuery = "INSERT INTO qr_video_time (order_number)" +
+                        " (SELECT channel_order_id FROM order_details o, phone_details_qr q " +
+                        "WHERE q.id= " + qrId + " AND o.imei_number = q.imei)";
+                     database.query(orderQuery, (err, result) => {
+                        if (err) {
+                           reject(err);
+                        } else {
+                           resolve((result.insertId > 0));
+                        }
+                     });
+                  });
+               };
+               Promise.all([updateVideoStatus(), insertTime()]).then(result => {
+                  if (result) {
+                     callback(false, 200, {'res': true});
+                  } else
+                     callback(false, 500, {'res': messages.errorMessage});
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else if (dataObject.method === 'options') {
+            callback(false, 200, {});
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(true, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+/**
  * Exporting the Handlers.
  */
 module.exports = handlers;
