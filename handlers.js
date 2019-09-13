@@ -1838,7 +1838,7 @@ handlers.visit = function (dataObject, callback) {
    function getTokenAndNotify(employeeID, visitId) {
       let query = "SELECT * FROM employee_details WHERE id = " + employeeID;
       database.query(query, function (err, employeeData) {
-         //console.log(employeeData[0]);
+         console.log(employeeData[0]);
          if (err) {
             console.log(err);
          } else {
@@ -1856,7 +1856,7 @@ handlers.visit = function (dataObject, callback) {
                         const msg = new Buffer(JSON.stringify(employeeData[0])).toString('base64');
                         const content = new Buffer(JSON.stringify(visitData[0])).toString('base64');
                         const extra = new Buffer((JSON.stringify(visitorData[0]))).toString('base64');
-                        if (employeeData[0].device_token.length > 0) {
+                        if (employeeData[0].device_token !== null && employeeData[0].device_token.length > 0) {
                            helpers.sendFirebaseNotification(employeeData[0].device_token, msg, content, extra, function (err) {
                               if (err) {
                                  console.log(err);
