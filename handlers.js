@@ -4594,16 +4594,12 @@ handlers.solution = (dataObject, callback) => {
             console.log(dataObject.queryString);
             const issueId = typeof (dataObject.queryString.issue_id) !== 'undefined' && dataObject.queryString.issue_id > 0 ?
                dataObject.queryString.issue_id : false;
-            if (issueId) {
-               const solution = new Solution("", issueId);
-               solution.getSolutions().then((result) => {
-                  callback(false, 200, {'res': result});
-               }).catch(err => {
-                  callback(err, 500, {'res': messages.errorMessage});
-               });
-            } else {
-               callback(true, 400, {'res': messages.insufficientData});
-            }
+            const solution = new Solution("", issueId);
+            solution.getSolutions().then((result) => {
+               callback(false, 200, {'res': result});
+            }).catch(err => {
+               callback(err, 500, {'res': messages.errorMessage});
+            });
          } else if (dataObject.method === 'put') {
             const solutionId = typeof (dataObject.postData.solution_id) !== 'undefined' && dataObject.postData.solution_id > 0 ?
                dataObject.postData.solution_id : false;

@@ -64,7 +64,8 @@ class Solutions {
     */
    getSolutions() {
       return new Promise((resolve, reject) => {
-         const query = "SELECT * FROM service_solution_master WHERE issue_id=" + this._issueId;
+         let whereClaus = (this._issueId) ? " WHERE issue_id = " + this._issueId : "";
+         const query = "SELECT * FROM service_solution_master " + whereClaus;
          database.query(query, (err, result) => {
             if (err) {
                console.error(err);
