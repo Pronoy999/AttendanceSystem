@@ -25,6 +25,58 @@ class Solutions {
    }
 
    /**
+    * Method to get the cost for a vendor for a solution ids.
+    * @param vendorId: The vendor ids.
+    * @param solutionIds: The solution ids.
+    * @returns {Promise<unknown>}
+    * @private
+    */
+   _getCostForVendor(vendorId, solutionIds) {
+      return new Promise((resolve, reject) => {
+         let inClaus;
+         if (solutionIds.length > 0) {
+            inClaus = " IN (" + solutionIds.map(s => s.solution_id).join(",") + ")";
+            const query = "SELECT solution_id,cost FROM service_solution_cost_master WHERE vendor_id = " + vendorId +
+               " AND solution_id " + inClaus;
+            database.query(query, (err, result) => {
+               if (err) {
+                  reject(err);
+               } else {
+                  resolve(result);
+               }
+            });
+         } else {
+            reject(false);
+         }
+      });
+   }
+
+   /**
+    * Method to get the data formatted according to vendor and their cost with solutions.
+    * @param solutionIds: The Solution ids.
+    * @param vendorIds: The vendor ids.
+    * @returns {Promise<unknown>}
+    * @private
+    */
+   _getVendorCostDetails(solutionIds, vendorIds) {
+      return new Promise(async (resolve, reject) => {
+         try {
+            let result = [];
+            for (let i = 0; i < vendorIds.length; i++) {
+               let oneData = {};
+               const oneVendorId = vendorIds[i].vendor_id;
+               oneData.vendor_id = oneVendorId;
+               oneData.cost_details = await this._getCostForVendor(oneVendorId, solutionIds);
+               result.push(oneData);
+            }
+            resolve(result);
+         } catch (e) {
+            reject(e);
+         }
+      });
+   }
+
+   /**
     * Method to create the Solution for an existing Issue.
     * @param solutionDetails: The Solution Details.
     * @param issueId: The Issue Id.
@@ -103,8 +155,8 @@ class Solutions {
     */
    getVendorsForSolutions(solutionIds) {
       return new Promise((resolve, reject) => {
-         let query = "SELECT vendor_id" +
-            " FROM staging_diagnostic_app.service_solution_cost_master cost" +
+         let query = "SELECT cost.vendor_id" +
+            " FROM service_solution_cost_master cost,vendor_details v" +
             " WHERE cost.solution_id IN (" + solutionIds.map(s => s.solution_id).join(",") + ") " +
             " AND v.vendor_id=cost.vendor_id " +
             " GROUP BY cost.vendor_id" +
@@ -115,7 +167,11 @@ class Solutions {
                console.error(err);
                reject(err);
             } else {
-               resolve(result);
+               this._getVendorCostDetails(solutionIds, result).then(result => {
+                  resolve(result);
+               }).catch(err => {
+                  reject(err);
+               });
             }
          });
       });
