@@ -108,8 +108,8 @@ class Issue {
          let remarks = (isServiceCenter) ? "service_center_remarks" : "hx_remarks";
          let query = "INSERT INTO service_issues " +
             "(request_id, issue_id, solution_id, issue_status, requester_id, " + remarks + ", created)" +
-            " VALUES (" + issueDetails.map(issue => "'" + requestId + "','" + issue.id + "','" + issue.solution_id +
-               "'," + issueStatus + "," + requesterId + ",'" + issue.remarks + "',NOW()").join(",") + ")";
+            " VALUES " + issueDetails.map(issue => "('" + requestId + "','" + issue.id + "','" + issue.solution_id +
+               "'," + issueStatus + "," + requesterId + ",'" + issue.remarks + "',NOW())").join(",");
          database.query(query, (err, result) => {
             if (err) {
                console.error(err);
