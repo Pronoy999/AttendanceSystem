@@ -4658,16 +4658,13 @@ handlers.serviceRequest = (dataObject, callback) => {
                dataObject.postData.imei : false;
             const requestId = typeof (dataObject.postData.request_id) === 'number' && dataObject.postData.request_id > 0 ?
                dataObject.postData.request_id : false;
-            if (imei || requestId) {
-               const request = new Request(requestId, imei);
-               request.getRequestDetails().then(result => {
-                  callback(false, 200, {'res': result});
-               }).catch(err => {
-                  callback(err, 500, {'res': messages.errorMessage});
-               });
-            } else {
-               callback(true, 400, {'res': messages.insufficientData});
-            }
+            const request = new Request(requestId, imei);
+            request.getRequestDetails().then(result => {
+               callback(false, 200, {'res': result});
+            }).catch(err => {
+               callback(err, 500, {'res': messages.errorMessage});
+            });
+
          } else if (dataObject.method === 'put') {
             const requestId = typeof (dataObject.postData.request_id) !== 'undefined' && dataObject.postData.request_id > 0 ?
                dataObject.postData.request_id : false;
