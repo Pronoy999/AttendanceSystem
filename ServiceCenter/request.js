@@ -77,6 +77,7 @@ class Request {
                this._requestId = result.insertId;
                try {
                   await this._insertRequestIssues(issueDetails, requesterId);
+                  await this.updateInventoryStatus(serviceCenterId, false);
                   resolve(true);
                } catch (e) {
                   reject(err);
@@ -111,11 +112,14 @@ class Request {
    /**
     * Method to update the status for the device.
     * @param updatedStatus: The status to be updated to.
+    * @param isStock:
     * @returns {Promise<>}
     */
-   updateInventoryStatus(updatedStatus) {
+   updateInventoryStatus(updatedStatus, isStock) {
       return new Promise((resolve, reject) => {
-         const query = "UPDATE inventory SET service_stock= " + updatedStatus + " WHERE product_imei_1 ='" + this._imeiNumber + "'";
+         isStock = (isStock) ? "service_stock" : "service_center";
+         const query = "UPDATE inventory SET " + isStock + " = " + updatedStatus + " WHERE product_imei_1 ='" + this._imeiNumber + "'";
+         console.log(query);
          database.query(query, (err, result) => {
             if (err) {
                console.error(err);
