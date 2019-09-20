@@ -68,7 +68,7 @@ class Request {
    createNewRequest(issueDetails, requesterId, serviceCenterId) {
       return new Promise((resolve, reject) => {
          const query = "INSERT INTO service_request (imei, requester_id, request_status, service_center_id) VALUES " +
-            " ('" + this._imeiNumber + "','" + requesterId + "'," + 1 + "," + serviceCenterId + ")";
+            " ('" + this._imeiNumber + "','" + requesterId + "'," + 5 + "," + serviceCenterId + ")";
          database.query(query, async (err, result) => {
             if (err) {
                console.error(err);
