@@ -439,6 +439,7 @@ helpers.createOTP = function () {
 /**
  * Method to extract the Details for Sell phone Order.
  * @param postData: The POST Request Data.
+ * @param callback
  */
 helpers.addSellPhoneOrder = function (postData, callback) {
    const firstName = postData.seller_first_name;
@@ -483,6 +484,7 @@ helpers.addSellPhoneOrder = function (postData, callback) {
                callback(err);
             } else {
                callback(false);
+               sendEmail();
             }
          });
       } else {
@@ -490,6 +492,15 @@ helpers.addSellPhoneOrder = function (postData, callback) {
          callback(err);
       }
    });
+   const sendEmail = () => {
+      const emailBody = "Hi, \n There is a new Order for sell phone. \n Regards,\n Elvis team.";
+      helpers.sendEmail("jeff.george@hyperxchange.com", "Sell Phone Order", emailBody,
+         "admin@hyperxchange.com").then(() => {
+         console.log("Email sent FOR SYP.");
+      }).catch(err => {
+         console.log(err);
+      });
+   };
 };
 /**
  * Method to update the Report details table.
