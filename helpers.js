@@ -961,7 +961,9 @@ helpers.updateProcurement = (qr) => {
 helpers.sendEmail = (targetAddress, subject, body, cc, attachments) => {
    return new Promise((resolve, reject) => {
       const transporter = nodemailer.createTransport({
-         service: 'gmail',
+         host: 'smtp.office365.com',
+         port: 587,
+         secure: false,
          auth: {
             user: 'admin@hyperxchange.com',
             pass: 'HX.Yibeal@12346'
