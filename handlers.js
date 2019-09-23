@@ -4662,7 +4662,11 @@ handlers.serviceRequest = (dataObject, callback) => {
             dataObject.queryString.is_request_details > 0 ? dataObject.queryString.is_request_details : false;
             if (isRequestDetails && (requestId || imei)) {
                const request = new Request(requestId, imei);
-
+               request.getRequestDetails().then(_resultSet => {
+                  callback(false, 200, {'res': _resultSet});
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
             } else {
                const request = new Request(requestId, imei);
                request.getRequestDetails().then(result => {
