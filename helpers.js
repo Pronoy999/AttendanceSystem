@@ -964,7 +964,7 @@ helpers.sendEmail = (targetAddress, subject, body, cc, attachments) => {
          service: 'gmail',
          auth: {
             user: 'admin@hyperxchange.com',
-            pass: 'hxadmin123'
+            pass: 'HX.Yibeal@12346'
          }
       });
       const mailOptions = {

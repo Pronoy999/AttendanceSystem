@@ -42,10 +42,11 @@ class Request {
     */
    getRequestDetails() {
       return new Promise((resolve, reject) => {
-         let query = "SELECT * FROM service_request";
+         let query = "SELECT r.imei,r.request_status,r.service_center_id,i.product_price, i.model_name," +
+            "i.product_color,i.storage FROM service_request r, inventory i WHERE i.product_imei_1=r.imei";
          if (this._imeiNumber || this._requestId) {
             let whereClaus = " WHERE ";
-            whereClaus += (this._requestId) ? " id = " + this._requestId : " imei_number = '" + this._imeiNumber + "'";
+            whereClaus += (this._requestId) ? " AND r.id = " + this._requestId : " AND r.imei_number = '" + this._imeiNumber + "'";
             query += whereClaus;
          }
          database.query(query, (err, result) => {
@@ -129,6 +130,10 @@ class Request {
             }
          });
       });
+   }
+
+   getServiceRequestDetails() {
+
    }
 }
 

@@ -4654,16 +4654,23 @@ handlers.serviceRequest = (dataObject, callback) => {
                callback(true, 400, {'res': messages.insufficientData});
             }
          } else if (dataObject.method === 'get') {
-            const imei = typeof (dataObject.postData.imei) !== 'undefined' && dataObject.postData.imei.length > 0 ?
-               dataObject.postData.imei : false;
-            const requestId = typeof (dataObject.postData.request_id) === 'number' && dataObject.postData.request_id > 0 ?
-               dataObject.postData.request_id : false;
-            const request = new Request(requestId, imei);
-            request.getRequestDetails().then(result => {
-               callback(false, 200, {'res': result});
-            }).catch(err => {
-               callback(err, 500, {'res': messages.errorMessage});
-            });
+            const imei = typeof (dataObject.queryString.imei) !== 'undefined' && dataObject.queryString.imei.length > 0 ?
+               dataObject.queryString.imei : false;
+            const requestId = typeof (dataObject.queryString.request_id) === 'number' && dataObject.queryString.request_id > 0 ?
+               dataObject.queryString.request_id : false;
+            const isRequestDetails = typeof (dataObject.queryString.is_request_details) !== 'undefined' &&
+            dataObject.queryString.is_request_details > 0 ? dataObject.queryString.is_request_details : false;
+            if (isRequestDetails && (requestId || imei)) {
+               const request = new Request(requestId, imei);
+
+            } else {
+               const request = new Request(requestId, imei);
+               request.getRequestDetails().then(result => {
+                  callback(false, 200, {'res': result});
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            }
 
          } else if (dataObject.method === 'put') {
             const requestId = typeof (dataObject.postData.request_id) !== 'undefined' && dataObject.postData.request_id > 0 ?
