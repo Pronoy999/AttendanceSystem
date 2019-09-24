@@ -184,26 +184,56 @@ class Issue {
    }
 
    /**
-    * Method to update the status of the existing Issue id with remarks.
-    * @param updatedStatus: The Status to be updated to.
-    * @param hxRemarks: The HX remarks to be set.
-    * @param serviceRemarks: The service Remarks to be set.
-    * @returns {Promise<>}
+    * Method to update the issue status. It can either from Service center or from HX.
+    * @param issueDetails: The array containing the issue details.
+    * @param isServiceCenter: true if its from service centre else false.
+    * @returns {Promise<any>}
     */
-   updateIssueStatus(updatedStatus, hxRemarks, serviceRemarks) {
+   updateIssueStatus(issueDetails, isServiceCenter) {
       return new Promise((resolve, reject) => {
-         let query = "UPDATE service_issues SET issue_status= " + updatedStatus;
-         query += (hxRemarks) ? " ,hx_remarks = " + hxRemarks : "";
-         query += (serviceRemarks) ? " ,service_center_remarks=" + serviceRemarks : "";
-         query += " WHERE id= " + this._issueDetailsId;
-         database.query(query, (err, result) => {
-            if (err) {
-               console.error(err);
-               reject(err);
-            } else {
+         let acceptedQueries = [], rejectedQueries = [];
+         if (issueDetails instanceof Array) {
+            let isService = (isServiceCenter) ? "service_center_remarks" : "hx_remarks";
+            const acceptedIssues = issueDetails.filter(oneIssue => {
+               return oneIssue.issue_status === "approve";
+            });
+            const rejectedIssues = issueDetails.filter(oneIssue => {
+               return oneIssue.issue_status === "reject";
+            });
+            acceptedIssues.map(i => acceptedQueries.push("UPDATE service_issues SET issue_status=1, " +
+               isService + "='" + i.remarks + "' WHERE id = " + i.issue_id));
+            rejectedIssues.map(j => rejectedQueries.push("UPDATE service_issues SET issue_status= 2, " +
+               isService + "='" + j.remarks + "' WHERE id = " + j.issue_id));
+            let promiseArray = [];
+            if (acceptedQueries.length > 0) promiseArray.push(executeQueries(acceptedQueries));
+            if (rejectedQueries.length > 0) promiseArray.push(executeQueries(rejectedQueries));
+            Promise.all(promiseArray).then(() => {
                resolve(true);
-            }
-         });
+            }).catch(err => {
+               reject(err);
+            });
+         } else {
+            reject(false);
+         }
+
+         /**
+          * Method to execute the queries.
+          * @param queries: the array containing the queries.
+          * @returns {Promise<any>}
+          */
+         function executeQueries(queries) {
+            return new Promise((resolve, reject) => {
+               queries.forEach(oneQuery => {
+                  database.query(oneQuery, (err, result) => {
+                     if (err) {
+                        reject(err);
+                     } else {
+                        resolve(true);
+                     }
+                  });
+               });
+            });
+         }
       });
    }
 }
