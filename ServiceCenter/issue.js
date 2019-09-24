@@ -189,7 +189,7 @@ class Issue {
     * @param isServiceCenter: true if its from service centre else false.
     * @returns {Promise<any>}
     */
-   updateIssueStatus(issueDetails, isServiceCenter) {
+   updateIssueStatus(issueDetails, isServiceCenter, requestId) {
       return new Promise((resolve, reject) => {
          let acceptedQueries = [], rejectedQueries = [];
          if (issueDetails instanceof Array) {
@@ -201,14 +201,19 @@ class Issue {
                return oneIssue.issue_status === "reject";
             });
             acceptedIssues.map(i => acceptedQueries.push("UPDATE service_issues SET issue_status=1, " +
-               isService + "='" + i.remarks + "' WHERE id = " + i.issue_id));
+               isService + "='" + i.remarks + "' WHERE issue_id = " + i.issue_id + " AND request_id= " + i.request_id));
             rejectedIssues.map(j => rejectedQueries.push("UPDATE service_issues SET issue_status= 2, " +
-               isService + "='" + j.remarks + "' WHERE id = " + j.issue_id));
+               isService + "='" + j.remarks + "' WHERE id = " + j.issue_id + " AND request_id= " + i.request_id));
             let promiseArray = [];
             if (acceptedQueries.length > 0) promiseArray.push(executeQueries(acceptedQueries));
             if (rejectedQueries.length > 0) promiseArray.push(executeQueries(rejectedQueries));
             Promise.all(promiseArray).then(() => {
                resolve(true);
+               const Request = require('./request');
+               const request = new Request(requestId);
+               request.updateRequestStatus(2).then(() => {
+                  console.log("request status updated to IN-OFFICE.");
+               });
             }).catch(err => {
                reject(err);
             });

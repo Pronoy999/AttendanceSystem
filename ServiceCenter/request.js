@@ -136,10 +136,6 @@ class Request {
          });
       });
    }
-
-   getServiceRequestDetails() {
-
-   }
 }
 
 /**
