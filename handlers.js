@@ -4745,9 +4745,10 @@ handlers.serviceIssue = (dataObject, callback) => {
          } else if (dataObject.method === 'put') {
             const issueDetails = (dataObject.postData.issue_details instanceof Array) ? dataObject.postData.issue_details : false;
             const isServiceCenter = !!(dataObject.postData.is_service_center);
-            if (issueDetails) {
+            const requestId = (dataObject.postData.request_id) > 0 ? dataObject.postData.request_id : false;
+            if (issueDetails && requestId) {
                const issue = new Issue();
-               issue.updateIssueStatus(issueDetails, isServiceCenter).then(() => {
+               issue.updateIssueStatus(issueDetails, isServiceCenter, requestId).then(() => {
                   callback(false, 200, {'res': true});
                }).catch(err => {
                   callback(err, 500, {'res': messages.errorMessage});

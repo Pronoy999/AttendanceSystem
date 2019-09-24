@@ -201,9 +201,9 @@ class Issue {
                return oneIssue.issue_status === "reject";
             });
             acceptedIssues.map(i => acceptedQueries.push("UPDATE service_issues SET issue_status=1, " +
-               isService + "='" + i.remarks + "' WHERE issue_id = " + i.issue_id + " AND request_id= " + i.request_id));
+               isService + "='" + i.remarks + "' WHERE issue_id = " + i.issue_id + " AND request_id= " + requestId));
             rejectedIssues.map(j => rejectedQueries.push("UPDATE service_issues SET issue_status= 2, " +
-               isService + "='" + j.remarks + "' WHERE id = " + j.issue_id + " AND request_id= " + i.request_id));
+               isService + "='" + j.remarks + "' WHERE issue_id = " + j.issue_id + " AND request_id= " + requestId));
             let promiseArray = [];
             if (acceptedQueries.length > 0) promiseArray.push(executeQueries(acceptedQueries));
             if (rejectedQueries.length > 0) promiseArray.push(executeQueries(rejectedQueries));
