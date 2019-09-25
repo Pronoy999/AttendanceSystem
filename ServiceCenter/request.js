@@ -47,7 +47,7 @@ class Request {
          if (this._imeiNumber || this._requestId) {
             let whereClaus = (this._imeiNumber) ? "r.imei='" + this._imeiNumber + "'" : "r.id=" + this._requestId;
             query = "SELECT r.id,r.imei,r.request_status,r.requester_id,r.service_center_id,i.issue_id," +
-               "i.solution_id,im.issue_details,sm.solution_details,sm.spare_part_return_required,cm.cost " +
+                "i.issue_status,i.solution_id,im.issue_details,sm.solution_details,sm.spare_part_return_required,cm.cost " +
                "FROM service_request r,service_issues i,service_issue_master im,service_solution_master sm," +
                " service_solution_cost_master cm " +
                "WHERE " + whereClaus + " AND i.request_id = r.id AND im.id = i.issue_id AND sm.id = i.solution_id AND" +

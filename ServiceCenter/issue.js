@@ -187,6 +187,7 @@ class Issue {
     * Method to update the issue status. It can either from Service center or from HX.
     * @param issueDetails: The array containing the issue details.
     * @param isServiceCenter: true if its from service centre else false.
+    * @param requestId
     * @returns {Promise<any>}
     */
    updateIssueStatus(issueDetails, isServiceCenter, requestId) {
