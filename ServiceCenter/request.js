@@ -43,17 +43,19 @@ class Request {
    getRequestDetails() {
       return new Promise((resolve, reject) => {
          let query = "SELECT r.imei,r.request_status,r.service_center_id,i.product_price, i.model_name," +
-            "i.product_color,i.storage FROM service_request r, inventory i WHERE i.product_imei_1=r.imei";
+             "i.product_color,i.storage FROM service_request r, inventory i WHERE i.product_imei_1=r.imei";
          if (this._imeiNumber || this._requestId) {
             let whereClaus = (this._imeiNumber) ? "r.imei='" + this._imeiNumber + "'" : "r.id=" + this._requestId;
             query = "SELECT r.id,r.imei,r.request_status,r.requester_id,r.service_center_id,i.issue_id," +
                 "i.issue_status,i.solution_id,im.issue_details,sm.solution_details,sm.spare_part_return_required,cm.cost " +
-               "FROM service_request r,service_issues i,service_issue_master im,service_solution_master sm," +
-               " service_solution_cost_master cm " +
-               "WHERE " + whereClaus + " AND i.request_id = r.id AND im.id = i.issue_id AND sm.id = i.solution_id AND" +
-               " cm.solution_id = i.solution_id" +
-               "  AND cm.vendor_id = r.service_center_id";
+                "FROM service_request r,service_issues i,service_issue_master im,service_solution_master sm," +
+                " service_solution_cost_master cm " +
+                "WHERE " + whereClaus + " AND i.request_id = r.id AND im.id = i.issue_id AND sm.id = i.solution_id AND" +
+                " cm.solution_id = i.solution_id" +
+                "  AND cm.vendor_id = r.service_center_id";
          }
+         console.log(this._imeiNumber);
+         console.log(query);
          database.query(query, (err, result) => {
             if (err) {
                console.error(err);
@@ -74,7 +76,7 @@ class Request {
    createNewRequest(issueDetails, requesterId, serviceCenterId) {
       return new Promise((resolve, reject) => {
          const query = "INSERT INTO service_request (imei, requester_id, request_status, service_center_id) VALUES " +
-            " ('" + this._imeiNumber + "','" + requesterId + "'," + 5 + "," + serviceCenterId + ")";
+             " ('" + this._imeiNumber + "','" + requesterId + "'," + 5 + "," + serviceCenterId + ")";
          database.query(query, async (err, result) => {
             if (err) {
                console.error(err);
