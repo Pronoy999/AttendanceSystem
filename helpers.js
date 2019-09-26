@@ -531,52 +531,72 @@ helpers.updatePhoneReport = function (postData, callback) {
  * @param postData: the POST body.
  * @param callback: The method callback.
  */
-helpers.insertOrder = function (postData, callback) {
-   const awbNumber = postData.awb_number;
-   const channelOrderId = postData.channel_order_id;
-   const channelName = postData.channel_name;
-   const productDetails = postData.product_details;
-   const customerName = postData.customer_name;
-   const customerEmail = postData.customer_email;
-   const customerPhone = postData.customer_phone;
-   const address = postData.shipping_address;
-   const courierId = postData.courier_id;
-   const orderDate = postData.order_date;
-   const orderTime = postData.order_time;
-   const timeDate = Math.floor((new Date().getTime()) / 1000);
-   const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ')[0];
-   const dispatchBefore = postData.dispatch_before;
-   const invoiceNumber = postData.invoice_number;
-   const invoiceDate = postData.invoice_date;
-   const paymentMethod = postData.payment_method;
-   const productPrice = postData.product_price;
-   const orderStatus = postData.order_status;
-   const isVideoTaken = postData.is_video_taken;
-   const productGrade = postData.product_grade;
-   const imei = postData.imei_number;
-   const remarks = postData.remarks;
-   const values = "'','" + awbNumber + "','" + channelOrderId + "','" + channelName + "','" + productDetails + "','" +
-      customerName + "','" + customerEmail + "','" + customerPhone + "','" + address + "','" + courierId + "','" +
-      orderDate + "','" + orderTime + "','" + formattedDate + "','" + dispatchBefore + "','" + invoiceNumber + "','" + invoiceDate + "','" +
-      paymentMethod + "','" + productPrice + "','" + orderStatus + "','" + isVideoTaken + "','" +
-      productGrade + "','" + imei + "','" + remarks + "',''";
-   database.insert("order_details", values, function (err, insertData) {
-      if (err) {
-         callback(err);
-      } else {
+helpers.insertOrder = async function (postData, callback) {
+   try {
+      const awbNumber = postData.awb_number;
+      const channelOrderId = postData.channel_order_id;
+      if (await isExists(channelOrderId)) {
          callback(false);
+         return;
       }
-   });
-   /*const query = "INSERT INTO order_details VALUES (" + values + ")";
-   database.query(query, function (err, orderData) {
-       if (err) {
-           console.log(err);
-           callback(err);
-       } else {
-           callback(false);
-       }
-   });*/
+      const channelName = postData.channel_name;
+      const productDetails = postData.product_details;
+      const customerName = postData.customer_name;
+      const customerEmail = postData.customer_email;
+      const customerPhone = postData.customer_phone;
+      const address = postData.shipping_address;
+      const courierId = postData.courier_id;
+      const orderDate = postData.order_date;
+      const orderTime = postData.order_time;
+      const timeDate = Math.floor((new Date().getTime()) / 1000);
+      const formattedDate = (moment.unix(timeDate).tz('Asia/Kolkata').format(messages.dateFormat)).split(' ')[0];
+      const dispatchBefore = postData.dispatch_before;
+      const invoiceNumber = postData.invoice_number;
+      const invoiceDate = postData.invoice_date;
+      const paymentMethod = postData.payment_method;
+      const productPrice = postData.product_price;
+      const orderStatus = postData.order_status;
+      const isVideoTaken = postData.is_video_taken;
+      const productGrade = postData.product_grade;
+      const imei = postData.imei_number;
+      const remarks = postData.remarks;
+      const values = "'','" + awbNumber + "','" + channelOrderId + "','" + channelName + "','" + productDetails + "','" +
+         customerName + "','" + customerEmail + "','" + customerPhone + "','" + address + "','" + courierId + "','" +
+         orderDate + "','" + orderTime + "','" + formattedDate + "','" + dispatchBefore + "','" + invoiceNumber + "','" + invoiceDate + "','" +
+         paymentMethod + "','" + productPrice + "','" + orderStatus + "','" + isVideoTaken + "','" +
+         productGrade + "','" + imei + "','" + remarks + "',''";
+      database.insert("order_details", values, function (err, insertData) {
+         if (err) {
+            callback(err);
+         } else {
+            callback(false);
+         }
+      });
+   } catch (e) {
+      callback(e);
+   }
 
+   /**
+    * Method to check whether the order exists or not.
+    * @param channelOrderId: The channel order id.
+    * @returns {Promise<unknown>}
+    */
+   function isExists(channelOrderId) {
+      return new Promise((resolve, reject) => {
+         const query = "SELECT * FROM order_details WHERE channel_order_id = '" + channelOrderId + "'";
+         database.query(query, (err, result) => {
+            if (err) {
+               reject(err);
+            } else {
+               if (typeof (result[0]) !== 'undefined') {
+                  resolve(true);
+               } else {
+                  resolve(false);
+               }
+            }
+         });
+      });
+   }
 };
 /**
  * Method to send the firebase notification.
