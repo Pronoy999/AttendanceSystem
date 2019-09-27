@@ -43,6 +43,7 @@ const router = {
    'order-details': handlers.orderDetails,
    'order-returned': handlers.orderReturned,
    'order-status': handlers.orderStatus,
+   'order': handlers.order,
    'details': handlers.details,
    'bio-auth': handlers.bioAuth,
    'firebase-token': handlers.firebaseToken,

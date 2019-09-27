@@ -1133,6 +1133,22 @@ helpers.isEquivalent = (a, b) => {
 helpers.validateEmail = email => {
    return messages.emailRegex.test(String(email).toLowerCase());
 };
+
+helpers.cancelOrders = (orders) => {
+   return new Promise((resolve, reject) => {
+      const query = "UPDATE order_details SET order_status=8" +
+         " WHERE channel_order_id IN (" + orders.map(order => "'" + order.order_id + "'").join(",") + ")" +
+         " AND order_status <> 5";
+      console.log(query);
+      database.query(query, (err, result) => {
+         if (err) {
+            reject(err);
+         } else {
+            resolve(true);
+         }
+      });
+   });
+};
 /**
  * Exporting the module.
  */

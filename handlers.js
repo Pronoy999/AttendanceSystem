@@ -4826,6 +4826,28 @@ handlers.qrVideo = (dataObject, callback) => {
       }
    });
 };
+handlers.order = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, (isValid) => {
+      if (isValid) {
+         if (dataObject.method === 'put') {
+            const orderDetails = typeof (dataObject.postData.cancel_orders) !== 'undefined' ? dataObject.postData.cancel_orders : false;
+            if (orderDetails) {
+               helpers.cancelOrders(orderDetails).then(() => {
+                  callback(false, 200, {'res': true});
+               }).catch(err => {
+                  callback(err, 500, {'res': messages.errorMessage});
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else {
+            callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(true, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
 /**
  * Exporting the Handlers.
  */
