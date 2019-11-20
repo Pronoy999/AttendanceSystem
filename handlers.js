@@ -3249,6 +3249,29 @@ handlers.firebaseToken = function (dataObject, callback) {
             callback(true, 400, {'res': messages.insufficientData});
          }
       });
+   } else if (dataObject.method === 'post') {
+      helpers.validateToken(dataObject.queryString.key, function (isValid) {
+         if (isValid) {
+            const token = typeof (dataObject.postData.token) === 'string' &&
+            dataObject.postData.token.length > 10 ? dataObject.postData.token : false;
+            const storeid = typeof (dataObject.postData.store_id) === 'string' &&
+            dataObject.postData.store_id.length > 0 ? dataObject.postData.store_id : false;
+            if (storeid && token) {
+               const query = "UPDATE store_master SET token='" + token + "' WHERE store_id=" + storeid;
+               database.query(query, function (err, updateData) {
+                  if (err) {
+                     callback(err, 500, {'res': messages.errorMessage});
+                  } else {
+                     callback(false, 200, {'res': true});
+                  }
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else {
+            callback(true, 403, {'res': messages.tokenExpiredMessage});
+         }
+      });
    } else {
       callback(true, 400, {'res': messages.invalidRequestMessage})
    }
