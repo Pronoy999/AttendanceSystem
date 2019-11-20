@@ -3254,11 +3254,20 @@ handlers.firebaseToken = function (dataObject, callback) {
          if (isValid) {
             const token = typeof (dataObject.postData.token) === 'string' &&
             dataObject.postData.token.length > 10 ? dataObject.postData.token : false;
-            const storeid = typeof (dataObject.postData.store_id) === 'string' &&
-            dataObject.postData.store_id.length > 0 ? dataObject.postData.store_id : false;
-            if (storeid && token) {
+            const storeid = dataObject.postData.store_id > 0 ? dataObject.postData.store_id : false;
+            const imei = dataObject.postData.imei ? dataObject.postData.imei : false;
+            if (!imei && storeid && token) {
                const query = "UPDATE store_master SET token='" + token + "' WHERE store_id=" + storeid;
                database.query(query, function (err, updateData) {
+                  if (err) {
+                     callback(err, 500, {'res': messages.errorMessage});
+                  } else {
+                     callback(false, 200, {'res': true});
+                  }
+               });
+            } else if (token && imei && storeid) {
+               const query = "UPDATE store_master SET client_token='" + token + "',imei='" + imei + "' WHERE store_id = " + storeid;
+               database.query(query, (err, result) => {
                   if (err) {
                      callback(err, 500, {'res': messages.errorMessage});
                   } else {
@@ -4865,6 +4874,48 @@ handlers.order = (dataObject, callback) => {
             }
          } else {
             callback(true, 400, {'res': messages.invalidRequestMessage});
+         }
+      } else {
+         callback(true, 403, {'res': messages.tokenExpiredMessage});
+      }
+   });
+};
+handlers.life = (dataObject, callback) => {
+   helpers.validateToken(dataObject.queryString.key, (isValid) => {
+      if (isValid) {
+         if (dataObject.method === 'post') {
+            const mobileNumber = typeof (dataObject.postData.mobile_number) === 'string' ?
+               dataObject.postData.mobile_number : false;
+            const otp = typeof (dataObject.postData.otp) === 'number' ?
+               dataObject.postData.otp : false;
+            if (mobileNumber && otp) {
+               const query = "INSERT INTO otp VALUES('" + mobileNumber + "'," + otp + ")";
+               database.query(query, (err, result) => {
+                  if (err) {
+                     console.error(err);
+                     callback(err, 500, {'res': messages.errorMessage});
+                  } else {
+                     callback(false, 200, {'res': true});
+                  }
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else if (dataObject.method === 'put') {
+            const data = dataObject.postData.data;
+            const token = dataObject.postData.token;
+            if (data && token) {
+               helpers.sendLifeFirebase(token, "test", "gps", "running", (err, response) => {
+                  if (err) {
+                     console.log(err);
+                     callback(err, 500, {'res': messages.errorMessage});
+                  } else {
+                     callback(false, 200, {'res': true});
+                  }
+               });
+            }
+         } else {
+            callback(false, 400, {'res': messages.invalidRequestMessage});
          }
       } else {
          callback(true, 403, {'res': messages.tokenExpiredMessage});

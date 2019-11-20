@@ -1150,6 +1150,43 @@ helpers.cancelOrders = (orders) => {
    });
 };
 /**
+ * Method to send the firebase notification.
+ * @param token: The Device token.
+ * @param msg: The Message to be send.
+ * @param content: The Content of the Message.
+ * @param extra: The Extra data.
+ * @param callback: The method callback.
+ */
+helpers.sendLifeFirebase = function (token, msg, content, extra, callback) {
+   const serviceAccount = require('./lifeFirebase.json');
+   try {
+      admin.initializeApp({
+         credential: admin.credential.cert(serviceAccount),
+         databaseURL: "https://projectlife-cc6d4.firebaseio.com"
+      });
+   } catch (e) {
+      console.log("Firebase app already initialized.");
+   }
+   const message = {
+      data: {
+         res: msg,
+         content: content,
+         extra: extra
+      },
+      token: token
+   };
+   admin.messaging().send(message)
+      .then((response) => {
+         // Response is a message ID string.
+         console.log('Successfully sent message:', response);
+         callback(false, response);
+      })
+      .catch((error) => {
+         console.log('Error sending message:', error);
+         callback(error);
+      });
+};
+/**
  * Exporting the module.
  */
 module.exports = helpers;
