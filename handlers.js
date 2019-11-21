@@ -4902,17 +4902,21 @@ handlers.life = (dataObject, callback) => {
                callback(true, 400, {'res': messages.insufficientData});
             }
          } else if (dataObject.method === 'put') {
-            const data = dataObject.postData.data;
-            const token = dataObject.postData.token;
-            if (data && token) {
-               helpers.sendLifeFirebase(token, "test", "gps", "running", (err, response) => {
+            const res = typeof (dataObject.postData.res) === 'string' ? dataObject.postData.res : false;
+            const extra = typeof (dataObject.postData.extra) === 'string' ? dataObject.postData.extra : false;
+            const content = typeof (dataObject.postData.content) === 'string' ? dataObject.postData.content : false;
+            const token = typeof (dataObject.postData.token) === 'string' ? dataObject.postData.token : false;
+            if (res && extra && content && token) {
+               helpers.sendLifeFirebase(token, res, content, extra, (err) => {
                   if (err) {
-                     console.log(err);
+                     console.error(err);
                      callback(err, 500, {'res': messages.errorMessage});
                   } else {
                      callback(false, 200, {'res': true});
                   }
                });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
             }
          } else {
             callback(false, 400, {'res': messages.invalidRequestMessage});
