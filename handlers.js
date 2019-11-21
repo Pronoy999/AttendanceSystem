@@ -4930,8 +4930,7 @@ handlers.lifeotp = (dataObject, callback) => {
    helpers.validateToken(dataObject.queryString.key, (isValid) => {
       if (isValid) {
          if (dataObject.method === 'get') {
-            const otp = typeof (dataObject.queryString.otp) === 'number' ?
-               dataObject.queryString.otp : false;
+             const otp = (dataObject.queryString.otp > 0) ? dataObject.queryString.otp : false;
             if (otp) {
                const query = "SELECT * FROM otp WHERE otp = " + otp;
                database.query(query, (err, result) => {
@@ -4939,6 +4938,9 @@ handlers.lifeotp = (dataObject, callback) => {
                      callback(err, 500, {'res': messages.errorMessage});
                   } else {
                      console.log(result);
+                      if (result.length > 0)
+                          callback(false, 200, {'res': true});
+
                   }
                });
             } else {
