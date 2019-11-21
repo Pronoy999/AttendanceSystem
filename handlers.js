@@ -4940,6 +4940,8 @@ handlers.lifeotp = (dataObject, callback) => {
                      console.log(result);
                       if (result.length > 0)
                           callback(false, 200, {'res': true});
+                      else
+                          callback(false, 200, {'res': false});
 
                   }
                });
