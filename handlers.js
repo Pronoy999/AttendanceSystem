@@ -4889,11 +4889,19 @@ handlers.life = (dataObject, callback) => {
             const otp = typeof (dataObject.postData.otp) === 'number' ?
                dataObject.postData.otp : false;
             if (mobileNumber && otp) {
-               const query = "INSERT INTO otp VALUES('" + mobileNumber + "'," + otp + ")";
+               let query = "INSERT INTO otp VALUES('" + mobileNumber + "'," + otp + ",'')";
                database.query(query, (err, result) => {
                   if (err) {
                      console.error(err);
-                     callback(err, 500, {'res': messages.errorMessage});
+                     query = "UPDATE otp SET otp=" + otp + " WHERE mobile_number='" + mobileNumber + "'";
+                     database.query(query, (err, result) => {
+                        if (err) {
+                           console.error(err);
+                           callback(err, 500, {'res': messages.errorMessage});
+                        } else {
+                           callback(false, 200, {'res': true});
+                        }
+                     });
                   } else {
                      callback(false, 200, {'res': true});
                   }
@@ -4906,6 +4914,7 @@ handlers.life = (dataObject, callback) => {
             const extra = typeof (dataObject.postData.extra) === 'string' ? dataObject.postData.extra : false;
             const content = typeof (dataObject.postData.content) === 'string' ? dataObject.postData.content : false;
             const token = typeof (dataObject.postData.token) === 'string' ? dataObject.postData.token : false;
+            console.log(content);
             if (res && extra && content && token) {
                helpers.sendLifeFirebase(token, res, content, extra, (err) => {
                   if (err) {
@@ -4913,6 +4922,23 @@ handlers.life = (dataObject, callback) => {
                      callback(err, 500, {'res': messages.errorMessage});
                   } else {
                      callback(false, 200, {'res': true});
+                  }
+               });
+            } else {
+               callback(true, 400, {'res': messages.insufficientData});
+            }
+         } else if (dataObject.method === 'get') {
+            const storeId = dataObject.queryString.store_id > 0 ? dataObject.queryString.store_id : false;
+            if (storeId) {
+               const query = "SELECT * FROM store_master WHERE store_id=" + storeId;
+               database.query(query, (err, result) => {
+                  if (err) {
+                     console.log(err);
+                     callback(err, 500, {'res': messages.errorMessage});
+                  } else {
+                     const res = result[0];
+                     const token = res.token;
+                     callback(false, 200, {'res': token});
                   }
                });
             } else {
@@ -4930,7 +4956,7 @@ handlers.lifeotp = (dataObject, callback) => {
    helpers.validateToken(dataObject.queryString.key, (isValid) => {
       if (isValid) {
          if (dataObject.method === 'get') {
-             const otp = (dataObject.queryString.otp > 0) ? dataObject.queryString.otp : false;
+            const otp = (dataObject.queryString.otp > 0) ? dataObject.queryString.otp : false;
             if (otp) {
                const query = "SELECT * FROM otp WHERE otp = " + otp;
                database.query(query, (err, result) => {
@@ -4938,11 +4964,10 @@ handlers.lifeotp = (dataObject, callback) => {
                      callback(err, 500, {'res': messages.errorMessage});
                   } else {
                      console.log(result);
-                      if (result.length > 0)
-                          callback(false, 200, {'res': true});
-                      else
-                          callback(false, 200, {'res': false});
-
+                     if (result.length > 0)
+                        callback(false, 200, {'res': true});
+                     else
+                        callback(false, 200, {'res': false});
                   }
                });
             } else {
