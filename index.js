@@ -67,7 +67,8 @@ const router = {
    'email': handlers.email,
    'nda': handlers.ndaEmail,
    'hrms': handlers.hrmsAttendance,
-   'life': handlers.life
+   'life': handlers.life,
+   'life/otp': handlers.lifeotp
 };
 /*const httpsOptions = {
    key: fs.readFileSync("/etc/apache2/ssl/keys/YibealTradexPvtKey.key"),
