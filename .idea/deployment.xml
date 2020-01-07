@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" uploadOnCheckin="d9fc49e8-0aa5-44df-8646-910901317270">
+  <component name="PublishConfigData" uploadOnCheckin="9ffe1d9e-c14e-408f-96a3-32fe3edbd497">
     <serverData>
       <paths name="AWS Production">
         <serverdata>
@@ -17,6 +17,6 @@
         </serverdata>
       </paths>
     </serverData>
-    <option name="myUploadOnCheckinName" value="AWS Staging" />
+    <option name="myUploadOnCheckinName" value="AWS Production" />
   </component>
 </project>

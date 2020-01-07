@@ -1,4 +1,5 @@
 const messages = {};
+messages.ATTENDANCE_FILE_NAME = "Attendance.xlsx";
 messages.tokenExpiredMessage = "Invalid Token or Token Expired.";
 messages.invalidRequestMessage = "Invalid Request Method.";
 messages.alreadyLoggedIn = "The User is already logged in";
@@ -7,6 +8,7 @@ messages.noVideo = "Missing Video for the Order.";
 messages.attendancePut = "Attendance successful.";
 messages.invalidPassword = "Invalid Email or Password";
 messages.companyPrefix = "HX";
+messages.DATE_ONLY_FORMAT = "YYYY-MM-DD";
 messages.phoneInserted = "Inserted new Phone.";
 messages.insufficientData = "Insufficient Data.";
 messages.dateFormat = 'YYYY-MM-DD HH:mm:ss';
@@ -156,6 +158,8 @@ messages.pdfMakeFonts = {
       bolditalics: 'Times-BoldItalic'
    }
 };
+messages.ATTENDANCE_EMAIL_BODY = "Hi, \n This is the attendance report for : ";
+messages.EMAIL_SIGNATURE = "\n Regards,\n Elvis.";
 /**
  * Exporting the Message Module.
  */

@@ -9,6 +9,7 @@ const moment = require('moment');
 const tz = require('moment-timezone');
 const fs = require('fs');
 const async = require('async');
+const workers = require('./workers');
 /*const {exec} = require('child_process');
 const java = require('./initJava');
 const aws = require('./aws');
@@ -80,6 +81,7 @@ handlers.notFound = function (data, callback) {
  */
 handlers.ping = function (dataObject, callback) {
    callback(false, 200, {'res': 'Welcome to HyperXchange API version 1.0.'});
+   workers.generateAttendanceReport();
 };
 /**
  * Method to verify or to send OTP.

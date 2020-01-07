@@ -2,15 +2,16 @@
   "name": "hyperxchangeapi",
   "version": "1.0.0",
   "dependencies": {
+    "async": "latest",
     "aws-sdk": "latest",
+    "excel4node": "^1.7.2",
     "firebase-admin": "^6.4.0",
     "moment": "latest",
     "moment-timezone": "latest",
     "mysql": "latest",
+    "node-schedule": "latest",
     "nodemailer": "^6.2.1",
     "pdfmake": "latest",
-    "sqlite3": "^4.0.6",
-    "node-schedule": "latest",
-    "async": "latest"
+    "sqlite3": "^4.0.6"
   }
 }

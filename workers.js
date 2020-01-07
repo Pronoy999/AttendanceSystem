@@ -5,6 +5,9 @@ const moment = require('moment');
 const schedule = require('node-schedule');
 const sns = require('./snsLib');
 const helpers = require('./helpers');
+const ReportGenerator = require('./reportGenerator');
+const constants = require('./Constants');
+const generator = require('./generator');
 const workers = {};
 
 
@@ -609,6 +612,21 @@ workers.callConfirmationNotification = () => {
             }
          }
       });
+   });
+};
+workers.generateAttendanceReport = () => {
+   const reportGen = new ReportGenerator();
+   reportGen.generateReportForAttendance().then(() => {
+      const path = __dirname.substr(0, __dirname.lastIndexOf("/"));
+      console.log(path);
+      const pathToFile = path + "/" + constants.ATTENDANCE_FILE_NAME;
+      const attachments = [{path: pathToFile}];
+      const monthName = generator.generateCurrentMonthName();
+      const year = generator.generateCurrentYear();
+      const date = monthName + " '" + year;
+      console.log("Report generated.")
+   }).catch(err => {
+      console.error(err);
    });
 };
 /**
