@@ -179,6 +179,7 @@ function initWorkers() {
    workers.generateStockServiceCSVforAccounts();
    workers.generateStockServiceCSVforOperations();
    workers.callConfirmationNotification();
+   workers.generateAttendanceReport();
 }
 
 initWorkers();

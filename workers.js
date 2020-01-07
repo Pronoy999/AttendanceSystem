@@ -615,18 +615,25 @@ workers.callConfirmationNotification = () => {
    });
 };
 workers.generateAttendanceReport = () => {
-   const reportGen = new ReportGenerator();
-   reportGen.generateReportForAttendance().then(() => {
-      const path = __dirname.substr(0, __dirname.lastIndexOf("/"));
-      console.log(path);
-      const pathToFile = path + "/" + constants.ATTENDANCE_FILE_NAME;
-      const attachments = [{path: pathToFile}];
-      const monthName = generator.generateCurrentMonthName();
-      const year = generator.generateCurrentYear();
-      const date = monthName + " '" + year;
-      console.log("Report generated.")
-   }).catch(err => {
-      console.error(err);
+   schedule.scheduleJob('54 23 30 */1 *', () => {
+      const reportGen = new ReportGenerator();
+      reportGen.generateReportForAttendance().then(() => {
+         const path = __dirname.substr(0, __dirname.lastIndexOf("/"));
+         console.log(path);
+         const pathToFile = path + "/" + constants.ATTENDANCE_FILE_NAME;
+         const attachments = [{path: pathToFile}];
+         const monthName = generator.generateCurrentMonthName();
+         const year = generator.generateCurrentYear();
+         const date = monthName + " '" + year;
+         console.log("Report generated.");
+         helpers.sendEmail("shipra@hyperxchange.com", "Attendance Report for " + date,
+            constants.ATTENDANCE_EMAIL_BODY + date + constants.EMAIL_SIGNATURE,
+            "asish@hyperxchange.com", attachments).then(() => {
+            console.log("Attendance Report for :" + date + " Emailed.");
+         });
+      }).catch(err => {
+         console.error(err);
+      });
    });
 };
 /**
