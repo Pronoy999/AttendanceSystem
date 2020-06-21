@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Activities.OTPDialogActivity">
+
+    <android.support.v7.widget.AppCompatTextView
+        android:id="@+id/promptView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="64dp"
+        android:layout_marginEnd="32dp"
+        android:text="@string/otp_prompt"
+        android:textColor="@android:color/black"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@id/phoneNumberView"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <android.support.v7.widget.AppCompatTextView
+        android:id="@+id/phoneNumberView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="serif-monospace"
+        android:textColor="@android:color/black"
+        android:textSize="25sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/promptView"
+        tools:text="+91 XXXXX XXXXXX" />
+
+    <android.support.v7.widget.AppCompatTextView
+        android:id="@+id/enterPrompt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="@string/enter_the_otp_below"
+        android:textColor="@android:color/black"
+        android:textSize="20sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/phoneNumberView" />
+
+    <LinearLayout
+        android:id="@+id/otpLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/enterPrompt">
+
+        <com.pw.hyperxchange.visitormanagement.Objects.DigitText
+            android:id="@+id/digit1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/otpDigitGap"
+            android:fontFamily="monospace"
+            android:hint="@string/hint_hash"
+            android:maxLength="1"
+            android:paddingLeft="@dimen/otpDigitPad"
+            android:paddingRight="@dimen/otpDigitPad"
+            android:textSize="25sp"
+            android:inputType="numberDecimal" />
+
+        <com.pw.hyperxchange.visitormanagement.Objects.DigitText
+            android:id="@+id/digit2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/otpDigitGap"
+            android:fontFamily="monospace"
+            android:hint="@string/hint_hash"
+            android:maxLength="1"
+            android:paddingLeft="@dimen/otpDigitPad"
+            android:paddingRight="@dimen/otpDigitPad"
+            android:textSize="25sp"
+            android:inputType="numberDecimal" />
+
+        <com.pw.hyperxchange.visitormanagement.Objects.DigitText
+            android:id="@+id/digit3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/otpDigitGap"
+            android:fontFamily="monospace"
+            android:hint="@string/hint_hash"
+            android:maxLength="1"
+            android:paddingLeft="@dimen/otpDigitPad"
+            android:paddingRight="@dimen/otpDigitPad"
+            android:textSize="25sp"
+            android:inputType="numberDecimal" />
+
+        <com.pw.hyperxchange.visitormanagement.Objects.DigitText
+            android:id="@+id/digit4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:hint="@string/hint_hash"
+            android:maxLength="1"
+            android:paddingLeft="@dimen/otpDigitPad"
+            android:paddingRight="@dimen/otpDigitPad"
+            android:textSize="25sp"
+            android:inputType="numberDecimal" />
+    </LinearLayout>
+
+    <LinearLayout
+        style="?attr/buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/otpCancel"
+            style="?attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingLeft="32dp"
+            android:paddingRight="32dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="4dp"
+            android:text="@string/cancel" />
+
+        <android.support.v7.widget.AppCompatButton
+            android:id="@+id/otpConfirm"
+            style="?attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingLeft="32dp"
+            android:paddingRight="32dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="4dp"
+            android:text="@string/confirm" />
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.pw.hyperxchange.visitormanagement.Objects.SquareImageView
+        android:id="@+id/QRCodeView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="0dp"
+        android:padding="16dp"
+        android:src="@drawable/ic_camera_add"
+        app:layout_constraintBottom_toTopOf="@id/loginPrompt"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/loginPrompt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:text="@string/login_prompt"
+        app:layout_constraintBottom_toTopOf="@id/fingersLayout"
+        app:layout_constraintTop_toBottomOf="@id/QRCodeView" />
+
+    <LinearLayout
+        android:id="@+id/fingersLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/loginPrompt">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <com.pw.hyperxchange.visitormanagement.Objects.FPLayout
+                android:id="@+id/rightThumbButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/round_edge"
+                android:scaleX="-1"
+                android:src="@drawable/left_thumb" />
+
+            <TextView
+                android:id="@+id/rightThumbText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/right_thumb"
+                android:textAlignment="center" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <com.pw.hyperxchange.visitormanagement.Objects.FPLayout
+                android:id="@+id/leftThumbButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/round_edge"
+                android:src="@drawable/left_thumb" />
+
+            <TextView
+                android:id="@+id/leftThumbText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/left_thumb"
+                android:textAlignment="center" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <com.pw.hyperxchange.visitormanagement.Objects.FPLayout
+                android:id="@+id/rightIndexButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/round_edge"
+                android:scaleX="-1"
+                android:src="@drawable/left_index" />
+
+            <TextView
+                android:id="@+id/rightIndexText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/right_index"
+                android:textAlignment="center" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <com.pw.hyperxchange.visitormanagement.Objects.FPLayout
+                android:id="@+id/leftIndexButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/round_edge"
+                android:src="@drawable/left_index" />
+
+            <TextView
+                android:id="@+id/leftIndexText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/left_index"
+                android:textAlignment="center" />
+        </LinearLayout>
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>

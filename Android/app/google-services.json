@@ -1,0 +1,99 @@
+{
+  "project_info": {
+    "project_number": "461046625405",
+    "firebase_url": "https://hyperxchange-api.firebaseio.com",
+    "project_id": "hyperxchange-api",
+    "storage_bucket": "hyperxchange-api.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:461046625405:android:bddfd182049eb035",
+        "android_client_info": {
+          "package_name": "com.pm.firebasecloudmessagingtest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "461046625405-cc0t1u34toluvasmm0iegucn8t6cj7ph.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pm.firebasecloudmessagingtest",
+            "certificate_hash": "cd975c66395939735f5a02a68e77363ff76741e8"
+          }
+        },
+        {
+          "client_id": "461046625405-nc2sqf45hi2sh99um5obcin36cbu868t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSiT45HQDLEcmc4XbzqQ_Mu5Mu7n_gu18"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "461046625405-nc2sqf45hi2sh99um5obcin36cbu868t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:461046625405:android:4ae55cf6f8065cef",
+        "android_client_info": {
+          "package_name": "com.pw.hyperxchange.visitormanagement"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "461046625405-l0ke03aq3a2k4ec798vuo2uos5bg4gou.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pw.hyperxchange.visitormanagement",
+            "certificate_hash": "cd975c66395939735f5a02a68e77363ff76741e8"
+          }
+        },
+        {
+          "client_id": "461046625405-nc2sqf45hi2sh99um5obcin36cbu868t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSiT45HQDLEcmc4XbzqQ_Mu5Mu7n_gu18"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "461046625405-nc2sqf45hi2sh99um5obcin36cbu868t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

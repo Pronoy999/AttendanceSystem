@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
+    android:focusableInTouchMode="true"
+    android:padding="8dp"
+    tools:context=".Activities.LoginActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:overScrollMode="never"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/loginButtonBar"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.pw.hyperxchange.visitormanagement.Objects.SquareImageView
+                android:id="@+id/loginImageView"
+                android:layout_width="256dp"
+                android:layout_height="0dp"
+                android:src="@drawable/ic_user"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                tools:visibility="gone" />
+
+            <android.support.design.widget.TextInputLayout
+                android:id="@+id/phoneNumberIL"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:counterEnabled="true"
+                app:counterMaxLength="10"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/loginImageView">
+
+                <EditText
+                    android:id="@+id/phoneNumberEdit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ems="@integer/loginEMS"
+                    android:hint="@string/mobile_number"
+                    android:inputType="phone"
+                    android:maxLength="10">
+
+                    <requestFocus />
+                </EditText>
+            </android.support.design.widget.TextInputLayout>
+
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/visitorView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/phoneNumberIL"
+                tools:visibility="visible">
+
+                <android.support.design.widget.TextInputLayout
+                    android:id="@+id/firstNameIL"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <EditText
+                        android:id="@+id/visitorFirstNameEdit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="@integer/loginEMS"
+                        android:hint="@string/first_name"
+                        android:inputType="textCapWords" />
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                    android:id="@+id/lastNameIL"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toBottomOf="@id/firstNameIL">
+
+                    <EditText
+                        android:id="@+id/visitorLastNameEdit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="@integer/loginEMS"
+                        android:hint="@string/last_name"
+                        android:inputType="textCapWords" />
+                </android.support.design.widget.TextInputLayout>
+
+                <CheckBox
+                    android:id="@+id/parkinCheckBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/parking_ticket"
+                    app:layout_constraintBottom_toTopOf="@id/newVisitorNotice"
+
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/purposeBox" />
+
+                <TextView
+                    android:id="@+id/newVisitorNotice"
+                    android:layout_width="204dp"
+                    android:layout_height="wrap_content"
+                    android:text="Please fill the details and capture an image of the visitor to request a visit."
+                    android:textSize="15sp"
+                    app:layout_constraintBottom_toBottomOf="@id/visitorCamButton"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toLeftOf="@id/visitorCamButton"
+                    app:layout_constraintTop_toBottomOf="@id/parkinCheckBox" />
+
+                <TextView
+                    android:id="@+id/oldVisitorNotice"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:text="Please verify the details and update the image of the visitor, if required, to request a visit."
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="@id/visitorCamButton"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toLeftOf="@id/visitorCamButton"
+                    app:layout_constraintTop_toBottomOf="@id/lastNameIL" />
+
+                <ImageButton
+                    android:id="@+id/visitorCamButton"
+                    style="?attr/buttonBarButtonStyle"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:src="@drawable/ic_camera_add"
+                    app:layout_constraintBottom_toBottomOf="@id/newVisitorNotice"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/purposeBox" />
+
+                <EditText
+                    android:id="@+id/purposeBox"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:ems="240"
+                    android:gravity="top|start"
+                    android:hint="@string/purpose_hint"
+                    android:lines="5"
+                    android:maxLength="240"
+                    android:scrollbars="vertical"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/lastNameIL" />
+            </android.support.constraint.ConstraintLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/employeeView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintLeft_toLeftOf="@id/phoneNumberIL"
+                app:layout_constraintRight_toRightOf="@id/phoneNumberIL"
+                app:layout_constraintTop_toBottomOf="@id/phoneNumberIL">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
+                    android:gravity="center"
+                    android:text="Please continue SIGN IN to request for an OTP."
+                    android:textSize="13sp"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+
+            </android.support.constraint.ConstraintLayout>
+        </android.support.constraint.ConstraintLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/loginButtonBar"
+        style="?attr/buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <Button
+            android:id="@+id/cancelLoginButton"
+            style="?attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:paddingLeft="32dp"
+            android:paddingRight="32dp"
+            android:text="Cancel" />
+
+        <Button
+            android:id="@+id/loginButton"
+            style="?attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:paddingLeft="32dp"
+            android:paddingRight="32dp"
+            android:text="Sign In" />
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>

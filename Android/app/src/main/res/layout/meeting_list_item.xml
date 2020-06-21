@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/meetingItemImage"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:tint="@color/colorPrimary"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="32dp"
+        android:contentDescription="@string/meeting_image"
+        android:src="@drawable/ic_meeting"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/meetingItemDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="20dp"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        app:layout_constraintLeft_toRightOf="@id/meetingItemImage"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="2019-02-26" />
+
+    <TextView
+        android:id="@+id/meetingItemRoom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:textSize="20sp"
+        app:layout_constraintLeft_toRightOf="@id/meetingItemImage"
+        app:layout_constraintTop_toBottomOf="@id/meetingItemDate"
+        tools:text="Room 3" />
+
+    <TextView
+        android:id="@+id/slotStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:textSize="20sp"
+        app:layout_constraintLeft_toRightOf="@id/meetingItemRoom"
+        app:layout_constraintTop_toBottomOf="@id/meetingItemDate"
+        tools:text="10:00" />
+
+    <TextView
+        android:id="@+id/dash"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/dash"
+        android:textSize="20sp"
+        app:layout_constraintLeft_toRightOf="@id/slotStart"
+        app:layout_constraintTop_toBottomOf="@id/meetingItemDate" />
+
+    <TextView
+        android:id="@+id/slotEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        app:layout_constraintLeft_toRightOf="@id/dash"
+        app:layout_constraintTop_toBottomOf="@id/meetingItemDate"
+        tools:text="10.30" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:textSize="18sp"
+        app:layout_constraintLeft_toRightOf="@id/meetingItemImage"
+        app:layout_constraintTop_toBottomOf="@id/meetingItemRoom"
+        tools:text="Satanik" />
+</android.support.constraint.ConstraintLayout>

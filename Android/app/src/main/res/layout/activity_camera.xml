@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Activities.CameraActivity">
+
+    <io.fotoapparat.view.CameraView
+        android:id="@+id/camView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.pw.hyperxchange.visitormanagement.Objects.SquareImageView
+        android:id="@+id/captureButton"
+        android:layout_width="128dp"
+        android:layout_height="128dp"
+        android:alpha="0.5"
+        android:background="@drawable/ic_camera"
+        android:src="@drawable/ic_camera"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.pw.hyperxchange.visitormanagement.Objects.SquareImageView
+        android:id="@+id/switchCam"
+        android:layout_width="48dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        android:alpha="0.5"
+        android:src="@drawable/ic_frontcam"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+</android.support.constraint.ConstraintLayout>

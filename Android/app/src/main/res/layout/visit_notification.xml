@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    tools:ignore="NestedWeights">
+
+    <ImageView
+        android:id="@+id/visitorNotiImage"
+        android:layout_width="128dp"
+        android:layout_height="128dp"
+        tools:src="@drawable/ic_user"
+        tools:tint="@android:color/darker_gray" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="4dp"
+        android:orientation="vertical"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/NotiVisitStatusNotice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/visit_accepted_security"
+            android:textColor="@android:color/holo_green_dark"
+            android:textSize="16sp"
+            android:textStyle="bold|italic"
+            android:visibility="gone"
+            tools:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/visitorNotiName"
+                    style="@style/TextAppearance.Compat.Notification.Title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:lines="1"
+                    android:textSize="16sp"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toLeftOf="@id/statusNotiIcon"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="Some Person" />
+
+                <TextView
+                    android:id="@+id/visitorNotiPhone"
+                    style="@style/TextAppearance.Compat.Notification.Line2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="13sp"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/visitorNotiName"
+                    tools:text="+91 00000 00000" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/visitNotiDate"
+                        style="@style/TextAppearance.Compat.Notification.Time"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textSize="12sp"
+                        app:layout_constraintLeft_toLeftOf="@id/visitorNotiName"
+                        app:layout_constraintRight_toLeftOf="@id/visitNotiTime"
+                        app:layout_constraintTop_toBottomOf="@id/visitorNotiPhone"
+                        tools:text="25/07/2018" />
+
+                    <TextView
+                        android:id="@+id/visitNotiTime"
+                        style="@style/TextAppearance.Compat.Notification.Time"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textSize="12sp"
+                        app:layout_constraintLeft_toRightOf="@id/visitNotiDate"
+                        app:layout_constraintRight_toRightOf="@id/visitorNotiName"
+                        app:layout_constraintTop_toTopOf="@id/visitNotiDate"
+                        tools:text="12:30 PM" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/statusNotiIcon"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:layout_marginEnd="16dp"
+                app:layout_constraintBottom_toTopOf="@id/NotiCancelVisit"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:src="@drawable/ic_pending" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/NotiButtonBar"
+            style="?android:attr/buttonBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="?attr/buttonBarStyle"
+            android:visibility="visible"
+            tools:visibility="visible">
+
+            <Button
+                android:id="@+id/NotiCancelVisit"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:drawableStart="@drawable/ic_cancel"
+                android:text="Cancel"
+                android:textColor="@android:color/holo_red_light" />
+
+            <Button
+                android:id="@+id/NotiAcceptVisit"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:drawableEnd="@drawable/ic_done"
+                android:text="Confirm"
+                android:textColor="@android:color/holo_green_dark" />
+
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.pw.hyperxchange.visitormanagement.Objects.CardLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="192dp"
+    android:background="@drawable/round_edge"
+
+    android:backgroundTint="@color/colorPrimaryDark"
+    android:padding="16dp">
+
+    <com.pw.hyperxchange.visitormanagement.Objects.SquareImageView
+        android:id="@+id/employeeCardImage"
+        android:layout_width="84dp"
+        android:layout_height="0dp"
+        android:src="@drawable/ic_user"
+        android:tint="@android:color/darker_gray"
+        android:background="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@id/employeeCardName" />
+
+    <TextView
+        android:id="@+id/employeeCardName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/nav_header_vertical_spacing"
+        android:textColor="@android:color/primary_text_dark"
+        android:text="Some Employee"
+        android:textSize="20sp"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        app:layout_constraintBottom_toTopOf="@id/employeeCardPhone" />
+
+    <TextView
+        android:id="@+id/employeeCardPhone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/primary_text_dark"
+        android:text="+91 00000 00000"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</com.pw.hyperxchange.visitormanagement.Objects.CardLayout>

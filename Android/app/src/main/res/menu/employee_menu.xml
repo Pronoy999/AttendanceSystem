@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+    <item
+        android:id="@+id/menu_home"
+        android:title="@string/home" />
+    <item
+        android:id="@+id/menu_sign_in"
+        android:title="@string/sign_in_qr" />
+    <item
+        android:id="@+id/menu_qrcode"
+        android:title="@string/show_qr_code" />
+    <item
+        android:id="@+id/menu_sign_in_common"
+        android:title="@string/visitor_sms_sign_in" />
+    <item
+        android:id="@+id/menu_visit_log"
+        android:title="@string/visit_history" />
+    <item
+        android:id="@+id/menu_card_view"
+        android:title="@string/show_visit_card"
+        android:visible="false" />
+    <item
+        android:id="@+id/menu_meeting"
+        android:title="@string/book_a_meeting_room" />
+</menu>
