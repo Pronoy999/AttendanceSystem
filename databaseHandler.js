@@ -3,11 +3,11 @@ const mysql = require('mysql');
  * AWS Database credentials.
  */
 const pool = mysql.createPool({
-   host: 'hx-db.cy5gosef4el7.ap-south-1.rds.amazonaws.com',
-   user: 'db_admin',
-   database: 'diagnostic_app',
-   password: 'hxadmin123',
-   port: '3306'
+   host: '',
+   user: '',
+   database: '',
+   password: '3',
+   port: ''
 });
 let database = {};
 /**
